@@ -1,0 +1,32 @@
+{
+  "paper_benchmark_name": "2D Simionescu function",
+  "paper_research_field": "Constrained Bayesian Optimization",
+  "matched_benchmark_name": "2D Simionescu function",
+  "matched_research_field": "Synthetic Function Optimization",
+  "name_match_type": "exact",
+  "field_match_status": "same_field",
+  "match_reason": "Direct name match as provided in the paper; used as a synthetic test function.",
+  "status": "well_established_formula",
+  "materialization_strategy": "generate_definition",
+  "source_type": "literature_formula",
+  "source_url": "",
+  "download_subdir": "benchmark_2",
+  "materialization_commands": [],
+  "definition_summary": "A two-dimensional synthetic function benchmark employed to test the performance of boundary exploration strategies in Bayesian optimization.",
+  "equations_or_components": [
+    "Analytic formulation details as available in the relevant optimization literature."
+  ],
+  "variables_or_inputs": [
+    "x1, x2 (continuous inputs within specified bounds)"
+  ],
+  "constraints_or_bounds": [
+    "Feasibility is determined by implicit boundary conditions included in the function definition."
+  ],
+  "expected_artifacts": [
+    "benchmark_definition.txt"
+  ],
+  "license_or_access_notes": [
+    "Freely available for academic research."
+  ],
+  "failure_reason": ""
+}

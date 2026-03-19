@@ -1,0 +1,96 @@
+----------------------------------------
+[Implementation approach]
+We will build a modular Python system that reproduces the BE-CBO method by separating concerns into benchmark definition, surrogate model training (using BoTorch’s GP for the objective and a PyTorch deep ensemble for constraint classification), acquisition optimization (using constrained EI via SciPy’s SLSQP with a pre-optimization step using Adam), and experiment orchestration. The system will leverage open-source libraries such as PyTorch for neural networks, BoTorch (and GPyTorch) for GP modeling and acquisition functions, and SciPy for constrained optimization. A main application module will configure the experiment (using a simple config file or dictionary), initialize the appropriate modules, and run the Bayesian optimization loop over the designated evaluation budget.
+
+----------------------------------------
+[File list]
+- main.py
+- benchmark.py
+- gp_surrogate.py
+- deep_ensemble.py
+- acquisition.py
+- botrainer.py
+- evaluation.py
+- utils.py
+- config.py
+
+----------------------------------------
+[Data structures and interfaces]
+classDiagram
+    class Main {
+        +__init__(config: dict)
+        +run_experiment() -> None
+    }
+    class Benchmark {
+        +__init__(problem_config: dict)
+        +evaluate(x: Tensor) -> Tuple[float, bool]
+        +get_initial_samples(num_samples: int) -> Tensor
+    }
+    class GPSurrogate {
+        +__init__(config: dict)
+        +update(data: List[Tuple[Tensor, float]]) -> None
+        +predict(x: Tensor) -> Tuple[Tensor, Tensor]
+        +acquisition(x: Tensor) -> Tensor
+    }
+    class DeepEnsembleClassifier {
+        +__init__(config: dict)
+        +train(data: List[Tuple[Tensor, int]]) -> None
+        +predict(x: Tensor) -> Tuple[Tensor, Tensor]
+        // Returns feasibility probability and uncertainty
+    }
+    class AcquisitionOptimizer {
+        +__init__(config: dict)
+        +optimize(acq_func: Callable, classifier: DeepEnsembleClassifier, bounds: Tensor) -> Tensor
+    }
+    class BOTrainer {
+        +__init__(benchmark: Benchmark, gp: GPSurrogate, classifier: DeepEnsembleClassifier, acq_opt: AcquisitionOptimizer, config: dict)
+        +run() -> None
+    }
+    class Evaluation {
+        +__init__(results: dict)
+        +compute_metrics() -> dict
+    }
+    Main --> Benchmark
+    Main --> BOTrainer
+    BOTrainer --> GPSurrogate
+    BOTrainer --> DeepEnsembleClassifier
+    BOTrainer --> AcquisitionOptimizer
+    BOTrainer --> Benchmark
+    Evaluation --> BOTrainer
+
+----------------------------------------
+[Program call flow]
+sequenceDiagram
+    participant M as Main
+    participant B as Benchmark
+    participant GP as GPSurrogate
+    participant DE as DeepEnsembleClassifier
+    participant AO as AcquisitionOptimizer
+    participant BT as BOTrainer
+    participant E as Evaluation
+
+    M->>B: Load problem configuration and initialize benchmark
+    B-->>M: Provide objective and constraint functions
+    M->>GP: Initialize GP surrogate with config
+    M->>DE: Initialize deep ensemble classifier with config
+    M->>AO: Initialize Acquisition Optimizer with config
+    M->>BT: Create BOTrainer(B, GP, DE, AO, config)
+    BT->>B: Get initial samples (using Sobol sequence)
+    loop For each BO iteration
+        BT->>GP: Update GP using collected feasible data
+        BT->>DE: Train/update classifier with (x, binary feasibility) data
+        BT->>AO: Optimize the acquisition function (EI) with dynamic bound (l(x)=0.5 - σ) constraint
+        AO-->>BT: Return candidate point x
+        BT->>B: Evaluate candidate x
+        B-->>BT: Return objective value and feasibility flag
+        BT: Log result and update dataset
+    end
+    BT->>E: Send final results for evaluation
+    E->>E: Compute metrics (best objective, feasibility ratio, classification accuracy)
+    E-->>M: Return evaluation metrics
+    M->>M: Log results and display summary output
+
+----------------------------------------
+[Anything UNCLEAR]
+Clarification is needed regarding the specific hyperparameters and convergence settings for the constrained optimizer (e.g., number of Adam steps, SLSQP tolerances). Also, details about the data structures used to store training data for the GP and deep ensemble (and how they interface with BoTorch/GPyTorch APIs) should be confirmed.
+

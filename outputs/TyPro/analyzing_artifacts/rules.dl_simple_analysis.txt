@@ -1,0 +1,156 @@
+Below is an annotated version of what the rules.dl file might look like. In this file we formally capture (using Horn clauses) the key propagation rules described in the paper. These rules cover transitive casts, pointer aliasing, struct/union field propagation, and finally the derivation of allowed targets for an indirect call using fixed‐ and variadic‐arity checks as well as “context transfer” rules. Note that the names of the relations exactly match the facts produced during AST extraction (e.g., TypeContextPair, PointsTo, StructMember, UnionMember, Cast, ICall, FunctionPointer, and (optionally) TypeCall). Also note that some rules (IC1 and IC2 below) are a simplified approximation for the “indirect call context transfer” part of the analysis. Adjustments may be needed when integrating with the rest of the pipeline.
+
+------------------------------------------------------------
+/* rules.dl – Datalog rules for type propagation and target set computation */
+/* 
+   Relation Declarations.
+   These facts (and their attributes) are expected to be extracted by the ASTExtractor
+   and then optimized by FactOptimizer. Their names and signatures are fixed.
+*/
+
+.decl TypeContextPair(id: number, type: symbol, context: symbol)
+.decl PointsTo(ptr: number, pointee: number)
+.decl StructMember(parent: number, member: number, offset: number)
+.decl UnionMember(parent: number, member: number, fieldType: symbol)
+.decl Cast(src: number, dst: number)         // Direct casts and transfers (from explicit casts, implicit transfers, etc.)
+.decl ICall(callType: number, callLabel: symbol, arity: number)
+.decl FunctionPointer(id: number, func: symbol, arity: number, vararg: bool)
+/* Optional: For handling argument/return type transfers for indirect calls */
+.decl TypeCall(id: number, type: symbol, callLabel: symbol)
+
+/* The final result: mapping each indirect call (by label) to allowed function targets. */
+.decl TargetSet(callLabel: symbol, func: symbol)
+
+/* ===========================================================================
+   Rule Group 1: Cast Propagation 
+   ---------------------------------------------------------------------------
+   (T) Transitive propagation: if X casts to Y and Y casts to Z then X casts to Z.
+============================================================================ */
+Cast(X, Z) :- Cast(X, Y), Cast(Y, Z).
+
+/* ===========================================================================
+   Rule Group 2: Pointer Aliasing Propagation 
+   ---------------------------------------------------------------------------
+   (P) If a cast propagates between two pointer types, then the cast applies
+       to the pointee types as well. We derive two symmetric rules.
+============================================================================ */
+Cast(Xp, Yp) :-
+    Cast(X, Y),
+    PointsTo(X, Xp),
+    PointsTo(Y, Yp).
+
+Cast(Yp, Xp) :-
+    Cast(Y, X),
+    PointsTo(Y, Yp),
+    PointsTo(X, Xp).
+
+/* ===========================================================================
+   Rule Group 3: Struct and Union Propagation 
+   ---------------------------------------------------------------------------
+   (S) For structures: If two struct types are related via a cast, then their
+       corresponding fields (identified by matching byte offset) also propagate.
+============================================================================ */
+Cast(Member1, Member2) :-
+    Cast(Struct1, Struct2),
+    StructMember(Struct1, Member1, Off),
+    StructMember(Struct2, Member2, Off).
+
+/* ---------------------------------------------------------------------------
+   (U) For unions: When propagating unions, the field transfer is allowed only
+       if the field types match (using the field type for comparison).
+============================================================================ */
+Cast(Member1, Member2) :-
+    Cast(Union1, Union2),
+    UnionMember(Union1, Member1, FieldType),
+    UnionMember(Union2, Member2, FieldType).
+
+/* ===========================================================================
+   Rule Group 4: Target Set Computation
+   ---------------------------------------------------------------------------
+   Rules F1/F2 compute the TargetSet relation by “connecting” an indirect call
+   (its expected type, number of arguments) with an address-taken function
+   (recorded in a FunctionPointer fact), provided a valid cast propagation exists.
+============================================================================ */
+
+/* (F1) For fixed-arity functions: 
+   An indirect call with arity A can target a function pointer with exactly A parameters,
+   provided that the type used in the indirect call (callType) propagates (via Cast)
+   to the type associated with the function pointer.
+*/
+TargetSet(Call, f) :-
+    ICall(CallType, Call, A),
+    FunctionPointer(fp, f, A, false),
+    Cast(CallType, fp).
+
+/* (F2) For functions that accept a variable number of arguments:
+   Even if the arity is marked as variadic (vararg true), a similar rule applies.
+*/
+TargetSet(Call, f) :-
+    ICall(CallType, Call, A),
+    FunctionPointer(fp, f, A, true),
+    Cast(CallType, fp).
+
+/* ===========================================================================
+   Rule Group 5: Indirect Call Context Transfer
+   ---------------------------------------------------------------------------
+   These rules (IC1 and IC2) are designed to capture the transfer of type context
+   from an indirect call’s argument or return type to that of the callee function.
+   They help “simulate” a direct call by aligning the call context with the function’s.
+   (Note: The following are heuristic approximations and assume that a corresponding
+   TypeCall fact is generated during AST fact extraction.)
+============================================================================ */
+ 
+/* (IC1) For call argument types:
+   If an indirect call call (by label) has an argument type (as a TypeCall fact) and if,
+   in a candidate function f, a corresponding parameter appears (recorded via a TypeContextPair),
+   then we derive an additional cast propagation between these type/context pairs.
+*/
+Cast(TCall, TFunc) :-
+    TargetSet(Call, f),
+    TypeCall(TCall, ArgType, Call),
+    TypeContextPair(TFunc, ArgType, f).
+
+/* (IC2) For return types:
+   Similarly, if an indirect call expects a return type (captured by a TypeCall fact)
+   and the target function f provides a return type (recorded in TypeContextPair),
+   a cast is derived. 
+*/
+Cast(RetCall, RetFunc) :-
+    TargetSet(Call, f),
+    TypeCall(RetCall, RetType, Call),
+    TypeContextPair(RetFunc, RetType, f).
+
+/* ===========================================================================
+   (Optional) Optimization Rule: Fact Equivalence
+   ---------------------------------------------------------------------------
+   When two TypeContextPair facts are found to be mutually casting (i.e., X casts to Y
+   and Y casts to X), they are considered equivalent. This information can be used
+   by the FactOptimizer to merge duplicate identifiers.
+============================================================================ */
+.decl Equivalent(id1: number, id2: number)
+Equivalent(X, Y) :- Cast(X, Y), Cast(Y, X), X < Y.
+
+/* ===========================================================================
+   Additional External Rules for Dynamic Linking (if needed)
+   ---------------------------------------------------------------------------
+   Based on Appendix B in the paper, additional rules would mark certain type/context
+   pairs as ‘external’ when they appear in module summaries. These rules are not fully
+   detailed here but would include:
+     - ExternalSymbol, InterfaceType, and External relations.
+     - Propagation rules ensuring that visible (exported/imported) types transfer their
+       “external” property to their sub-components.
+   For brevity, these rules are left for further refinement.
+============================================================================ */
+
+/* End of rules.dl */
+
+------------------------------------------------------------
+
+This logic analysis follows the methodological steps described in the paper:
+1. It starts by building a complete Cast relation (using transitivity, pointer aliasing, and struct/union propagation).
+2. The TargetSet relation is derived by matching the type used at an indirect call (ICall) with a FunctionPointer fact for a function having the correct number of arguments (with separate rules for fixed and variadic).
+3. The context transfer rules (IC1 and IC2) simulate the effect of a direct call by “transferring” type contexts from the caller to the callee.
+
+The above rules rely solely on the facts extracted from the AST (via TypeContextPair, PointsTo, etc.) and thus faithfully reproduce the type propagation logic that underlies TyPro. Configuration settings (such as using LLVM 10 and llvmlite for IR transformations) are external to these rules and are referenced only in the overall pipeline—here the rules reflect the abstract propagation and target set computation process. 
+
+Any ambiguities (for example, the precise structure of TypeCall or details on external module summaries) should be resolved during integration and testing, with this rules file serving as the core logical specification for the Soufflé-based analysis.

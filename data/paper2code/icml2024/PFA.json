@@ -1,0 +1,3390 @@
+{
+    "paper_id": "PFA",
+    "header": {
+        "generated_with": "S2ORC 1.0.0",
+        "date_generated": "2025-02-25T21:37:28.567409Z"
+    },
+    "title": "Scribble-Supervised Semantic Segmentation with Prototype-based Feature Augmentation",
+    "authors": [
+        {
+            "first": "Guiyang",
+            "middle": [],
+            "last": "Chan",
+            "suffix": "",
+            "affiliation": {},
+            "email": ""
+        },
+        {
+            "first": "Pengcheng",
+            "middle": [],
+            "last": "Zhang",
+            "suffix": "",
+            "affiliation": {},
+            "email": ""
+        },
+        {
+            "first": "Hai",
+            "middle": [],
+            "last": "Dong",
+            "suffix": "",
+            "affiliation": {},
+            "email": ""
+        },
+        {
+            "first": "Shunhui",
+            "middle": [],
+            "last": "Ji",
+            "suffix": "",
+            "affiliation": {},
+            "email": ""
+        },
+        {
+            "first": "Bainian",
+            "middle": [],
+            "last": "Chen",
+            "suffix": "",
+            "affiliation": {},
+            "email": ""
+        }
+    ],
+    "year": "",
+    "venue": null,
+    "identifiers": {},
+    "abstract": "Scribble-supervised semantic segmentation presents a cost-effective training method that utilizes annotations generated through scribbling. It is valued in attaining high performance while minimizing annotation costs, which has made it highly regarded among researchers. Scribble supervision propagates information from labeled pixels to the surrounding unlabeled pixels, enabling semantic segmentation for the entire image. However, existing methods often ignore the features of classified pixels during feature propagation. To address these limitations, this paper proposes a prototype-based feature augmentation method that leverages feature prototypes to augment scribble supervision. Experimental results demonstrate that our approach achieves state-of-the-art performance on the PASCAL VOC 2012 dataset in scribble-supervised semantic segmentation tasks. The code is available at https://github.com/TranquilChan/PFA.",
+    "pdf_parse": {
+        "paper_id": "PFA",
+        "_pdf_hash": "",
+        "abstract": [
+            {
+                "text": "Scribble-supervised semantic segmentation presents a cost-effective training method that utilizes annotations generated through scribbling. It is valued in attaining high performance while minimizing annotation costs, which has made it highly regarded among researchers. Scribble supervision propagates information from labeled pixels to the surrounding unlabeled pixels, enabling semantic segmentation for the entire image. However, existing methods often ignore the features of classified pixels during feature propagation. To address these limitations, this paper proposes a prototype-based feature augmentation method that leverages feature prototypes to augment scribble supervision. Experimental results demonstrate that our approach achieves state-of-the-art performance on the PASCAL VOC 2012 dataset in scribble-supervised semantic segmentation tasks. The code is available at https://github.com/TranquilChan/PFA.",
+                "cite_spans": [],
+                "ref_spans": [],
+                "eq_spans": [],
+                "section": "Abstract",
+                "sec_num": null
+            }
+        ],
+        "body_text": [
+            {
+                "text": "In recent years, the rapid progress of deep learning techniques has propelled deep neural networks to achieve significant advancements in image semantic segmentation tasks. These networks play a pivotal role in aiding human comprehension of image content, providing precise pixel-level segmentation. As one of the most intricate tasks in the field of computer vision, training semantic segmentation models typically requires a large number of high-quality annotated samples. However, annotating samples at the pixel level demands a substantial amount of manpower and time, and the annotation process can be tedious. Therefore, in scenarios where data dependency is strong, researchers are increasingly focusing on methods that utilize scribble labels for supervised learning. Training with scribble labels falls under weakly supervised learning, allowing annotators to mark regions in the image using simple lines or sketches and assign corresponding labels to those regions. Compared to pixel-level annotation, using scribble labels can significantly reduce the workload of annotation and improve efficiency. Additionally, compared to point (Bearman et al., 2016; Lee et al., 2021) , bounding box (Kulharia et al., 2020; Zhang et al., 2021) , and image-level (Zhang et al., 2020; Du et al., 2022) labels, scribble labels provide more crucial semantic information to the models, helping them better learn the semantic structure of the images.",
+                "cite_spans": [
+                    {
+                        "start": 1142,
+                        "end": 1164,
+                        "text": "(Bearman et al., 2016;",
+                        "ref_id": "BIBREF1"
+                    },
+                    {
+                        "start": 1165,
+                        "end": 1182,
+                        "text": "Lee et al., 2021)",
+                        "ref_id": "BIBREF16"
+                    },
+                    {
+                        "start": 1198,
+                        "end": 1221,
+                        "text": "(Kulharia et al., 2020;",
+                        "ref_id": "BIBREF14"
+                    },
+                    {
+                        "start": 1222,
+                        "end": 1241,
+                        "text": "Zhang et al., 2021)",
+                        "ref_id": "BIBREF39"
+                    },
+                    {
+                        "start": 1260,
+                        "end": 1280,
+                        "text": "(Zhang et al., 2020;",
+                        "ref_id": "BIBREF38"
+                    },
+                    {
+                        "start": 1281,
+                        "end": 1297,
+                        "text": "Du et al., 2022)",
+                        "ref_id": "BIBREF8"
+                    }
+                ],
+                "ref_spans": [],
+                "eq_spans": [],
+                "section": "Introduction",
+                "sec_num": "1."
+            },
+            {
+                "text": "As shown in Figure 1 , existing methods mainly rely on regularization loss (Tang et al., 2018a; b; Obukhov et al., 2019; Marin et al., 2019; Liang et al., 2022) , consistency loss (Ke et al., 2021; Pan et al., 2021) , pseudo proposal (Lin et al., 2016; Zhang et al., 2021; Xu et al., 2021) , auxiliary tasks (Wang et al., 2019; Pan et al., 2021) , and label diffu-sion (Wu et al., 2023; Zhang et al., 2024) . However, these methods exhibit certain drawbacks. Regularization methods often overlook leveraging high-level semantic information. Consistency loss does not provide direct supervision at the category level. Pseudo-labeling methods require multi-stage training, which are time-consuming. Auxiliary tasks introduce additional data and predictive errors of introduced data can influence the final outcomes. Label diffusion primarily relies on local information and fails to utilize global information to leverage the features of correctly classified pixels. In fact, the features of pixels that have been correctly classified can play a pivotal role in guiding the classification of pixels in boundary regions. However, many existing methods based on scribble supervision ignore this role.",
+                "cite_spans": [
+                    {
+                        "start": 75,
+                        "end": 95,
+                        "text": "(Tang et al., 2018a;",
+                        "ref_id": null
+                    },
+                    {
+                        "start": 96,
+                        "end": 98,
+                        "text": "b;",
+                        "ref_id": null
+                    },
+                    {
+                        "start": 99,
+                        "end": 120,
+                        "text": "Obukhov et al., 2019;",
+                        "ref_id": "BIBREF21"
+                    },
+                    {
+                        "start": 121,
+                        "end": 140,
+                        "text": "Marin et al., 2019;",
+                        "ref_id": "BIBREF20"
+                    },
+                    {
+                        "start": 141,
+                        "end": 160,
+                        "text": "Liang et al., 2022)",
+                        "ref_id": "BIBREF17"
+                    },
+                    {
+                        "start": 180,
+                        "end": 197,
+                        "text": "(Ke et al., 2021;",
+                        "ref_id": "BIBREF12"
+                    },
+                    {
+                        "start": 198,
+                        "end": 215,
+                        "text": "Pan et al., 2021)",
+                        "ref_id": "BIBREF23"
+                    },
+                    {
+                        "start": 234,
+                        "end": 252,
+                        "text": "(Lin et al., 2016;",
+                        "ref_id": "BIBREF18"
+                    },
+                    {
+                        "start": 253,
+                        "end": 272,
+                        "text": "Zhang et al., 2021;",
+                        "ref_id": "BIBREF39"
+                    },
+                    {
+                        "start": 273,
+                        "end": 289,
+                        "text": "Xu et al., 2021)",
+                        "ref_id": "BIBREF34"
+                    },
+                    {
+                        "start": 308,
+                        "end": 327,
+                        "text": "(Wang et al., 2019;",
+                        "ref_id": "BIBREF30"
+                    },
+                    {
+                        "start": 328,
+                        "end": 345,
+                        "text": "Pan et al., 2021)",
+                        "ref_id": "BIBREF23"
+                    },
+                    {
+                        "start": 369,
+                        "end": 386,
+                        "text": "(Wu et al., 2023;",
+                        "ref_id": "BIBREF31"
+                    },
+                    {
+                        "start": 387,
+                        "end": 406,
+                        "text": "Zhang et al., 2024)",
+                        "ref_id": "BIBREF41"
+                    }
+                ],
+                "ref_spans": [
+                    {
+                        "start": 19,
+                        "end": 20,
+                        "text": "1",
+                        "ref_id": "FIGREF1"
+                    }
+                ],
+                "eq_spans": [],
+                "section": "Introduction",
+                "sec_num": "1."
+            },
+            {
+                "text": "In the context of semi-supervised classification tasks, Feat-Match (Kuo et al., 2020) learns and extracts feature prototypes from labeled samples, subsequently enhancing the features of unlabeled data with these prototypes to improve the classification of unlabeled samples. Inspired by this, we seek to extend its application to scribble-level weakly supervised semantic segmentation. Nevertheless, in our scenario of scribble-level weakly supervised segmentation, the labels are assigned at the pixel level, unlike the image-level labels in semi-supervised tasks. Our approach entails the initial learning from labeled pixels, extraction of feature prototypes from accurately classified pixels, and the subsequent utilization of these prototypes to guide the classification of remaining pixels.",
+                "cite_spans": [
+                    {
+                        "start": 67,
+                        "end": 85,
+                        "text": "(Kuo et al., 2020)",
+                        "ref_id": "BIBREF15"
+                    }
+                ],
+                "ref_spans": [],
+                "eq_spans": [],
+                "section": "Introduction",
+                "sec_num": "1."
+            },
+            {
+                "text": "Specifically, our method initiates with prototype extraction.",
+                "cite_spans": [],
+                "ref_spans": [],
+                "eq_spans": [],
+                "section": "Introduction",
+                "sec_num": "1."
+            },
+            {
+                "text": "In contrast to conventional clustering methods employed in semi-supervised and unsupervised approaches, we directly extract feature prototypes from high-confidence regions of initial predictions. In summary, our contributions are as follows:",
+                "cite_spans": [],
+                "ref_spans": [],
+                "eq_spans": [],
+                "section": "Introduction",
+                "sec_num": "1."
+            },
+            {
+                "text": "\u2022 We propose a prototype-based feature augmentation method for scribble-level weak supervision, extend-ing the application of the method from image-level to pixel-level and significantly enhancing the efficacy of scribble supervision.",
+                "cite_spans": [],
+                "ref_spans": [],
+                "eq_spans": [],
+                "section": "Introduction",
+                "sec_num": "1."
+            },
+            {
+                "text": "\u2022 We propose a dynamic augmentation strategy employing local and global prototypes. This synergistic approach maximizes the utilization of information in scribble-supervised semantic segmentation and mitigates the challenge of limited prototype representation at various training stages.",
+                "cite_spans": [],
+                "ref_spans": [],
+                "eq_spans": [],
+                "section": "Introduction",
+                "sec_num": "1."
+            },
+            {
+                "text": "\u2022 We validate the components of our method through experiments and report the state-of-the-art performance on the PASCAL VOC 2012 dataset.",
+                "cite_spans": [],
+                "ref_spans": [],
+                "eq_spans": [],
+                "section": "Introduction",
+                "sec_num": "1."
+            },
+            {
+                "text": "Scribble-supervised semantic segmentation, a form of weakly supervised semantic segmentation, employs scribbles as annotations to label image regions. This approach presents a cost-effective alternative to fully supervised labeling. Compared to other weakly supervised annotation methods, including point, bounding-box, and image-level labels, scribble supervision imparts more comprehensive and detailed information, resulting in better performance.",
+                "cite_spans": [],
+                "ref_spans": [],
+                "eq_spans": [],
+                "section": "Scribble-Supervised Semantic Segmentation",
+                "sec_num": "2.1."
+            },
+            {
+                "text": "In scribble-supervised semantic segmentation, Scribble-Sup (Lin et al., 2016) first introduced the concept of using scribble labels for semantic segmentation and provided the ScribbleSup dataset. They propagated the scribble label information to surrounding pixels using superpixels and designed corresponding loss functions for supervision. Tang et al. proposed methods based on regularization losses, such as Normalized Cut loss (Tang et al., 2018a) and Kernel Cut loss (Tang et al., 2018b) , for model training. Gated CRF (Obukhov et al., 2019) augmented the efficiency by introducing gating operations on top of the Kernel Cut loss. RAWKS (Vernaza & Chandraker, 2017) and BPG (Wang et al., 2019) utilized boundary detectors to assist the models in achieving better results. URSS (Pan et al., 2021) reduced uncertainty through neural representation and selfsupervision in the neural feature space. SPML (Ke et al., 2021) improved performance by using metric learning methods and introducing a contour detector as additional supervision. PSI (Xu et al., 2021) utilized latent contextual dependency to enhance and refine segmentation results from partially known seeds. A2GNN (Zhang et al., 2021) introduced a graph neural network approach to generate pseudolabels and applied multi-level supervision. TEL (Liang et al., 2022) proposed a novel tree energy loss method that provides semantic guidance to unlabeled pixels. AGMM (Wu et al., 2023) of labeled pixels and unlabeled pixels sharing similar feature distributions. CDSP (Zhang et al., 2024) utilized pseudolabels supervised by image-level class labels and global semantics.",
+                "cite_spans": [
+                    {
+                        "start": 59,
+                        "end": 77,
+                        "text": "(Lin et al., 2016)",
+                        "ref_id": "BIBREF18"
+                    },
+                    {
+                        "start": 431,
+                        "end": 451,
+                        "text": "(Tang et al., 2018a)",
+                        "ref_id": null
+                    },
+                    {
+                        "start": 472,
+                        "end": 492,
+                        "text": "(Tang et al., 2018b)",
+                        "ref_id": null
+                    },
+                    {
+                        "start": 525,
+                        "end": 547,
+                        "text": "(Obukhov et al., 2019)",
+                        "ref_id": "BIBREF21"
+                    },
+                    {
+                        "start": 643,
+                        "end": 671,
+                        "text": "(Vernaza & Chandraker, 2017)",
+                        "ref_id": "BIBREF29"
+                    },
+                    {
+                        "start": 680,
+                        "end": 699,
+                        "text": "(Wang et al., 2019)",
+                        "ref_id": "BIBREF30"
+                    },
+                    {
+                        "start": 783,
+                        "end": 801,
+                        "text": "(Pan et al., 2021)",
+                        "ref_id": "BIBREF23"
+                    },
+                    {
+                        "start": 906,
+                        "end": 923,
+                        "text": "(Ke et al., 2021)",
+                        "ref_id": "BIBREF12"
+                    },
+                    {
+                        "start": 1044,
+                        "end": 1061,
+                        "text": "(Xu et al., 2021)",
+                        "ref_id": "BIBREF34"
+                    },
+                    {
+                        "start": 1177,
+                        "end": 1197,
+                        "text": "(Zhang et al., 2021)",
+                        "ref_id": "BIBREF39"
+                    },
+                    {
+                        "start": 1307,
+                        "end": 1327,
+                        "text": "(Liang et al., 2022)",
+                        "ref_id": "BIBREF17"
+                    },
+                    {
+                        "start": 1427,
+                        "end": 1444,
+                        "text": "(Wu et al., 2023)",
+                        "ref_id": "BIBREF31"
+                    },
+                    {
+                        "start": 1528,
+                        "end": 1548,
+                        "text": "(Zhang et al., 2024)",
+                        "ref_id": "BIBREF41"
+                    }
+                ],
+                "ref_spans": [],
+                "eq_spans": [],
+                "section": "Scribble-Supervised Semantic Segmentation",
+                "sec_num": "2.1."
+            },
+            {
+                "text": "Feature prototypes can be seen as 'exemplars' of different categories in the feature space. Their essence lies in being feature vectors widely used in computer vision tasks to augment the model's recognition capability of different types of features. In fully supervised semantic segmentation tasks, OCRNet (Yuan et al., 2020) , ACFNet (Zhang et al., 2019) , and CondNet (Yu et al., 2021) aggregate category feature embeddings by considering the initial segmented regions. Mask2former (Cheng et al., 2022) and CFT (Tang et al., 2023) focus on category features through masking. The main idea of these methods is to augment features through prototypes, but their methods are relatively common, such as convolution, multiplication, and attention. In weakly supervised semantic segmentation, EPS (Yoon et al., 2021) utilizes prototypes to guide the model in learning more accurate feature representations, thereby improving segmentation results. PPC (Du et al., 2022) provides pixel-level supervisory signals by contrasting pixels with prototypes to narrow the gap between classification and segmentation. SIPE (Chen et al., 2022) proposes an image-specific prototype exploration method to capture complete regional information in the image. They delve into the use of feature prototypes, but they do not use prototypes for feature augmentation, or their employed fusion approaches are relatively simple, thereby failing to harness the guiding role of prototype. FeatMatch (Kuo et al., 2020) augments features by fusing them with prototypes, but it is a semi-supervised classification task. Xu et al. further introduces prototype-augmented methods into the field of semantic segmentation (Xu et al., 2022) , but it remains a semi-supervised task. The goal of our work is to incorporate this idea into weakly supervised semantic segmentation, introducing prototype augmentation at the pixel level.",
+                "cite_spans": [
+                    {
+                        "start": 307,
+                        "end": 326,
+                        "text": "(Yuan et al., 2020)",
+                        "ref_id": "BIBREF37"
+                    },
+                    {
+                        "start": 336,
+                        "end": 356,
+                        "text": "(Zhang et al., 2019)",
+                        "ref_id": "BIBREF40"
+                    },
+                    {
+                        "start": 371,
+                        "end": 388,
+                        "text": "(Yu et al., 2021)",
+                        "ref_id": "BIBREF36"
+                    },
+                    {
+                        "start": 485,
+                        "end": 505,
+                        "text": "(Cheng et al., 2022)",
+                        "ref_id": "BIBREF6"
+                    },
+                    {
+                        "start": 514,
+                        "end": 533,
+                        "text": "(Tang et al., 2023)",
+                        "ref_id": "BIBREF28"
+                    },
+                    {
+                        "start": 793,
+                        "end": 812,
+                        "text": "(Yoon et al., 2021)",
+                        "ref_id": "BIBREF35"
+                    },
+                    {
+                        "start": 947,
+                        "end": 964,
+                        "text": "(Du et al., 2022)",
+                        "ref_id": "BIBREF8"
+                    },
+                    {
+                        "start": 1108,
+                        "end": 1127,
+                        "text": "(Chen et al., 2022)",
+                        "ref_id": "BIBREF5"
+                    },
+                    {
+                        "start": 1470,
+                        "end": 1488,
+                        "text": "(Kuo et al., 2020)",
+                        "ref_id": "BIBREF15"
+                    },
+                    {
+                        "start": 1685,
+                        "end": 1702,
+                        "text": "(Xu et al., 2022)",
+                        "ref_id": "BIBREF33"
+                    }
+                ],
+                "ref_spans": [],
+                "eq_spans": [],
+                "section": "Prototype-based Method",
+                "sec_num": "2.2."
+            },
+            {
+                "text": "Figure 2 illustrates the overall framework of our approach, leveraging a Vision Transformer (Xie et al., 2021) as the backbone for extracting initial feature maps. These feature maps are then input to a decoder for generating semantic segmentation prediction maps. Details of the encoder and decoder are discussed in Section 4.2. Supervised by scribble labels through partial cross-entropy loss, the semantic segmentation prediction maps are refined. Subsequently, high-confidence regions from the initial prediction maps are identified as accurately predicted pixels, and corresponding feature vectors in the initial feature maps are extracted.",
+                "cite_spans": [
+                    {
+                        "start": 92,
+                        "end": 110,
+                        "text": "(Xie et al., 2021)",
+                        "ref_id": "BIBREF32"
+                    }
+                ],
+                "ref_spans": [
+                    {
+                        "start": 7,
+                        "end": 8,
+                        "text": "2",
+                        "ref_id": null
+                    }
+                ],
+                "eq_spans": [],
+                "section": "Overview",
+                "sec_num": "3.1."
+            },
+            {
+                "text": "Local prototypes are formed by weighting and averaging these feature vectors based on predicted values. Throughout training iterations, these local prototypes update global prototypes, elucidated in Section 3.2. Both the global prototypes and local prototypes are used to augment the initial features through prototype-based feature augmenters. The augmented feature maps are then passed through the decoder to generate augmented prediction maps, with the weights of the three decoders shared during this process. The consistency loss is applied between the two augmented prediction maps and the initial prediction maps for supervision, detailed in Section 3.3.",
+                "cite_spans": [],
+                "ref_spans": [],
+                "eq_spans": [],
+                "section": "Overview",
+                "sec_num": "3.1."
+            },
+            {
+                "text": "Augmenting features via prototypes depends heavily on precisely defined prototypes. The creation of these prototypes is vital. We classify prototypes into two types: local prototypes and global prototypes. Local prototypes are extracted from image features within each batch during training iterations and are specifically for augmenting features within that batch. In contrast, global prototypes encompass more comprehensive information and can be dynamically updated globally. Global prototypes augment information diversity by updating with local prototypes, rendering them more suitable for feature augmentation.",
+                "cite_spans": [],
+                "ref_spans": [],
+                "eq_spans": [],
+                "section": "SETTING OF THE PROTOTYPE",
+                "sec_num": "3.2.1."
+            },
+            {
+                "text": "Here, we outline the process of extracting prototypes from features, namely generating local prototypes. Currently, methods for extracting prototypes from image features are mostly employed in semi-supervised and unsupervised semantic segmentation techniques. Many of these methods (Kuo et al., 2020; Xu et al., 2022) utilize clustering as an effective approach in scenarios where labels are either scarce or lacking. However, the primary goal of prototype extraction is to derive highly representative features from the data as the basis for prototype generation. Using clustering methods often fails to effectively align with the actual categories.",
+                "cite_spans": [
+                    {
+                        "start": 282,
+                        "end": 300,
+                        "text": "(Kuo et al., 2020;",
+                        "ref_id": "BIBREF15"
+                    },
+                    {
+                        "start": 301,
+                        "end": 317,
+                        "text": "Xu et al., 2022)",
+                        "ref_id": "BIBREF33"
+                    }
+                ],
+                "ref_spans": [],
+                "eq_spans": [],
+                "section": "EXTRACTION OF THE PROTOTYPE",
+                "sec_num": "3.2.2."
+            },
+            {
+                "text": "In a weakly supervised setting, we believe that relying solely on clustering methods does not fully leverage the semantic information provided by scribble labels. These labels can significantly contribute by offering valuable insights into the representative regions required for prototype extraction.",
+                "cite_spans": [],
+                "ref_spans": [],
+                "eq_spans": [],
+                "section": "EXTRACTION OF THE PROTOTYPE",
+                "sec_num": "3.2.2."
+            },
+            {
+                "text": "Therefore, we utilize the initial prediction values, represented as p, generated by the model as confidence scores.",
+                "cite_spans": [],
+                "ref_spans": [],
+                "eq_spans": [],
+                "section": "EXTRACTION OF THE PROTOTYPE",
+                "sec_num": "3.2.2."
+            },
+            {
+                "text": "Assisted by category labels, we compute prototypes from high-confidence pixel-level features of the categories in the current image. Initially, we select the top K confident points for each category. Unlike conventional methods (Du et al., 2022) , we exclusively employ features associated with categories present in the current image for prototype computation by utilizing category labels. This approach aids in eliminating prototype interference from irrelevant categories during subsequent feature augmentation. The formula for computing feature prototypes is:",
+                "cite_spans": [
+                    {
+                        "start": 228,
+                        "end": 245,
+                        "text": "(Du et al., 2022)",
+                        "ref_id": "BIBREF8"
+                    }
+                ],
+                "ref_spans": [],
+                "eq_spans": [],
+                "section": "EXTRACTION OF THE PROTOTYPE",
+                "sec_num": "3.2.2."
+            },
+            {
+                "text": "EQUATION",
+                "cite_spans": [],
+                "ref_spans": [],
+                "eq_spans": [
+                    {
+                        "start": 0,
+                        "end": 8,
+                        "text": "EQUATION",
+                        "ref_id": "EQREF",
+                        "raw_str": "c t = topk(p t ), p t \u2208 \u2126 p (1) v t = topk(f t ), f t \u2208 \u2126 f (2) fp t = norm( K i c t,i v t,i K i c t,i )",
+                        "eq_num": "(3)"
+                    }
+                ],
+                "section": "EXTRACTION OF THE PROTOTYPE",
+                "sec_num": "3.2.2."
+            },
+            {
+                "text": "Here, t represents one of all categories. The sets \u2126 p and \u2126 f respectively denote the collections of feature values and prediction values for all categories present in the current image. The feature prototype fp t is the weighted average of feature embedding, normalized accordingly.",
+                "cite_spans": [],
+                "ref_spans": [],
+                "eq_spans": [],
+                "section": "EXTRACTION OF THE PROTOTYPE",
+                "sec_num": "3.2.2."
+            },
+            {
+                "text": "When extracting prototypes solely from each batch, it limits the consideration of diversity within prototypes of the same category. This restriction confines the analysis to the current batch's image features, failing to effectively aid the model in comprehending new features. ",
+                "cite_spans": [],
+                "ref_spans": [],
+                "eq_spans": [],
+                "section": "DEFINITION AND UPDATE OF GLOBAL PROTOTYPES",
+                "sec_num": "3.2.3."
+            },
+            {
+                "text": "EQUATION",
+                "cite_spans": [],
+                "ref_spans": [],
+                "eq_spans": [
+                    {
+                        "start": 0,
+                        "end": 8,
+                        "text": "EQUATION",
+                        "ref_id": "EQREF",
+                        "raw_str": "fp old = selectmin( fp t \u2022 fp i ||fp t || \u2022 ||fp i || ), fp i \u2208 \u2126 fp global (4) fp new = \u03b1 \u2022 fp old + (1 -\u03b1) \u2022 fp t , \u03b1 \u2208 [0, 1]",
+                        "eq_num": "(5"
+                    }
+                ],
+                "section": "DEFINITION AND UPDATE OF GLOBAL PROTOTYPES",
+                "sec_num": "3.2.3."
+            },
+            {
+                "text": "Inspired by the feature prototype method FeatMatch (Kuo et al., 2020) used in semi-supervised learning classification, we have introduced a feature-prototype-based classification approach into scribble-supervised semantic segmentation tasks. In semi-supervised classification tasks, prototypes are derived through clustering. During augmentation, prototypes for each category are involved, aiming to extract valuable information from labeled data and propagate it to unlabeled data. However, for our task, prototypes are extracted from high-confidence regions in the current image features. Our goal is to propagate valuable information from correctly classified pixels to those yet to be classified. Therefore, we believe other category prototypes aren't necessary for this augmentation process.",
+                "cite_spans": [
+                    {
+                        "start": 51,
+                        "end": 69,
+                        "text": "(Kuo et al., 2020)",
+                        "ref_id": "BIBREF15"
+                    }
+                ],
+                "ref_spans": [],
+                "eq_spans": [],
+                "section": "PROTOTYPES",
+                "sec_num": null
+            },
+            {
+                "text": "Feature augmentation based on local prototypes occurs within each batch. Therefore, when augmenting using local prototypes, it is essential to select the prototypes corresponding to the categories of the current features for reinforcement.",
+                "cite_spans": [],
+                "ref_spans": [],
+                "eq_spans": [],
+                "section": "PROTOTYPES",
+                "sec_num": null
+            },
+            {
+                "text": "In the aforementioned extraction phase, prototypes unrelated to categories present in the current image were not extracted, resulting in these category prototypes being zero-valued. To select the prototypes corresponding to categories within the current batch, we initially filter the local prototypes fp by defining fp * = select(fp), thereby removing irrelevant zerovalue prototypes. Subsequently, for each feature f within the current batch and its corresponding prototype fp, we project them into an embedding space, obtaining e f = linear(f) and e f p = linear(fp). Then, we compute their attention weight \u03c9, derived from the matrix multiplication of e f and e f p , normalized using sof tmax. The formula is expressed as: \u03c9 = sof tmax(matmul(e T f , e f p ))",
+                "cite_spans": [],
+                "ref_spans": [],
+                "eq_spans": [],
+                "section": "PROTOTYPES",
+                "sec_num": null
+            },
+            {
+                "text": "Then, weighting e f p using attention weight \u03c9 . Next, concatenating the weighted prototype with image features and subjecting them to a linear layer transformation is performed. This process aids in propagating information from the prototype to the image features, thereby enhancing the features:",
+                "cite_spans": [],
+                "ref_spans": [],
+                "eq_spans": [],
+                "section": "PROTOTYPES",
+                "sec_num": null
+            },
+            {
+                "text": "e * f = ReLu(linear(concat(matmul(\u03c9, e f p ), e f )) (7)",
+                "cite_spans": [],
+                "ref_spans": [],
+                "eq_spans": [],
+                "section": "PROTOTYPES",
+                "sec_num": null
+            },
+            {
+                "text": "Finally, the last feature is obtained by using residual connections between the initial features and the augmented features:",
+                "cite_spans": [],
+                "ref_spans": [],
+                "eq_spans": [],
+                "section": "PROTOTYPES",
+                "sec_num": null
+            },
+            {
+                "text": "EQUATION",
+                "cite_spans": [],
+                "ref_spans": [],
+                "eq_spans": [
+                    {
+                        "start": 0,
+                        "end": 8,
+                        "text": "EQUATION",
+                        "ref_id": "EQREF",
+                        "raw_str": "f aug = ReLu(f + linear(e * f )).",
+                        "eq_num": "(8)"
+                    }
+                ],
+                "section": "PROTOTYPES",
+                "sec_num": null
+            },
+            {
+                "text": "As shown in the Figure 3 , the overall process of feature augmentation based on global prototypes is similar to that based on local prototypes, with the main difference lying in the initial handling of prototypes. However, compared to local prototypes, global prototypes contain n ordinary prototypes for each category. Hence, before augmentation, it is necessary to perform a merge process on the global prototypes to facilitate subsequent computations.",
+                "cite_spans": [],
+                "ref_spans": [
+                    {
+                        "start": 23,
+                        "end": 24,
+                        "text": "3",
+                        "ref_id": "FIGREF2"
+                    }
+                ],
+                "eq_spans": [],
+                "section": "PROTOTYPES",
+                "sec_num": null
+            },
+            {
+                "text": "Considering that our prototypes are extracted from features, the quality of the extracted features might not be assured during the early stages of training. Consequently, relying solely on prototypes for feature augmentation might not yield optimal results. Therefore, we have established a warm-up period during which we refrain from utilizing prototypes for feature augmentation, instead employing basic loss constraints for training. Once this warm-up period concludes, we extract local prototypes from the features. These local prototypes contribute to enhancing the features of the current batch. Meanwhile, the global prototypes might still contain empty values due to ongoing updates. Hence, we have set a condition where the global prototypes do not partake in feature augmentation until they are completely filled. It is only after the global prototypes have been fully updated that we utilize them for augmentation.",
+                "cite_spans": [],
+                "ref_spans": [],
+                "eq_spans": [],
+                "section": "THE SETTING FOR AUGMENTATION",
+                "sec_num": "3.3.3."
+            },
+            {
+                "text": "For the design of the loss function, as shown in Figure 2 , the overall loss function consists of two parts: partial crossentropy loss L pce and consistency loss L con . The consistency loss further includes the consistency loss between the initial predicted values and the predicted values augmented using local prototypes L total , as well as the consistency loss between the initial predicted values and the predicted values augmented using global prototypes L global .",
+                "cite_spans": [],
+                "ref_spans": [
+                    {
+                        "start": 56,
+                        "end": 57,
+                        "text": "2",
+                        "ref_id": null
+                    }
+                ],
+                "eq_spans": [],
+                "section": "Loss Function",
+                "sec_num": "3.4."
+            },
+            {
+                "text": "Partial cross-entropy loss is obtained between the predicted values and the scribble labels, and its expression is as follows (Tang et al., 2018b; Obukhov et al., 2019; Pan et al., 2021; Liang et al., 2022) :",
+                "cite_spans": [
+                    {
+                        "start": 126,
+                        "end": 146,
+                        "text": "(Tang et al., 2018b;",
+                        "ref_id": null
+                    },
+                    {
+                        "start": 147,
+                        "end": 168,
+                        "text": "Obukhov et al., 2019;",
+                        "ref_id": "BIBREF21"
+                    },
+                    {
+                        "start": 169,
+                        "end": 186,
+                        "text": "Pan et al., 2021;",
+                        "ref_id": "BIBREF23"
+                    },
+                    {
+                        "start": 187,
+                        "end": 206,
+                        "text": "Liang et al., 2022)",
+                        "ref_id": "BIBREF17"
+                    }
+                ],
+                "ref_spans": [],
+                "eq_spans": [],
+                "section": "Loss Function",
+                "sec_num": "3.4."
+            },
+            {
+                "text": "EQUATION",
+                "cite_spans": [],
+                "ref_spans": [],
+                "eq_spans": [
+                    {
+                        "start": 0,
+                        "end": 8,
+                        "text": "EQUATION",
+                        "ref_id": "EQREF",
+                        "raw_str": "L pce = - 1 |\u2126 L | i\u2208\u2126 L c\u2208C y c i log(p c i )",
+                        "eq_num": "(9)"
+                    }
+                ],
+                "section": "Loss Function",
+                "sec_num": "3.4."
+            },
+            {
+                "text": "where \u2126 L represents the set of all labeled pixels, C represents all the categories, y c i and p c i represent the ground truth and predicted values of category c at pixel i, respectively.",
+                "cite_spans": [],
+                "ref_spans": [],
+                "eq_spans": [],
+                "section": "Loss Function",
+                "sec_num": "3.4."
+            },
+            {
+                "text": "Consistency loss is employed to constrain the feature prediction values before and after augmentation. We utilize mean squared error (MSE) (Bauer & Kohavi, 1999) as the consistency loss function to restrict the relationship between these two prediction values, expressed as:",
+                "cite_spans": [
+                    {
+                        "start": 139,
+                        "end": 161,
+                        "text": "(Bauer & Kohavi, 1999)",
+                        "ref_id": "BIBREF0"
+                    }
+                ],
+                "ref_spans": [],
+                "eq_spans": [],
+                "section": "Loss Function",
+                "sec_num": "3.4."
+            },
+            {
+                "text": "EQUATION",
+                "cite_spans": [],
+                "ref_spans": [],
+                "eq_spans": [
+                    {
+                        "start": 0,
+                        "end": 8,
+                        "text": "EQUATION",
+                        "ref_id": "EQREF",
+                        "raw_str": "L con = - h\u00d7w i=1 p i log(p aug i )",
+                        "eq_num": "(10)"
+                    }
+                ],
+                "section": "Loss Function",
+                "sec_num": "3.4."
+            },
+            {
+                "text": "Here, h and w represent the height and width of the predicted values, where p i and p aug i denote the initial predicted value and the augmented predicted value at the same position, respectively.",
+                "cite_spans": [],
+                "ref_spans": [],
+                "eq_spans": [],
+                "section": "Loss Function",
+                "sec_num": "3.4."
+            },
+            {
+                "text": "Total loss varies at different stages of training. In the warm-up period, when neither the local prototype nor the global prototype is utilized, the overall loss is represented as: L total = L pce . During the phase when prototypes start being used but the global prototype hasn't been fully updated, only the local prototype contributes to augmentation. Hence, the overall loss at this stage is: L total = L pce + \u03bb l L con-l . Finally, when both the global and local prototypes are engaged in training, the overall loss is defined as: L total = L pce + \u03bb l L con-l + \u03bb g L con-g . Here, \u03bb l and \u03bb g represent the loss weights for L con-l and L con-g respectively.",
+                "cite_spans": [],
+                "ref_spans": [],
+                "eq_spans": [],
+                "section": "Loss Function",
+                "sec_num": "3.4."
+            },
+            {
+                "text": "We use the PASCAL-Scribble Dataset, which was initially introduced by Lin et al. in ScribbleSup (Lin et al., 2016) . The PASCAL-Scribble Dataset is a dataset with scribble annotations applied to the PASCAL VOC 2012 (Everingham et al., 2010) . The PASCAL VOC 2012 dataset consists of 12,031 images with scribble annotations. The training set contains 10,582 images, and the validation set contains 1,449 images. The PASCAL VOC 2012 dataset has 21 categories, including 20 object categories and one background category. Unless otherwise specified, all ablation experiments are conducted on the PASCAL VOC 2012 dataset.",
+                "cite_spans": [
+                    {
+                        "start": 96,
+                        "end": 114,
+                        "text": "(Lin et al., 2016)",
+                        "ref_id": "BIBREF18"
+                    },
+                    {
+                        "start": 215,
+                        "end": 240,
+                        "text": "(Everingham et al., 2010)",
+                        "ref_id": "BIBREF9"
+                    }
+                ],
+                "ref_spans": [],
+                "eq_spans": [],
+                "section": "Dataset and Evaluation Metric",
+                "sec_num": "4.1."
+            },
+            {
+                "text": "The evaluation metric used is the mean Intersection-over-Union (mIoU).",
+                "cite_spans": [],
+                "ref_spans": [],
+                "eq_spans": [],
+                "section": "Dataset and Evaluation Metric",
+                "sec_num": "4.1."
+            },
+            {
+                "text": "Our method consists of five main modules: encoder, decoder, prototype extraction, prototype updating, and feature augmentation. Given the efficient and excellent performance of the vision transformer in semantic segmentation tasks, we adopt the Mix Transformer proposed in Segformer (Xie et al., 2021) , which is specifically optimized for semantic segmentation tasks and achieves superior performance compared to vanilla transformers. The backbone parameters of the model are initialized with ImageNet (Deng et al., 2009) pretrained weights, while the remaining parameters are randomly initialized. We utilize the AdamW optimizer with an initial learning rate of 3 \u00d7 10 -5 . We employ a multi-step scheduler for learning rate decay during iterations, with a decay weight of 0.01. Additionally, the learning rate for other parameters is set to 10 times that of the backbone network. Regarding data preprocessing, all training images undergo random scaling (0.5 to 2), random rotation (-10 to 10 degrees), random flipping, and Gaussian blurring. Finally, the images are cropped to a size of 512\u00d7512. In Equation ( 5), the momentum of prototype updating \u03b1, is set to 0.99, and the number of global prototypes is set to 5. The batch size is set to 16. Our experimental code is based on the PyTorch framework (Paszke et al., 2019) , and all experiments are conducted on an NVIDIA RTX 3090 GPU.",
+                "cite_spans": [
+                    {
+                        "start": 283,
+                        "end": 301,
+                        "text": "(Xie et al., 2021)",
+                        "ref_id": "BIBREF32"
+                    },
+                    {
+                        "start": 503,
+                        "end": 522,
+                        "text": "(Deng et al., 2009)",
+                        "ref_id": "BIBREF7"
+                    },
+                    {
+                        "start": 1305,
+                        "end": 1326,
+                        "text": "(Paszke et al., 2019)",
+                        "ref_id": "BIBREF24"
+                    }
+                ],
+                "ref_spans": [],
+                "eq_spans": [],
+                "section": "Implementation Details",
+                "sec_num": "4.2."
+            },
+            {
+                "text": "As shown in Table 1 , we compare our method with existing approaches and demonstrate significant improvements in PASCAL VOC 2012 val set. To ensure fairness, we chose MiT-B1 as the backbone, which achieved a score of 79.2% on fully supervised data, similar to other methods using ResNet101 (He et al., 2016) as the backbone. MiT-B1 is slightly lower than them. Of course, we can also choose larger MiT series backbones, but this would compromise the fairness of the comparison. Therefore, we will discuss this in detail in Section 4.4.",
+                "cite_spans": [
+                    {
+                        "start": 290,
+                        "end": 307,
+                        "text": "(He et al., 2016)",
+                        "ref_id": "BIBREF11"
+                    }
+                ],
+                "ref_spans": [
+                    {
+                        "start": 18,
+                        "end": 19,
+                        "text": "1",
+                        "ref_id": null
+                    }
+                ],
+                "eq_spans": [],
+                "section": "Comparison with State-of-the-Art Methods",
+                "sec_num": "4.3."
+            },
+            {
+                "text": "As shown in Table 1 , we compare our method with other state-of-the-art approaches. Our method adopts a singlestage training framework, which does not require the use of additional supervised data during the training process and does not use CRF (Kr\u00e4henb\u00fchl & Koltun, 2011) . Scribble-Sup (Lin et al., 2016) introduced scribble labels into the semantic segmentation field for the first time and achieved an mIoU of 63.1%. Methods based on the design principle of regularization loss guide pixel classification by extracting pairwise relationships from low-level image information. They also achieve good results, reaching up to 75.0%. BPG (Wang et al., 2019) and SPML (Ke et al., 2021) use edge detectors to assist semantic segmentation, but this requires additional data. URSS (Pan et al., 2021) and A2GNN (Zhang et al., 2021 ) also achieve good results, surpassing 76% mIoU, but they require multi-stage learning. AGMM (Wu et al., 2023) and CDSP (Zhang et al., 2024) leverage label diffusion methodologies to achieve notable performance. However, it is noteworthy that their respective mIoU values have not exceeded the threshold of 77%. TEL (Liang et al., 2022) is the best method in recent years, proposing a tree energy loss to guide the classification of unlabeled pixels, achieving an mIoU of 77.3%. Compared to the current state-of-the-art method TEL, despite our backbone network, MiT-B1, performing slightly weaker than theirs on the fully supervised dataset, our approach still achieves a 0.6% improvement in mIoU.",
+                "cite_spans": [
+                    {
+                        "start": 246,
+                        "end": 273,
+                        "text": "(Kr\u00e4henb\u00fchl & Koltun, 2011)",
+                        "ref_id": "BIBREF13"
+                    },
+                    {
+                        "start": 289,
+                        "end": 307,
+                        "text": "(Lin et al., 2016)",
+                        "ref_id": "BIBREF18"
+                    },
+                    {
+                        "start": 639,
+                        "end": 658,
+                        "text": "(Wang et al., 2019)",
+                        "ref_id": "BIBREF30"
+                    },
+                    {
+                        "start": 668,
+                        "end": 685,
+                        "text": "(Ke et al., 2021)",
+                        "ref_id": "BIBREF12"
+                    },
+                    {
+                        "start": 778,
+                        "end": 796,
+                        "text": "(Pan et al., 2021)",
+                        "ref_id": "BIBREF23"
+                    },
+                    {
+                        "start": 807,
+                        "end": 826,
+                        "text": "(Zhang et al., 2021",
+                        "ref_id": "BIBREF39"
+                    },
+                    {
+                        "start": 921,
+                        "end": 938,
+                        "text": "(Wu et al., 2023)",
+                        "ref_id": "BIBREF31"
+                    },
+                    {
+                        "start": 948,
+                        "end": 968,
+                        "text": "(Zhang et al., 2024)",
+                        "ref_id": "BIBREF41"
+                    },
+                    {
+                        "start": 1144,
+                        "end": 1164,
+                        "text": "(Liang et al., 2022)",
+                        "ref_id": "BIBREF17"
+                    }
+                ],
+                "ref_spans": [
+                    {
+                        "start": 18,
+                        "end": 19,
+                        "text": "1",
+                        "ref_id": null
+                    }
+                ],
+                "eq_spans": [],
+                "section": "Comparison with State-of-the-Art Methods",
+                "sec_num": "4.3."
+            },
+            {
+                "text": "In this section, we investigate all the operations discussed in Section 3. All training and validation are conducted on the Pascal VOC 2012 dataset.",
+                "cite_spans": [],
+                "ref_spans": [],
+                "eq_spans": [],
+                "section": "Ablation Study and Analysis",
+                "sec_num": "4.4."
+            },
+            {
+                "text": "Effectiveness of each component. First, we investigate the components of our method, which involve the usage of three loss functions. We employ the basic MiT-B1 as the backbone. We designate the use of only partial crossentropy as the baseline for our method, and then conduct ablation studies on the methods with local prototype augmentation and global prototype augmentation. As shown in Figure 2 , our method has three prediction maps, and all three prediction maps can generate results. When using only local prototypes, there are two prediction maps: the basic one and the one augmented with local prototypes. Similarly, when using global prototype augmentation, there are also two prediction maps: the basic one and the one augmented with global prototypes. As shown in Table 2 , when using only local prototype augmentation, our method achieves a 9.4% mIoU improvement compared to the baseline. When using only global prototype augmentation, there is a 9.9% mIoU improvement. When both methods are used together, the best performance is achieved with a 10.4% mIoU improvement. Therefore, we select the simultaneous augmentation of both prototypes as our final method. In Section 3.4, due to the different choices of L pce at different stages, when both augmentation methods are used, we also conduct ablation experiments on the two choices. The results show that the prediction map augmented with global prototype augmentation, guided by partial cross-entropy loss with scribble labels, achieves the best results. Additionally, we can observe that using both augmentation methods can significantly improve the basic prediction map.",
+                "cite_spans": [],
+                "ref_spans": [
+                    {
+                        "start": 397,
+                        "end": 398,
+                        "text": "2",
+                        "ref_id": null
+                    },
+                    {
+                        "start": 782,
+                        "end": 783,
+                        "text": "2",
+                        "ref_id": "TABREF4"
+                    }
+                ],
+                "eq_spans": [],
+                "section": "Ablation Study and Analysis",
+                "sec_num": "4.4."
+            },
+            {
+                "text": "As shown in Figure 4 , we present the visualization results for different composition components. Compared to the baseline results, the results augmented with prototypes show significant improvements, especially in regions of other categories, such as the \"fire hydrant\" in the second image and the green area in the fourth image. Through prototype guidance, the interference from these other categories is weakened or eliminated. There is little difference between using only local prototypes and using only global prototypes, with the global prototypes slightly emphasizing details. Optimal results are achieved when both methods are used, as evidenced by the improvement in the hand region in the first image and the details of the occluded edges in the fourth image. For more detailed information, please refer to the supplementary. Setting of prototype. In our approach, the number of global prototypes represents the number of local prototypes that should be included for each class. To assess the impact of increasing the number of global prototypes on the results, we conducted experiments using only global prototypes for augmentation and not utilizing local prototypes. From Figure 5, it can be observed that as the number of prototypes increases to around 5, the increase in mIoU becomes satu-rated. Therefore, we have set this value as the default in our method.",
+                "cite_spans": [],
+                "ref_spans": [
+                    {
+                        "start": 19,
+                        "end": 20,
+                        "text": "4",
+                        "ref_id": "FIGREF3"
+                    }
+                ],
+                "eq_spans": [],
+                "section": "Ablation Study and Analysis",
+                "sec_num": "4.4."
+            },
+            {
+                "text": "We also conduct tests on the top-k percentage involved in Equations ( 1) and ( 2) for prototype extraction. The fewer pixels involved in the computation indicate the use of more confident pixels for prototype extraction. However, if the percentage is too small, we may lose more useful information. Similarly, to evaluate the impact of varying the value of k on the performance, we conduct experiments using only local prototypes. As shown in Figure 6 , our method performs better when the k percentage is 8%. Impact of backbone. In Section 4.3, for a fair comparison, we only compare our method with the state-of-the-art methods using MIT-B1. Here, we investigated the backbone of our method. We select the backbones commonly used in existing methods, such as DeepLabv2 (Chen et al., 2017) , DeepLabv3+ (Chen et al., 2018) and LTF (Song et al., 2019) based on ResNet101 (He et al., 2016) , as well as Segformer (Xie et al., 2021) based on a larger backbone network that performs better in fully supervised scenarios. As shown in Table 3 , we present the results obtained in both fully supervised and scribble supervised settings using the Pascal VOC 2012 dataset, as well as the parameter counts and floating-point operation (FLOPs) of each model during inference. The table demonstrates that MiT-B1 Segformer achieves comparable performance to the ResNet101-based LTF despite its significantly lower parameter counts and computational complexity. And under the premise of using ResNet101 as backbone, our approach is superior to all current approaches. We observed that our method exhibits superior upper bound performance on the Transformer (77.9%/79.2%) compared to ResNet (78.2%/80.9%). This characteristic, coupled with its exceptional efficiency, constitutes a key factor in our selection of Segformer. When utilizing a model with a similar parameter count, MiT-B3 attains a mIoU score of 79.8%. Additionally, opting for MiT-B5 with the highest parameter count yields a peak mIoU score of 81.5%, significantly surpassing existing methods. However, due to the unfair advantage introduced by the backbone, it is not included in Table 1 .",
+                "cite_spans": [
+                    {
+                        "start": 771,
+                        "end": 790,
+                        "text": "(Chen et al., 2017)",
+                        "ref_id": "BIBREF3"
+                    },
+                    {
+                        "start": 804,
+                        "end": 823,
+                        "text": "(Chen et al., 2018)",
+                        "ref_id": "BIBREF4"
+                    },
+                    {
+                        "start": 832,
+                        "end": 851,
+                        "text": "(Song et al., 2019)",
+                        "ref_id": "BIBREF25"
+                    },
+                    {
+                        "start": 871,
+                        "end": 888,
+                        "text": "(He et al., 2016)",
+                        "ref_id": "BIBREF11"
+                    },
+                    {
+                        "start": 912,
+                        "end": 930,
+                        "text": "(Xie et al., 2021)",
+                        "ref_id": "BIBREF32"
+                    }
+                ],
+                "ref_spans": [
+                    {
+                        "start": 450,
+                        "end": 451,
+                        "text": "6",
+                        "ref_id": "FIGREF5"
+                    },
+                    {
+                        "start": 1036,
+                        "end": 1037,
+                        "text": "3",
+                        "ref_id": "TABREF5"
+                    },
+                    {
+                        "start": 2139,
+                        "end": 2140,
+                        "text": "1",
+                        "ref_id": null
+                    }
+                ],
+                "eq_spans": [],
+                "section": "Ablation Study and Analysis",
+                "sec_num": "4.4."
+            },
+            {
+                "text": "This paper introduces a prototype-based feature augmentation method for scribble supervision. We extract prototypes from the confident portion of the initial results provided by scribble supervision. By utilizing the extracted prototypes, we augment the initial features and employ different prototype strategies tailored to the specific setting of scribble supervision. The method utilizes generated prototypes from correctly classified pixels to guide the classification of misclassified pixels, resulting in improved prediction performance. Experimental results demonstrate that our method achieves state-of-the-art performance. In the future, we plan to apply our method to other tasks to harness its significant potential and application value.",
+                "cite_spans": [],
+                "ref_spans": [],
+                "eq_spans": [],
+                "section": "Conclusion",
+                "sec_num": "5."
+            },
+            {
+                "text": "This paper presents work whose goal is to advance the field of Machine Learning. There are many potential societal consequences of our work, none which we feel must be specifically highlighted here.",
+                "cite_spans": [],
+                "ref_spans": [],
+                "eq_spans": [],
+                "section": "Impact Statement",
+                "sec_num": null
+            },
+            {
+                "text": "A. More Technical Details As shown in Figure 7 , the structure of our encoder and decoder utilizes the Segfomer (Xie et al., 2021) based on MiT-B1, and its efficiency is one of the main reasons why we chose it. We select the features from four levels, which are fused by the MLPLayer, as our feature map F because it can contain information from multiple levels. We use the feature map F and the prediction map P as the basis for prototype extraction. The features augmented through prototype refinement are then passed through a feature augmenter to maintain the same size as F.",
+                "cite_spans": [
+                    {
+                        "start": 112,
+                        "end": 130,
+                        "text": "(Xie et al., 2021)",
+                        "ref_id": "BIBREF32"
+                    }
+                ],
+                "ref_spans": [
+                    {
+                        "start": 45,
+                        "end": 46,
+                        "text": "7",
+                        "ref_id": null
+                    }
+                ],
+                "eq_spans": [],
+                "section": "Impact Statement",
+                "sec_num": null
+            },
+            {
+                "text": "During feature extraction, we extract feature prototypes from the feature values corresponding to the top K values of each category contained in the prediction of the current image. Due to the uncertainty of predictions, it is inevitable to extract prototypes from other misclassified categories. In this case, when using only local prototype augmentation, although the prototypes are extracted from the current predicted category, they only reinforce the probability of misclassification for those misclassified images, leading to worse prediction performance. When using global prototypes, we retrieve global prototypes from the prototype memory bank for augmentation. Global prototypes include prototypes for each category, and if we do not select the prototypes of the correct category contained in the current image, it will also increase the chances of model misjudgment, resulting in counterproductive effects. Therefore, during the training process, we use category labels to filter the prototypes and select out those irrelevant prototypes to better utilize the effects of prototypes. The scribble labels contain category information, so we can easily obtain category labels from the scribble labels. Therefore, these can be achieved quite well during the training process, but they pose challenges during the inference process.",
+                "cite_spans": [],
+                "ref_spans": [],
+                "eq_spans": [],
+                "section": "A.2. More Details of Feature Augmenter and Inference",
+                "sec_num": null
+            },
+            {
+                "text": "As depicted in Table 4 , employing the correct class labels to guide prototype augmentation yields a mIoU score of 80.4%, surpassing even the predictions of MiT-B1 on the fully supervised dataset. However, this approach violates inference rules, as during inference, we can only access images without direct class label information. To address this, our initial strategy involves filtering preliminary prediction maps of unused prototypes by setting a threshold, because these pixels with small quantities are often misclassified. Experimenting with various thresholds, as shown in Table 4 , the optimal result occurs with a threshold of 500, resulting in a mIoU of 75.7%. Nevertheless, this is lower than the 76.8% mIoU achieved without prototype augmentation. Consequently, we incorporate the classification results of established multi-label classification methods, Q2L (Liu et al., 2021) and MCAR (Gao & Zhou, 2021) , attaining respective mAP scores of 96.6% and 94.3% on the Pascal VOC 2012 val dataset. Utilizing their classification results, we achieve mIoU scores of 77.9% and 76.2%, respectively. This underscores the influence of superior classification results on enhancing prototype augmentation.",
+                "cite_spans": [
+                    {
+                        "start": 873,
+                        "end": 891,
+                        "text": "(Liu et al., 2021)",
+                        "ref_id": "BIBREF19"
+                    },
+                    {
+                        "start": 901,
+                        "end": 919,
+                        "text": "(Gao & Zhou, 2021)",
+                        "ref_id": "BIBREF10"
+                    }
+                ],
+                "ref_spans": [
+                    {
+                        "start": 21,
+                        "end": 22,
+                        "text": "4",
+                        "ref_id": "TABREF7"
+                    },
+                    {
+                        "start": 588,
+                        "end": 589,
+                        "text": "4",
+                        "ref_id": "TABREF7"
+                    }
+                ],
+                "eq_spans": [],
+                "section": "A.2. More Details of Feature Augmenter and Inference",
+                "sec_num": null
+            },
+            {
+                "text": "Conversely, incorrect classification results can misguide the model's understanding of semantic information by employing prototypes from incorrect categories, resulting in inferior performance. Given the potential for improving segmentation results through category labels, our future work will focus on refining the guidance of the prototype and incorporating this approach into multimodal tasks. The form of Scribble. Since doodling can vary greatly in style from person to person, it is inherently subjective. Therefore, it becomes imperative to conduct robustness tests on the model with different degrees of drop and shrink ratios. In Figure 8 , we present the results of our method's ablation experiments using scribble labels with varying degrees of drop and shrink.",
+                "cite_spans": [],
+                "ref_spans": [
+                    {
+                        "start": 647,
+                        "end": 648,
+                        "text": "8",
+                        "ref_id": "FIGREF6"
+                    }
+                ],
+                "eq_spans": [],
+                "section": "A.2. More Details of Feature Augmenter and Inference",
+                "sec_num": null
+            },
+            {
+                "text": "The results clearly demonstrate that, as the drop rate and shrink ratio increase, the model's performance declines. The method based on global prototypes exhibits relatively greater stability compared to the method employing local prototypes. However, overall, the model performs well even when the scribble annotations are reduced to mere dots.",
+                "cite_spans": [],
+                "ref_spans": [],
+                "eq_spans": [],
+                "section": "A.2. More Details of Feature Augmenter and Inference",
+                "sec_num": null
+            },
+            {
+                "text": "Weight of the loss. In Table 5 , we conducted an ablation study on the weighting of loss functions. We adjusted the weight ratios between different loss functions. Through this study, we determined the optimal weighting configuration for the loss functions as \u03bb l = 0.01, \u03bb g = 0.01. ",
+                "cite_spans": [],
+                "ref_spans": [
+                    {
+                        "start": 29,
+                        "end": 30,
+                        "text": "5",
+                        "ref_id": "TABREF8"
+                    }
+                ],
+                "eq_spans": [],
+                "section": "A.2. More Details of Feature Augmenter and Inference",
+                "sec_num": null
+            },
+            {
+                "text": "Figure 9 illustrates failed cases, offering a more intuitive understanding of the impact of prototype augmentation. To deepen the analysis, we present four types of outcomes: results without prototype augmentation, inference based on category labels, and inference utilizing two classification results. In the upper section of Figure 9 , without prototype augmentation, the model identifies various semantic categories, including 'person', 'chair', 'sofa', 'table', 'plant', 'boat', among others, with many misclassifications. Given that the category labels only specify 'person', 'sofa', and 'bottle', they direct the model to diminish the representation of other categories in the initial prediction, especially those on the prediction periphery like 'table' and 'plant', which vanish after augmentation. Conversely, the category 'bottle', absent in the initial results, emerges after being guided by the prototype. Notably, although the category label does not contain 'chair', a small portion is retained after prototype augmentation. In the Q2L (Liu et al., 2021) and MCAR (Gao & Zhou, 2021) classification results, 'person', 'chair', 'sofa', and 'person', 'chair', 'sofa', 'bottle' are respectively identified. The segmentation results also align with the classification results, weakening the performance of other categories. In the lower section of Figure 9 , the results without prototype augmentation include three categories: 'cat', 'dog', and a minimal representation of 'sofa'. Both category labels and Q2L classification include 'sofa', leading to a significant increase in the sofa's representation after prototype augmentation. However, as MCAR's classification does not involve 'sofa', the remaining small representation of 'sofa' disappears after prototype augmentation. Overall, the prototype augmented the model's understanding and inference capabilities of complex semantics by guiding the identification of edge-class categories using category labels to refine initial results.",
+                "cite_spans": [
+                    {
+                        "start": 1050,
+                        "end": 1068,
+                        "text": "(Liu et al., 2021)",
+                        "ref_id": "BIBREF19"
+                    },
+                    {
+                        "start": 1078,
+                        "end": 1096,
+                        "text": "(Gao & Zhou, 2021)",
+                        "ref_id": "BIBREF10"
+                    }
+                ],
+                "ref_spans": [
+                    {
+                        "start": 7,
+                        "end": 8,
+                        "text": "9",
+                        "ref_id": "FIGREF7"
+                    },
+                    {
+                        "start": 334,
+                        "end": 335,
+                        "text": "9",
+                        "ref_id": "FIGREF7"
+                    },
+                    {
+                        "start": 1364,
+                        "end": 1365,
+                        "text": "9",
+                        "ref_id": "FIGREF7"
+                    }
+                ],
+                "eq_spans": [],
+                "section": "B.2. Failure Cases and Analysis",
+                "sec_num": null
+            },
+            {
+                "text": "As shown in Table 6 , we also present the data comparison of our method with other methods on each category of Pascal VOC 2012 val set. Our approach has yielded the best results in most categories. In Figure 10 , we present the visualization results of our method, along with the baseline and the SOTA methods. From the images, it can be observed that the SOTA method is able to identify certain regions. However, the identified regions are relatively small. This is where the advantage of our method comes into play. With the guidance of the prototype, our method can guide the segmentation of other pixels, resulting in superior segmentation results in the boundary regions. For instance, in the first image, the ears of the cow; in the second image, the 'chair' region; in the third image, the 'bottle' region; and in the fourth image, the 'sofa' region. These areas effectively demonstrate the guiding role of the prototype, as they direct the classification of other pixels and augment the classification performance in the boundary regions.",
+                "cite_spans": [],
+                "ref_spans": [
+                    {
+                        "start": 18,
+                        "end": 19,
+                        "text": "6",
+                        "ref_id": "TABREF9"
+                    },
+                    {
+                        "start": 208,
+                        "end": 210,
+                        "text": "10",
+                        "ref_id": "FIGREF1"
+                    }
+                ],
+                "eq_spans": [],
+                "section": "B.3. More Quantitative Results",
+                "sec_num": null
+            },
+            {
+                "text": "We have provided more visualization results of different composition components in Figure 11 . ",
+                "cite_spans": [],
+                "ref_spans": [
+                    {
+                        "start": 90,
+                        "end": 92,
+                        "text": "11",
+                        "ref_id": "FIGREF1"
+                    }
+                ],
+                "eq_spans": [],
+                "section": "B.3. More Quantitative Results",
+                "sec_num": null
+            }
+        ],
+        "back_matter": [
+            {
+                "text": "This work is funded by the National Natural Science Foundation of China under Grant No.62272145 and No.U21B2016.",
+                "cite_spans": [],
+                "ref_spans": [],
+                "eq_spans": [],
+                "section": "Acknowledgements",
+                "sec_num": null
+            },
+            {
+                "text": " (Tang et al., 2018b) (2) ECCV'18 Scribble --\u221a 75.0 GridCRF Loss (Marin et al., 2019) (2) ICCV'19 Scribble ---72.8 GatedCRF (Obukhov et al., 2019) (3) NeurIPS'19 Scribble \u221a --75.5 BPG (Wang et al., 2019) (2) IJCAI'19 Scribble \u221a \u221a -76.0 SPML (Ke et al., 2021) (2) ICLR'21 Scribble \u221a \u221a \u221a 76.1 URSS (Pan et al., 2021) (2) ICCV'21 Scribble --\u221a 76.1 PSI (Xu et al., 2021) (3) ICCV'21 Scribble \u221a --74.9 Seminar (Chen et al., 2021) ( ",
+                "cite_spans": [
+                    {
+                        "start": 1,
+                        "end": 21,
+                        "text": "(Tang et al., 2018b)",
+                        "ref_id": null
+                    },
+                    {
+                        "start": 65,
+                        "end": 85,
+                        "text": "(Marin et al., 2019)",
+                        "ref_id": "BIBREF20"
+                    },
+                    {
+                        "start": 124,
+                        "end": 146,
+                        "text": "(Obukhov et al., 2019)",
+                        "ref_id": "BIBREF21"
+                    },
+                    {
+                        "start": 184,
+                        "end": 203,
+                        "text": "(Wang et al., 2019)",
+                        "ref_id": "BIBREF30"
+                    },
+                    {
+                        "start": 241,
+                        "end": 258,
+                        "text": "(Ke et al., 2021)",
+                        "ref_id": "BIBREF12"
+                    },
+                    {
+                        "start": 296,
+                        "end": 314,
+                        "text": "(Pan et al., 2021)",
+                        "ref_id": "BIBREF23"
+                    },
+                    {
+                        "start": 349,
+                        "end": 366,
+                        "text": "(Xu et al., 2021)",
+                        "ref_id": "BIBREF34"
+                    },
+                    {
+                        "start": 405,
+                        "end": 424,
+                        "text": "(Chen et al., 2021)",
+                        "ref_id": "BIBREF2"
+                    }
+                ],
+                "ref_spans": [],
+                "eq_spans": [],
+                "section": "annex",
+                "sec_num": null
+            }
+        ],
+        "bib_entries": {
+            "BIBREF0": {
+                "ref_id": "b0",
+                "title": "An empirical comparison of voting classification algorithms: Bagging, boosting, and variants",
+                "authors": [
+                    {
+                        "first": "E",
+                        "middle": [],
+                        "last": "Bauer",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "R",
+                        "middle": [],
+                        "last": "Kohavi",
+                        "suffix": ""
+                    }
+                ],
+                "year": 1999,
+                "venue": "Machine learning",
+                "volume": "36",
+                "issue": "",
+                "pages": "105--139",
+                "other_ids": {},
+                "num": null,
+                "urls": [],
+                "raw_text": "Bauer, E. and Kohavi, R. An empirical comparison of voting classification algorithms: Bagging, boosting, and variants. Machine learning, 36:105-139, 1999.",
+                "links": null
+            },
+            "BIBREF1": {
+                "ref_id": "b1",
+                "title": "What's the point: Semantic segmentation with point supervision",
+                "authors": [
+                    {
+                        "first": "A",
+                        "middle": [],
+                        "last": "Bearman",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "O",
+                        "middle": [],
+                        "last": "Russakovsky",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "V",
+                        "middle": [],
+                        "last": "Ferrari",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "L",
+                        "middle": [],
+                        "last": "Fei-Fei",
+                        "suffix": ""
+                    }
+                ],
+                "year": 2016,
+                "venue": "European conference on computer vision",
+                "volume": "",
+                "issue": "",
+                "pages": "549--565",
+                "other_ids": {},
+                "num": null,
+                "urls": [],
+                "raw_text": "Bearman, A., Russakovsky, O., Ferrari, V., and Fei-Fei, L. What's the point: Semantic segmentation with point supervision. In European conference on computer vision, pp. 549-565. Springer, 2016.",
+                "links": null
+            },
+            "BIBREF2": {
+                "ref_id": "b2",
+                "title": "Seminar learning for click-level weakly supervised semantic segmentation",
+                "authors": [
+                    {
+                        "first": "H",
+                        "middle": [],
+                        "last": "Chen",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "J",
+                        "middle": [],
+                        "last": "Wang",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "H",
+                        "middle": [
+                            "C"
+                        ],
+                        "last": "Chen",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "X",
+                        "middle": [],
+                        "last": "Zhen",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "F",
+                        "middle": [],
+                        "last": "Zheng",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "R",
+                        "middle": [],
+                        "last": "Ji",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "L",
+                        "middle": [],
+                        "last": "Shao",
+                        "suffix": ""
+                    }
+                ],
+                "year": 2021,
+                "venue": "Proceedings of the IEEE/CVF International Conference on Computer Vision",
+                "volume": "",
+                "issue": "",
+                "pages": "6920--6929",
+                "other_ids": {},
+                "num": null,
+                "urls": [],
+                "raw_text": "Chen, H., Wang, J., Chen, H. C., Zhen, X., Zheng, F., Ji, R., and Shao, L. Seminar learning for click-level weakly supervised semantic segmentation. In Proceedings of the IEEE/CVF International Conference on Computer Vision, pp. 6920-6929, 2021.",
+                "links": null
+            },
+            "BIBREF3": {
+                "ref_id": "b3",
+                "title": "Semantic image segmentation with deep convolutional nets, atrous convolution, and fully connected crfs",
+                "authors": [
+                    {
+                        "first": "L.-C",
+                        "middle": [],
+                        "last": "Chen",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "G",
+                        "middle": [],
+                        "last": "Papandreou",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "I",
+                        "middle": [],
+                        "last": "Kokkinos",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "K",
+                        "middle": [],
+                        "last": "Murphy",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "A",
+                        "middle": [
+                            "L"
+                        ],
+                        "last": "Yuille",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "",
+                        "middle": [],
+                        "last": "Deeplab",
+                        "suffix": ""
+                    }
+                ],
+                "year": 2017,
+                "venue": "IEEE transactions on pattern analysis and machine intelligence",
+                "volume": "40",
+                "issue": "4",
+                "pages": "834--848",
+                "other_ids": {},
+                "num": null,
+                "urls": [],
+                "raw_text": "Chen, L.-C., Papandreou, G., Kokkinos, I., Murphy, K., and Yuille, A. L. Deeplab: Semantic image segmentation with deep convolutional nets, atrous convolution, and fully connected crfs. IEEE transactions on pattern analysis and machine intelligence, 40(4):834-848, 2017.",
+                "links": null
+            },
+            "BIBREF4": {
+                "ref_id": "b4",
+                "title": "Encoder-decoder with atrous separable convolution for semantic image segmentation",
+                "authors": [
+                    {
+                        "first": "L.-C",
+                        "middle": [],
+                        "last": "Chen",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "Y",
+                        "middle": [],
+                        "last": "Zhu",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "G",
+                        "middle": [],
+                        "last": "Papandreou",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "F",
+                        "middle": [],
+                        "last": "Schroff",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "H",
+                        "middle": [],
+                        "last": "Adam",
+                        "suffix": ""
+                    }
+                ],
+                "year": 2018,
+                "venue": "Proceedings of the European conference on computer vision (ECCV)",
+                "volume": "",
+                "issue": "",
+                "pages": "801--818",
+                "other_ids": {},
+                "num": null,
+                "urls": [],
+                "raw_text": "Chen, L.-C., Zhu, Y., Papandreou, G., Schroff, F., and Adam, H. Encoder-decoder with atrous separable convolution for semantic image segmentation. In Proceedings of the European conference on computer vision (ECCV), pp. 801-818, 2018.",
+                "links": null
+            },
+            "BIBREF5": {
+                "ref_id": "b5",
+                "title": "Self-supervised image-specific prototype exploration for weakly supervised semantic segmentation",
+                "authors": [
+                    {
+                        "first": "Q",
+                        "middle": [],
+                        "last": "Chen",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "L",
+                        "middle": [],
+                        "last": "Yang",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "J.-H",
+                        "middle": [],
+                        "last": "Lai",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "X",
+                        "middle": [],
+                        "last": "Xie",
+                        "suffix": ""
+                    }
+                ],
+                "year": 2022,
+                "venue": "Proceedings of the IEEE/CVF conference on computer vision and pattern recognition",
+                "volume": "",
+                "issue": "",
+                "pages": "4288--4298",
+                "other_ids": {},
+                "num": null,
+                "urls": [],
+                "raw_text": "Chen, Q., Yang, L., Lai, J.-H., and Xie, X. Self-supervised image-specific prototype exploration for weakly super- vised semantic segmentation. In Proceedings of the IEEE/CVF conference on computer vision and pattern recognition, pp. 4288-4298, 2022.",
+                "links": null
+            },
+            "BIBREF6": {
+                "ref_id": "b6",
+                "title": "Masked-attention mask transformer for universal image segmentation",
+                "authors": [
+                    {
+                        "first": "B",
+                        "middle": [],
+                        "last": "Cheng",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "I",
+                        "middle": [],
+                        "last": "Misra",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "A",
+                        "middle": [
+                            "G"
+                        ],
+                        "last": "Schwing",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "A",
+                        "middle": [],
+                        "last": "Kirillov",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "R",
+                        "middle": [],
+                        "last": "Girdhar",
+                        "suffix": ""
+                    }
+                ],
+                "year": 2022,
+                "venue": "Proceedings of the IEEE/CVF conference on computer vision and pattern recognition",
+                "volume": "",
+                "issue": "",
+                "pages": "1290--1299",
+                "other_ids": {},
+                "num": null,
+                "urls": [],
+                "raw_text": "Cheng, B., Misra, I., Schwing, A. G., Kirillov, A., and Gird- har, R. Masked-attention mask transformer for universal image segmentation. In Proceedings of the IEEE/CVF conference on computer vision and pattern recognition, pp. 1290-1299, 2022.",
+                "links": null
+            },
+            "BIBREF7": {
+                "ref_id": "b7",
+                "title": "Imagenet: A large-scale hierarchical image database",
+                "authors": [
+                    {
+                        "first": "J",
+                        "middle": [],
+                        "last": "Deng",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "W",
+                        "middle": [],
+                        "last": "Dong",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "R",
+                        "middle": [],
+                        "last": "Socher",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "L.-J",
+                        "middle": [],
+                        "last": "Li",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "K",
+                        "middle": [],
+                        "last": "Li",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "L",
+                        "middle": [],
+                        "last": "Fei-Fei",
+                        "suffix": ""
+                    }
+                ],
+                "year": 2009,
+                "venue": "2009 IEEE conference on computer vision and pattern recognition",
+                "volume": "",
+                "issue": "",
+                "pages": "248--255",
+                "other_ids": {},
+                "num": null,
+                "urls": [],
+                "raw_text": "Deng, J., Dong, W., Socher, R., Li, L.-J., Li, K., and Fei-Fei, L. Imagenet: A large-scale hierarchical image database. In 2009 IEEE conference on computer vision and pattern recognition, pp. 248-255. Ieee, 2009.",
+                "links": null
+            },
+            "BIBREF8": {
+                "ref_id": "b8",
+                "title": "Weakly supervised semantic segmentation by pixel-to-prototype contrast",
+                "authors": [
+                    {
+                        "first": "Y",
+                        "middle": [],
+                        "last": "Du",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "Z",
+                        "middle": [],
+                        "last": "Fu",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "Q",
+                        "middle": [],
+                        "last": "Liu",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "Y",
+                        "middle": [],
+                        "last": "Wang",
+                        "suffix": ""
+                    }
+                ],
+                "year": 2022,
+                "venue": "Proceedings of the IEEE/CVF Conference on Computer Vision and Pattern Recognition",
+                "volume": "",
+                "issue": "",
+                "pages": "4320--4329",
+                "other_ids": {},
+                "num": null,
+                "urls": [],
+                "raw_text": "Du, Y., Fu, Z., Liu, Q., and Wang, Y. Weakly supervised semantic segmentation by pixel-to-prototype contrast. In Proceedings of the IEEE/CVF Conference on Computer Vision and Pattern Recognition, pp. 4320-4329, 2022.",
+                "links": null
+            },
+            "BIBREF9": {
+                "ref_id": "b9",
+                "title": "The pascal visual object classes (voc) challenge",
+                "authors": [
+                    {
+                        "first": "M",
+                        "middle": [],
+                        "last": "Everingham",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "L",
+                        "middle": [],
+                        "last": "Van Gool",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "C",
+                        "middle": [
+                            "K"
+                        ],
+                        "last": "Williams",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "J",
+                        "middle": [],
+                        "last": "Winn",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "A",
+                        "middle": [],
+                        "last": "Zisserman",
+                        "suffix": ""
+                    }
+                ],
+                "year": 2010,
+                "venue": "International journal of computer vision",
+                "volume": "88",
+                "issue": "",
+                "pages": "303--338",
+                "other_ids": {},
+                "num": null,
+                "urls": [],
+                "raw_text": "Everingham, M., Van Gool, L., Williams, C. K., Winn, J., and Zisserman, A. The pascal visual object classes (voc) challenge. International journal of computer vision, 88: 303-338, 2010.",
+                "links": null
+            },
+            "BIBREF10": {
+                "ref_id": "b10",
+                "title": "Learning to discover multiclass attentional regions for multi-label image recognition",
+                "authors": [
+                    {
+                        "first": "B.-B",
+                        "middle": [],
+                        "last": "Gao",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "H.-Y",
+                        "middle": [],
+                        "last": "Zhou",
+                        "suffix": ""
+                    }
+                ],
+                "year": 2021,
+                "venue": "IEEE Transactions on Image Processing",
+                "volume": "30",
+                "issue": "",
+                "pages": "5920--5932",
+                "other_ids": {},
+                "num": null,
+                "urls": [],
+                "raw_text": "Gao, B.-B. and Zhou, H.-Y. Learning to discover multi- class attentional regions for multi-label image recognition. IEEE Transactions on Image Processing, 30:5920-5932, 2021.",
+                "links": null
+            },
+            "BIBREF11": {
+                "ref_id": "b11",
+                "title": "Deep residual learning for image recognition",
+                "authors": [
+                    {
+                        "first": "K",
+                        "middle": [],
+                        "last": "He",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "X",
+                        "middle": [],
+                        "last": "Zhang",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "S",
+                        "middle": [],
+                        "last": "Ren",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "J",
+                        "middle": [],
+                        "last": "Sun",
+                        "suffix": ""
+                    }
+                ],
+                "year": 2016,
+                "venue": "Proceedings of the IEEE conference on computer vision and pattern recognition",
+                "volume": "",
+                "issue": "",
+                "pages": "770--778",
+                "other_ids": {},
+                "num": null,
+                "urls": [],
+                "raw_text": "He, K., Zhang, X., Ren, S., and Sun, J. Deep residual learn- ing for image recognition. In Proceedings of the IEEE conference on computer vision and pattern recognition, pp. 770-778, 2016.",
+                "links": null
+            },
+            "BIBREF12": {
+                "ref_id": "b12",
+                "title": "Universal weakly supervised segmentation by pixel-to-segment contrastive learning",
+                "authors": [
+                    {
+                        "first": "T.-W",
+                        "middle": [],
+                        "last": "Ke",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "J.-J",
+                        "middle": [],
+                        "last": "Hwang",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "S",
+                        "middle": [
+                            "X"
+                        ],
+                        "last": "Yu",
+                        "suffix": ""
+                    }
+                ],
+                "year": 2021,
+                "venue": "",
+                "volume": "",
+                "issue": "",
+                "pages": "",
+                "other_ids": {
+                    "arXiv": [
+                        "arXiv:2105.00957"
+                    ]
+                },
+                "num": null,
+                "urls": [],
+                "raw_text": "Ke, T.-W., Hwang, J.-J., and Yu, S. X. Universal weakly supervised segmentation by pixel-to-segment contrastive learning. arXiv preprint arXiv:2105.00957, 2021.",
+                "links": null
+            },
+            "BIBREF13": {
+                "ref_id": "b13",
+                "title": "Efficient inference in fully connected crfs with gaussian edge potentials",
+                "authors": [
+                    {
+                        "first": "P",
+                        "middle": [],
+                        "last": "Kr\u00e4henb\u00fchl",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "V",
+                        "middle": [],
+                        "last": "Koltun",
+                        "suffix": ""
+                    }
+                ],
+                "year": 2011,
+                "venue": "Advances in neural information processing systems",
+                "volume": "24",
+                "issue": "",
+                "pages": "",
+                "other_ids": {},
+                "num": null,
+                "urls": [],
+                "raw_text": "Kr\u00e4henb\u00fchl, P. and Koltun, V. Efficient inference in fully connected crfs with gaussian edge potentials. Advances in neural information processing systems, 24, 2011.",
+                "links": null
+            },
+            "BIBREF14": {
+                "ref_id": "b14",
+                "title": "Box2seg: Attention weighted loss and discriminative feature learning for weakly supervised segmentation",
+                "authors": [
+                    {
+                        "first": "V",
+                        "middle": [],
+                        "last": "Kulharia",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "S",
+                        "middle": [],
+                        "last": "Chandra",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "A",
+                        "middle": [],
+                        "last": "Agrawal",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "P",
+                        "middle": [],
+                        "last": "Torr",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "A",
+                        "middle": [],
+                        "last": "Tyagi",
+                        "suffix": ""
+                    }
+                ],
+                "year": 2020,
+                "venue": "European Conference on Computer Vision",
+                "volume": "",
+                "issue": "",
+                "pages": "290--308",
+                "other_ids": {},
+                "num": null,
+                "urls": [],
+                "raw_text": "Kulharia, V., Chandra, S., Agrawal, A., Torr, P., and Tyagi, A. Box2seg: Attention weighted loss and discriminative feature learning for weakly supervised segmentation. In European Conference on Computer Vision, pp. 290-308. Springer, 2020.",
+                "links": null
+            },
+            "BIBREF15": {
+                "ref_id": "b15",
+                "title": "Featmatch: Feature-based augmentation for semi-supervised learning",
+                "authors": [
+                    {
+                        "first": "C.-W",
+                        "middle": [],
+                        "last": "Kuo",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "C.-Y",
+                        "middle": [],
+                        "last": "Ma",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "J.-B",
+                        "middle": [],
+                        "last": "Huang",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "Z",
+                        "middle": [],
+                        "last": "Kira",
+                        "suffix": ""
+                    }
+                ],
+                "year": 2020,
+                "venue": "Computer Vision-ECCV 2020: 16th European Conference",
+                "volume": "",
+                "issue": "",
+                "pages": "479--495",
+                "other_ids": {},
+                "num": null,
+                "urls": [],
+                "raw_text": "Kuo, C.-W., Ma, C.-Y., Huang, J.-B., and Kira, Z. Feat- match: Feature-based augmentation for semi-supervised learning. In Computer Vision-ECCV 2020: 16th Eu- ropean Conference, Glasgow, UK, August 23-28, 2020, Proceedings, Part XVIII 16, pp. 479-495. Springer, 2020.",
+                "links": null
+            },
+            "BIBREF16": {
+                "ref_id": "b16",
+                "title": "Weakly supervised segmentation of small buildings with point labels",
+                "authors": [
+                    {
+                        "first": "J.-H",
+                        "middle": [],
+                        "last": "Lee",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "C",
+                        "middle": [],
+                        "last": "Kim",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "S",
+                        "middle": [],
+                        "last": "Sull",
+                        "suffix": ""
+                    }
+                ],
+                "year": 2021,
+                "venue": "Proceedings of the IEEE/CVF International Conference on Computer Vision",
+                "volume": "",
+                "issue": "",
+                "pages": "7406--7415",
+                "other_ids": {},
+                "num": null,
+                "urls": [],
+                "raw_text": "Lee, J.-H., Kim, C., and Sull, S. Weakly supervised segmen- tation of small buildings with point labels. In Proceedings of the IEEE/CVF International Conference on Computer Vision, pp. 7406-7415, 2021.",
+                "links": null
+            },
+            "BIBREF17": {
+                "ref_id": "b17",
+                "title": "Tree energy loss: Towards sparsely annotated semantic segmentation",
+                "authors": [
+                    {
+                        "first": "Z",
+                        "middle": [],
+                        "last": "Liang",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "T",
+                        "middle": [],
+                        "last": "Wang",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "X",
+                        "middle": [],
+                        "last": "Zhang",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "J",
+                        "middle": [],
+                        "last": "Sun",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "J",
+                        "middle": [],
+                        "last": "Shen",
+                        "suffix": ""
+                    }
+                ],
+                "year": 2022,
+                "venue": "Proceedings of the IEEE/CVF Conference on Computer Vision and Pattern Recognition",
+                "volume": "",
+                "issue": "",
+                "pages": "16907--16916",
+                "other_ids": {},
+                "num": null,
+                "urls": [],
+                "raw_text": "Liang, Z., Wang, T., Zhang, X., Sun, J., and Shen, J. Tree energy loss: Towards sparsely annotated semantic seg- mentation. In Proceedings of the IEEE/CVF Conference on Computer Vision and Pattern Recognition, pp. 16907- 16916, 2022.",
+                "links": null
+            },
+            "BIBREF18": {
+                "ref_id": "b18",
+                "title": "Scribble-supervised convolutional networks for semantic segmentation",
+                "authors": [
+                    {
+                        "first": "D",
+                        "middle": [],
+                        "last": "Lin",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "J",
+                        "middle": [],
+                        "last": "Dai",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "J",
+                        "middle": [],
+                        "last": "Jia",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "K",
+                        "middle": [],
+                        "last": "He",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "J",
+                        "middle": [],
+                        "last": "Sun",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "",
+                        "middle": [],
+                        "last": "Scribblesup",
+                        "suffix": ""
+                    }
+                ],
+                "year": 2016,
+                "venue": "Proceedings of the IEEE conference on computer vision and pattern recognition",
+                "volume": "",
+                "issue": "",
+                "pages": "3159--3167",
+                "other_ids": {},
+                "num": null,
+                "urls": [],
+                "raw_text": "Lin, D., Dai, J., Jia, J., He, K., and Sun, J. Scribblesup: Scribble-supervised convolutional networks for semantic segmentation. In Proceedings of the IEEE conference on computer vision and pattern recognition, pp. 3159-3167, 2016.",
+                "links": null
+            },
+            "BIBREF19": {
+                "ref_id": "b19",
+                "title": "Query2label: A simple transformer way to multi-label classification",
+                "authors": [
+                    {
+                        "first": "S",
+                        "middle": [],
+                        "last": "Liu",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "L",
+                        "middle": [],
+                        "last": "Zhang",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "X",
+                        "middle": [],
+                        "last": "Yang",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "H",
+                        "middle": [],
+                        "last": "Su",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "J",
+                        "middle": [],
+                        "last": "Zhu",
+                        "suffix": ""
+                    }
+                ],
+                "year": 2021,
+                "venue": "",
+                "volume": "",
+                "issue": "",
+                "pages": "",
+                "other_ids": {
+                    "arXiv": [
+                        "arXiv:2107.10834"
+                    ]
+                },
+                "num": null,
+                "urls": [],
+                "raw_text": "Liu, S., Zhang, L., Yang, X., Su, H., and Zhu, J. Query2label: A simple transformer way to multi-label classification. arXiv preprint arXiv:2107.10834, 2021.",
+                "links": null
+            },
+            "BIBREF20": {
+                "ref_id": "b20",
+                "title": "Beyond gradient descent for regularized segmentation losses",
+                "authors": [
+                    {
+                        "first": "D",
+                        "middle": [],
+                        "last": "Marin",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "M",
+                        "middle": [],
+                        "last": "Tang",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "I",
+                        "middle": [
+                            "B"
+                        ],
+                        "last": "Ayed",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "Y",
+                        "middle": [],
+                        "last": "Boykov",
+                        "suffix": ""
+                    }
+                ],
+                "year": 2019,
+                "venue": "Computer Vision and Pattern Recognition",
+                "volume": "",
+                "issue": "",
+                "pages": "",
+                "other_ids": {},
+                "num": null,
+                "urls": [],
+                "raw_text": "Marin, D., Tang, M., Ayed, I. B., and Boykov, Y. Beyond gradient descent for regularized segmentation losses. In Computer Vision and Pattern Recognition, 2019.",
+                "links": null
+            },
+            "BIBREF21": {
+                "ref_id": "b21",
+                "title": "Gated crf loss for weakly supervised semantic image segmentation",
+                "authors": [
+                    {
+                        "first": "A",
+                        "middle": [],
+                        "last": "Obukhov",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "S",
+                        "middle": [],
+                        "last": "Georgoulis",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "D",
+                        "middle": [],
+                        "last": "Dai",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "L",
+                        "middle": [],
+                        "last": "Van Gool",
+                        "suffix": ""
+                    }
+                ],
+                "year": 2019,
+                "venue": "",
+                "volume": "",
+                "issue": "",
+                "pages": "",
+                "other_ids": {
+                    "arXiv": [
+                        "arXiv:1906.04651"
+                    ]
+                },
+                "num": null,
+                "urls": [],
+                "raw_text": "Obukhov, A., Georgoulis, S., Dai, D., and Van Gool, L. Gated crf loss for weakly supervised semantic image segmentation. arXiv preprint arXiv:1906.04651, 2019.",
+                "links": null
+            },
+            "BIBREF22": {
+                "ref_id": "b22",
+                "title": "Background-aware pooling and noise-aware loss for weakly-supervised semantic segmentation",
+                "authors": [
+                    {
+                        "first": "Y",
+                        "middle": [],
+                        "last": "Oh",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "B",
+                        "middle": [],
+                        "last": "Kim",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "B",
+                        "middle": [],
+                        "last": "Ham",
+                        "suffix": ""
+                    }
+                ],
+                "year": 2021,
+                "venue": "Proceedings of the IEEE/CVF conference on computer vision and pattern recognition",
+                "volume": "",
+                "issue": "",
+                "pages": "6913--6922",
+                "other_ids": {},
+                "num": null,
+                "urls": [],
+                "raw_text": "Oh, Y., Kim, B., and Ham, B. Background-aware pooling and noise-aware loss for weakly-supervised semantic seg- mentation. In Proceedings of the IEEE/CVF conference on computer vision and pattern recognition, pp. 6913- 6922, 2021.",
+                "links": null
+            },
+            "BIBREF23": {
+                "ref_id": "b23",
+                "title": "Scribble-supervised semantic segmentation by uncertainty reduction on neural representation and selfsupervision on neural eigenspace",
+                "authors": [
+                    {
+                        "first": "Z",
+                        "middle": [],
+                        "last": "Pan",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "P",
+                        "middle": [],
+                        "last": "Jiang",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "Y",
+                        "middle": [],
+                        "last": "Wang",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "C",
+                        "middle": [],
+                        "last": "Tu",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "A",
+                        "middle": [
+                            "G"
+                        ],
+                        "last": "Cohn",
+                        "suffix": ""
+                    }
+                ],
+                "year": 2021,
+                "venue": "Proceedings of the IEEE/CVF International Conference on Computer Vision",
+                "volume": "",
+                "issue": "",
+                "pages": "7416--7425",
+                "other_ids": {},
+                "num": null,
+                "urls": [],
+                "raw_text": "Pan, Z., Jiang, P., Wang, Y., Tu, C., and Cohn, A. G. Scribble-supervised semantic segmentation by uncer- tainty reduction on neural representation and self- supervision on neural eigenspace. In Proceedings of the IEEE/CVF International Conference on Computer Vision, pp. 7416-7425, 2021.",
+                "links": null
+            },
+            "BIBREF24": {
+                "ref_id": "b24",
+                "title": "Pytorch: An imperative style, high-performance deep learning library",
+                "authors": [
+                    {
+                        "first": "A",
+                        "middle": [],
+                        "last": "Paszke",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "S",
+                        "middle": [],
+                        "last": "Gross",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "F",
+                        "middle": [],
+                        "last": "Massa",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "A",
+                        "middle": [],
+                        "last": "Lerer",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "J",
+                        "middle": [],
+                        "last": "Bradbury",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "G",
+                        "middle": [],
+                        "last": "Chanan",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "T",
+                        "middle": [],
+                        "last": "Killeen",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "Z",
+                        "middle": [],
+                        "last": "Lin",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "N",
+                        "middle": [],
+                        "last": "Gimelshein",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "L",
+                        "middle": [],
+                        "last": "Antiga",
+                        "suffix": ""
+                    }
+                ],
+                "year": 2019,
+                "venue": "Advances in neural information processing systems",
+                "volume": "",
+                "issue": "",
+                "pages": "",
+                "other_ids": {},
+                "num": null,
+                "urls": [],
+                "raw_text": "Paszke, A., Gross, S., Massa, F., Lerer, A., Bradbury, J., Chanan, G., Killeen, T., Lin, Z., Gimelshein, N., Antiga, L., et al. Pytorch: An imperative style, high-performance deep learning library. Advances in neural information processing systems, 32, 2019.",
+                "links": null
+            },
+            "BIBREF25": {
+                "ref_id": "b25",
+                "title": "Learnable tree filter for structure-preserving feature transform",
+                "authors": [
+                    {
+                        "first": "L",
+                        "middle": [],
+                        "last": "Song",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "Y",
+                        "middle": [],
+                        "last": "Li",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "Z",
+                        "middle": [],
+                        "last": "Li",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "G",
+                        "middle": [],
+                        "last": "Yu",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "H",
+                        "middle": [],
+                        "last": "Sun",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "J",
+                        "middle": [],
+                        "last": "Sun",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "N",
+                        "middle": [],
+                        "last": "Zheng",
+                        "suffix": ""
+                    }
+                ],
+                "year": 2019,
+                "venue": "Advances in neural information processing systems",
+                "volume": "",
+                "issue": "",
+                "pages": "",
+                "other_ids": {},
+                "num": null,
+                "urls": [],
+                "raw_text": "Song, L., Li, Y., Li, Z., Yu, G., Sun, H., Sun, J., and Zheng, N. Learnable tree filter for structure-preserving feature transform. Advances in neural information processing systems, 32, 2019.",
+                "links": null
+            },
+            "BIBREF26": {
+                "ref_id": "b26",
+                "title": "Normalized cut loss for weakly-supervised cnn segmentation",
+                "authors": [
+                    {
+                        "first": "M",
+                        "middle": [],
+                        "last": "Tang",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "A",
+                        "middle": [],
+                        "last": "Djelouah",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "F",
+                        "middle": [],
+                        "last": "Perazzi",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "Y",
+                        "middle": [],
+                        "last": "Boykov",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "C",
+                        "middle": [],
+                        "last": "Schroers",
+                        "suffix": ""
+                    }
+                ],
+                "year": 2018,
+                "venue": "Proceedings of the IEEE conference on computer vision and pattern recognition",
+                "volume": "",
+                "issue": "",
+                "pages": "1818--1827",
+                "other_ids": {},
+                "num": null,
+                "urls": [],
+                "raw_text": "Tang, M., Djelouah, A., Perazzi, F., Boykov, Y., and Schroers, C. Normalized cut loss for weakly-supervised cnn segmentation. In Proceedings of the IEEE conference on computer vision and pattern recognition, pp. 1818- 1827, 2018a.",
+                "links": null
+            },
+            "BIBREF27": {
+                "ref_id": "b27",
+                "title": "On regularized losses for weaklysupervised cnn segmentation",
+                "authors": [
+                    {
+                        "first": "M",
+                        "middle": [],
+                        "last": "Tang",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "F",
+                        "middle": [],
+                        "last": "Perazzi",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "A",
+                        "middle": [],
+                        "last": "Djelouah",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "I",
+                        "middle": [],
+                        "last": "Ben Ayed",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "C",
+                        "middle": [],
+                        "last": "Schroers",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "Y",
+                        "middle": [],
+                        "last": "Boykov",
+                        "suffix": ""
+                    }
+                ],
+                "year": 2018,
+                "venue": "Proceedings of the European Conference on Computer Vision (ECCV)",
+                "volume": "",
+                "issue": "",
+                "pages": "507--522",
+                "other_ids": {},
+                "num": null,
+                "urls": [],
+                "raw_text": "Tang, M., Perazzi, F., Djelouah, A., Ben Ayed, I., Schroers, C., and Boykov, Y. On regularized losses for weakly- supervised cnn segmentation. In Proceedings of the Eu- ropean Conference on Computer Vision (ECCV), pp. 507- 522, 2018b.",
+                "links": null
+            },
+            "BIBREF28": {
+                "ref_id": "b28",
+                "title": "Category feature transformer for semantic segmentation",
+                "authors": [
+                    {
+                        "first": "Q",
+                        "middle": [],
+                        "last": "Tang",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "C",
+                        "middle": [],
+                        "last": "Liu",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "F",
+                        "middle": [],
+                        "last": "Liu",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "Y",
+                        "middle": [],
+                        "last": "Liu",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "J",
+                        "middle": [],
+                        "last": "Jiang",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "B",
+                        "middle": [],
+                        "last": "Zhang",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "K",
+                        "middle": [],
+                        "last": "Han",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "Y",
+                        "middle": [],
+                        "last": "Wang",
+                        "suffix": ""
+                    }
+                ],
+                "year": 2023,
+                "venue": "",
+                "volume": "",
+                "issue": "",
+                "pages": "",
+                "other_ids": {
+                    "arXiv": [
+                        "arXiv:2308.05581"
+                    ]
+                },
+                "num": null,
+                "urls": [],
+                "raw_text": "Tang, Q., Liu, C., Liu, F., Liu, Y., Jiang, J., Zhang, B., Han, K., and Wang, Y. Category feature transformer for semantic segmentation. arXiv preprint arXiv:2308.05581, 2023.",
+                "links": null
+            },
+            "BIBREF29": {
+                "ref_id": "b29",
+                "title": "Learning random-walk label propagation for weakly-supervised semantic segmentation",
+                "authors": [
+                    {
+                        "first": "P",
+                        "middle": [],
+                        "last": "Vernaza",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "M",
+                        "middle": [],
+                        "last": "Chandraker",
+                        "suffix": ""
+                    }
+                ],
+                "year": 2017,
+                "venue": "Proceedings of the IEEE conference on computer vision and pattern recognition",
+                "volume": "",
+                "issue": "",
+                "pages": "7158--7166",
+                "other_ids": {},
+                "num": null,
+                "urls": [],
+                "raw_text": "Vernaza, P. and Chandraker, M. Learning random-walk label propagation for weakly-supervised semantic seg- mentation. In Proceedings of the IEEE conference on computer vision and pattern recognition, pp. 7158-7166, 2017.",
+                "links": null
+            },
+            "BIBREF30": {
+                "ref_id": "b30",
+                "title": "Boundary perception guidance: A scribblesupervised semantic segmentation approach",
+                "authors": [
+                    {
+                        "first": "B",
+                        "middle": [],
+                        "last": "Wang",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "G",
+                        "middle": [],
+                        "last": "Qi",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "S",
+                        "middle": [],
+                        "last": "Tang",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "T",
+                        "middle": [],
+                        "last": "Zhang",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "Y",
+                        "middle": [],
+                        "last": "Wei",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "L",
+                        "middle": [],
+                        "last": "Li",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "Y",
+                        "middle": [],
+                        "last": "Zhang",
+                        "suffix": ""
+                    }
+                ],
+                "year": 2019,
+                "venue": "IJCAI International joint conference on artificial intelligence",
+                "volume": "",
+                "issue": "",
+                "pages": "",
+                "other_ids": {},
+                "num": null,
+                "urls": [],
+                "raw_text": "Wang, B., Qi, G., Tang, S., Zhang, T., Wei, Y., Li, L., and Zhang, Y. Boundary perception guidance: A scribble- supervised semantic segmentation approach. In IJCAI International joint conference on artificial intelligence, 2019.",
+                "links": null
+            },
+            "BIBREF31": {
+                "ref_id": "b31",
+                "title": "Sparsely annotated semantic segmentation with adaptive gaussian mixtures",
+                "authors": [
+                    {
+                        "first": "L",
+                        "middle": [],
+                        "last": "Wu",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "Z",
+                        "middle": [],
+                        "last": "Zhong",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "L",
+                        "middle": [],
+                        "last": "Fang",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "X",
+                        "middle": [],
+                        "last": "He",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "Q",
+                        "middle": [],
+                        "last": "Liu",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "J",
+                        "middle": [],
+                        "last": "Ma",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "H",
+                        "middle": [],
+                        "last": "Chen",
+                        "suffix": ""
+                    }
+                ],
+                "year": 2023,
+                "venue": "Proceedings of the IEEE/CVF Conference on Computer Vision and Pattern Recognition",
+                "volume": "",
+                "issue": "",
+                "pages": "15454--15464",
+                "other_ids": {},
+                "num": null,
+                "urls": [],
+                "raw_text": "Wu, L., Zhong, Z., Fang, L., He, X., Liu, Q., Ma, J., and Chen, H. Sparsely annotated semantic segmentation with adaptive gaussian mixtures. In Proceedings of the IEEE/CVF Conference on Computer Vision and Pattern Recognition, pp. 15454-15464, 2023.",
+                "links": null
+            },
+            "BIBREF32": {
+                "ref_id": "b32",
+                "title": "Segformer: Simple and efficient design for semantic segmentation with transformers",
+                "authors": [
+                    {
+                        "first": "E",
+                        "middle": [],
+                        "last": "Xie",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "W",
+                        "middle": [],
+                        "last": "Wang",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "Z",
+                        "middle": [],
+                        "last": "Yu",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "A",
+                        "middle": [],
+                        "last": "Anandkumar",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "J",
+                        "middle": [
+                            "M"
+                        ],
+                        "last": "Alvarez",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "P",
+                        "middle": [],
+                        "last": "Luo",
+                        "suffix": ""
+                    }
+                ],
+                "year": 2021,
+                "venue": "Advances in Neural Information Processing Systems",
+                "volume": "34",
+                "issue": "",
+                "pages": "12077--12090",
+                "other_ids": {},
+                "num": null,
+                "urls": [],
+                "raw_text": "Xie, E., Wang, W., Yu, Z., Anandkumar, A., Alvarez, J. M., and Luo, P. Segformer: Simple and efficient design for semantic segmentation with transformers. Advances in Neural Information Processing Systems, 34:12077- 12090, 2021.",
+                "links": null
+            },
+            "BIBREF33": {
+                "ref_id": "b33",
+                "title": "Semi-supervised semantic segmentation with prototype-based consistency regularization",
+                "authors": [
+                    {
+                        "first": "H",
+                        "middle": [],
+                        "last": "Xu",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "L",
+                        "middle": [],
+                        "last": "Liu",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "Q",
+                        "middle": [],
+                        "last": "Bian",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "Z",
+                        "middle": [],
+                        "last": "Yang",
+                        "suffix": ""
+                    }
+                ],
+                "year": 2022,
+                "venue": "Advances in Neural Information Processing Systems",
+                "volume": "35",
+                "issue": "",
+                "pages": "26007--26020",
+                "other_ids": {},
+                "num": null,
+                "urls": [],
+                "raw_text": "Xu, H., Liu, L., Bian, Q., and Yang, Z. Semi-supervised semantic segmentation with prototype-based consistency regularization. Advances in Neural Information Process- ing Systems, 35:26007-26020, 2022.",
+                "links": null
+            },
+            "BIBREF34": {
+                "ref_id": "b34",
+                "title": "Scribble-supervised semantic segmentation inference",
+                "authors": [
+                    {
+                        "first": "J",
+                        "middle": [],
+                        "last": "Xu",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "C",
+                        "middle": [],
+                        "last": "Zhou",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "Z",
+                        "middle": [],
+                        "last": "Cui",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "C",
+                        "middle": [],
+                        "last": "Xu",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "Y",
+                        "middle": [],
+                        "last": "Huang",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "P",
+                        "middle": [],
+                        "last": "Shen",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "S",
+                        "middle": [],
+                        "last": "Li",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "J",
+                        "middle": [],
+                        "last": "Yang",
+                        "suffix": ""
+                    }
+                ],
+                "year": 2021,
+                "venue": "Proceedings of the IEEE/CVF International Conference on Computer Vision",
+                "volume": "",
+                "issue": "",
+                "pages": "15354--15363",
+                "other_ids": {},
+                "num": null,
+                "urls": [],
+                "raw_text": "Xu, J., Zhou, C., Cui, Z., Xu, C., Huang, Y., Shen, P., Li, S., and Yang, J. Scribble-supervised semantic segmentation inference. In Proceedings of the IEEE/CVF International Conference on Computer Vision, pp. 15354-15363, 2021.",
+                "links": null
+            },
+            "BIBREF35": {
+                "ref_id": "b35",
+                "title": "Exploring pixel-level self-supervision for weakly supervised semantic segmentation",
+                "authors": [
+                    {
+                        "first": "S.-H",
+                        "middle": [],
+                        "last": "Yoon",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "H",
+                        "middle": [],
+                        "last": "Kweon",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "J",
+                        "middle": [],
+                        "last": "Jeong",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "H",
+                        "middle": [],
+                        "last": "Kim",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "S",
+                        "middle": [],
+                        "last": "Kim",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "K.-J",
+                        "middle": [],
+                        "last": "Yoon",
+                        "suffix": ""
+                    }
+                ],
+                "year": 2021,
+                "venue": "",
+                "volume": "",
+                "issue": "",
+                "pages": "",
+                "other_ids": {
+                    "arXiv": [
+                        "arXiv:2112.05351"
+                    ]
+                },
+                "num": null,
+                "urls": [],
+                "raw_text": "Yoon, S.-H., Kweon, H., Jeong, J., Kim, H., Kim, S., and Yoon, K.-J. Exploring pixel-level self-supervision for weakly supervised semantic segmentation. arXiv preprint arXiv:2112.05351, 2021.",
+                "links": null
+            },
+            "BIBREF36": {
+                "ref_id": "b36",
+                "title": "Condnet: Conditional classifier for scene segmentation",
+                "authors": [
+                    {
+                        "first": "C",
+                        "middle": [],
+                        "last": "Yu",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "Y",
+                        "middle": [],
+                        "last": "Shao",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "C",
+                        "middle": [],
+                        "last": "Gao",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "N",
+                        "middle": [],
+                        "last": "Sang",
+                        "suffix": ""
+                    }
+                ],
+                "year": 2021,
+                "venue": "IEEE Signal Processing Letters",
+                "volume": "28",
+                "issue": "",
+                "pages": "758--762",
+                "other_ids": {},
+                "num": null,
+                "urls": [],
+                "raw_text": "Yu, C., Shao, Y., Gao, C., and Sang, N. Condnet: Con- ditional classifier for scene segmentation. IEEE Signal Processing Letters, 28:758-762, 2021.",
+                "links": null
+            },
+            "BIBREF37": {
+                "ref_id": "b37",
+                "title": "Object-contextual representations for semantic segmentation",
+                "authors": [
+                    {
+                        "first": "Y",
+                        "middle": [],
+                        "last": "Yuan",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "X",
+                        "middle": [],
+                        "last": "Chen",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "J",
+                        "middle": [],
+                        "last": "Wang",
+                        "suffix": ""
+                    }
+                ],
+                "year": 2020,
+                "venue": "Computer Vision-ECCV 2020: 16th European Conference, Glasgow",
+                "volume": "",
+                "issue": "",
+                "pages": "173--190",
+                "other_ids": {},
+                "num": null,
+                "urls": [],
+                "raw_text": "Yuan, Y., Chen, X., and Wang, J. Object-contextual rep- resentations for semantic segmentation. In Computer Vision-ECCV 2020: 16th European Conference, Glas- gow, UK, August 23-28, 2020, Proceedings, Part VI 16, pp. 173-190. Springer, 2020.",
+                "links": null
+            },
+            "BIBREF38": {
+                "ref_id": "b38",
+                "title": "Reliability does matter: An end-to-end weakly supervised semantic segmentation approach",
+                "authors": [
+                    {
+                        "first": "B",
+                        "middle": [],
+                        "last": "Zhang",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "J",
+                        "middle": [],
+                        "last": "Xiao",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "Y",
+                        "middle": [],
+                        "last": "Wei",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "M",
+                        "middle": [],
+                        "last": "Sun",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "K",
+                        "middle": [],
+                        "last": "Huang",
+                        "suffix": ""
+                    }
+                ],
+                "year": 2020,
+                "venue": "Proceedings of the AAAI Conference on Artificial Intelligence",
+                "volume": "34",
+                "issue": "",
+                "pages": "12765--12772",
+                "other_ids": {},
+                "num": null,
+                "urls": [],
+                "raw_text": "Zhang, B., Xiao, J., Wei, Y., Sun, M., and Huang, K. Re- liability does matter: An end-to-end weakly supervised semantic segmentation approach. In Proceedings of the AAAI Conference on Artificial Intelligence, volume 34, pp. 12765-12772, 2020.",
+                "links": null
+            },
+            "BIBREF39": {
+                "ref_id": "b39",
+                "title": "Affinity attention graph neural network for weakly supervised semantic segmentation",
+                "authors": [
+                    {
+                        "first": "B",
+                        "middle": [],
+                        "last": "Zhang",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "J",
+                        "middle": [],
+                        "last": "Xiao",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "J",
+                        "middle": [],
+                        "last": "Jiao",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "Y",
+                        "middle": [],
+                        "last": "Wei",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "Y",
+                        "middle": [],
+                        "last": "Zhao",
+                        "suffix": ""
+                    }
+                ],
+                "year": 2021,
+                "venue": "IEEE Transactions on Pattern Analysis and Machine Intelligence",
+                "volume": "44",
+                "issue": "11",
+                "pages": "8082--8096",
+                "other_ids": {},
+                "num": null,
+                "urls": [],
+                "raw_text": "Zhang, B., Xiao, J., Jiao, J., Wei, Y., and Zhao, Y. Affinity attention graph neural network for weakly supervised semantic segmentation. IEEE Transactions on Pattern Analysis and Machine Intelligence, 44(11):8082-8096, 2021.",
+                "links": null
+            },
+            "BIBREF40": {
+                "ref_id": "b40",
+                "title": "Acfnet: Attentional class feature network for semantic segmentation",
+                "authors": [
+                    {
+                        "first": "F",
+                        "middle": [],
+                        "last": "Zhang",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "Y",
+                        "middle": [],
+                        "last": "Chen",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "Z",
+                        "middle": [],
+                        "last": "Li",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "Z",
+                        "middle": [],
+                        "last": "Hong",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "J",
+                        "middle": [],
+                        "last": "Liu",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "F",
+                        "middle": [],
+                        "last": "Ma",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "J",
+                        "middle": [],
+                        "last": "Han",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "E",
+                        "middle": [],
+                        "last": "Ding",
+                        "suffix": ""
+                    }
+                ],
+                "year": 2019,
+                "venue": "Proceedings of the IEEE/CVF international conference on computer vision",
+                "volume": "",
+                "issue": "",
+                "pages": "6798--6807",
+                "other_ids": {},
+                "num": null,
+                "urls": [],
+                "raw_text": "Zhang, F., Chen, Y., Li, Z., Hong, Z., Liu, J., Ma, F., Han, J., and Ding, E. Acfnet: Attentional class feature network for semantic segmentation. In Proceedings of the IEEE/CVF international conference on computer vision, pp. 6798- 6807, 2019.",
+                "links": null
+            },
+            "BIBREF41": {
+                "ref_id": "b41",
+                "title": "Scribble hides class: Promoting scribble-based weakly-supervised semantic segmentation with its class label",
+                "authors": [
+                    {
+                        "first": "X",
+                        "middle": [],
+                        "last": "Zhang",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "L",
+                        "middle": [],
+                        "last": "Zhu",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "H",
+                        "middle": [],
+                        "last": "He",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "L",
+                        "middle": [],
+                        "last": "Jin",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "Y",
+                        "middle": [],
+                        "last": "Lu",
+                        "suffix": ""
+                    }
+                ],
+                "year": 2024,
+                "venue": "",
+                "volume": "",
+                "issue": "",
+                "pages": "",
+                "other_ids": {
+                    "arXiv": [
+                        "arXiv:2402.17555"
+                    ]
+                },
+                "num": null,
+                "urls": [],
+                "raw_text": "Zhang, X., Zhu, L., He, H., Jin, L., and Lu, Y. Scribble hides class: Promoting scribble-based weakly-supervised semantic segmentation with its class label. arXiv preprint arXiv:2402.17555, 2024.",
+                "links": null
+            }
+        },
+        "ref_entries": {
+            "FIGREF0": {
+                "fig_num": null,
+                "uris": null,
+                "text": "Key Laboratory of Water Big Data Technology of Ministry of Water Resources, Hohai University, Nanjing, China 2 College of Computer Science and Software Engineering, Hohai University, Nanjing, China 3 School of Computing Technologies, RMIT University, Melbourne, Australia. Correspondence to: Pengcheng Zhang <pchzhang@hhu.edu.cn>. Proceedings of the 41 st International Conference on Machine Learning, Vienna, Austria. PMLR 235, 2024. Copyright 2024 by the author(s).",
+                "type_str": "figure",
+                "num": null
+            },
+            "FIGREF1": {
+                "fig_num": "1",
+                "uris": null,
+                "text": "Figure 1. Illustration of existing scribble-supervised semantic segmentation approaches. F represents the feature map, and P represents the prediction map.",
+                "type_str": "figure",
+                "num": null
+            },
+            "FIGREF2": {
+                "fig_num": "3",
+                "uris": null,
+                "text": "Figure 3. The structural diagram of the prototype-based feature augmenter. When the global prototypes are not fully updated, only the local prototypes are used to augment the features. Once the global prototypes are fully updated, both the local and global prototypes are used to augment the features.",
+                "type_str": "figure",
+                "num": null
+            },
+            "FIGREF3": {
+                "fig_num": "4",
+                "uris": null,
+                "text": "Figure 4. Visualizing the Components of Our Method through Ablation Experiments.(a) Input image. (b) Baseline (Only use partial cross-entropy). (c) Augmented only by local prototypes. (d) Augmented only by global prototypes. (e) Augmented by two types of prototypes. (f) Ground truth.",
+                "type_str": "figure",
+                "num": null
+            },
+            "FIGREF4": {
+                "fig_num": "5",
+                "uris": null,
+                "text": "Figure 5. Impact of the number of prototypes contained in each class of global prototypes.",
+                "type_str": "figure",
+                "num": null
+            },
+            "FIGREF5": {
+                "fig_num": "6",
+                "uris": null,
+                "text": "Figure 6. Impact of different top-k percentage values on the computation of prototype in Equations (1) and (2).",
+                "type_str": "figure",
+                "num": null
+            },
+            "FIGREF6": {
+                "fig_num": "8",
+                "uris": null,
+                "text": "Figure 8. The experiments on scribble-drop and scribble-shrink dataset with different drop or shrink ratios.",
+                "type_str": "figure",
+                "num": null
+            },
+            "FIGREF7": {
+                "fig_num": "9",
+                "uris": null,
+                "text": "Figure 9. Failure cases of the proposed method on Pascal VOC val dataset. (a) Input image. (b) Baseline (Inference without prototype augmentation). (c) Inference with using category labels (d) Inference with using Q2L results. (e) Inference with using MCAR results. (f) Ground truth.",
+                "type_str": "figure",
+                "num": null
+            },
+            "FIGREF8": {
+                "fig_num": "1011",
+                "uris": null,
+                "text": "Figure 10. Visualization of our method and SOTA. (a) Input image. (b) Baseline (Inference without prototype augmentation). (c) URSS(Pan et al., 2021). (d) TEL(Wu et al., 2023). (e) Ours. (f) Ground truth.",
+                "type_str": "figure",
+                "num": null
+            },
+            "TABREF1": {
+                "content": "<table/>",
+                "text": "implemented supervision by constructing Gaussian mixture models based on the feature 2. The overall framework of our approach. Initially, the image undergoes encoding to produce a feature map. Subsequently, this feature map is fed into the decoder to generate a semantic segmentation prediction map. Scribble labels are employed to impose constraints using partial cross-entropy loss. Next, local prototypes are extracted from the initial prediction map and the feature map, while global prototypes are updated throughout the training iterations. The initial feature map is augmented separately using these two types of prototypes, and predictions are generated using the decoder. Consistency loss is used to constrain between two predicted maps and the initial predicted map. During the warm-up phase, partial cross-entropy is black. It turns green when global prototypes are inactive, and yellow when global prototypes are in use.",
+                "html": null,
+                "type_str": "table",
+                "num": null
+            },
+            "TABREF3": {
+                "content": "<table><tr><td colspan=\"3\">3.3. Prototype-based Feature Augmentation</td><td/></tr><tr><td>Softmax</td><td>Concat</td><td>Linear</td><td>ReLu</td></tr></table>",
+                "text": "",
+                "html": null,
+                "type_str": "table",
+                "num": null
+            },
+            "TABREF4": {
+                "content": "<table><tr><td>Method</td><td colspan=\"3\">Lpce L con-l Lcon-g</td><td colspan=\"3\">mIoU(%) basic local global</td></tr><tr><td>Baseline</td><td>\u221a</td><td/><td/><td>67.5</td><td>-</td><td>-</td></tr><tr><td>Ours</td><td>Lpce Lpce Lpce Lpce</td><td>\u221a \u221a \u221a</td><td>\u221a \u221a \u221a</td><td>75.7 76.0 76.4 76.8</td><td>76.9 -77.7 77.3</td><td>-77.4 77.1 77.9</td></tr></table>",
+                "text": "Ablation studies of the components of our proposed method. \"basic\" means the basic result, \"local\" means the result augmented with local prototypes, and \"global\" means the result augmented with global prototypes. The Lpce and Lpce represent different Lpce in Figure2, while the blue and red represent the top two results.",
+                "html": null,
+                "type_str": "table",
+                "num": null
+            },
+            "TABREF5": {
+                "content": "<table><tr><td>Model</td><td>Backbone</td><td colspan=\"2\">Params FLOPs</td><td colspan=\"2\">mIOU(%) full scribble</td></tr><tr><td>DeeplabV2</td><td colspan=\"2\">ResNet101 43.6M</td><td>75.2G</td><td>77.7</td><td>76.2</td></tr><tr><td colspan=\"5\">DeeplabV3+ ResNet101 60.8M 102.3G 80.2</td><td>78.1</td></tr><tr><td>LTF</td><td/><td colspan=\"3\">91.7M 138.4G 80.9</td><td>78.2</td></tr><tr><td>Segformer</td><td>MiT-B1</td><td>13.6M</td><td>19.4G</td><td>79.2</td><td>77.9</td></tr><tr><td>Segformer</td><td>MiT-B3</td><td>44.6M</td><td>44.5G</td><td>81.9</td><td>79.8</td></tr><tr><td>Segformer</td><td>MiT-B5</td><td>82.0M</td><td>72.9G</td><td>83.9</td><td>81.5</td></tr></table>",
+                "text": "Impact of the backbone.",
+                "html": null,
+                "type_str": "table",
+                "num": null
+            },
+            "TABREF6": {
+                "content": "<table><tr><td/><td/><td/><td/><td/><td/><td/><td/><td colspan=\"2\">Encoder</td><td/><td/><td/><td/><td/><td/><td/><td/><td/><td colspan=\"2\">Decoder</td><td/><td/><td/></tr><tr><td/><td>\ud835\udc3b\ud835\udc3b 4</td><td>\u00d7</td><td>\ud835\udc4a\ud835\udc4a 4</td><td>\u00d7 \ud835\udc36\ud835\udc36 1</td><td>\ud835\udc3b\ud835\udc3b 8</td><td>\u00d7</td><td>\ud835\udc4a\ud835\udc4a 8</td><td>\u00d7 \ud835\udc36\ud835\udc36 2</td><td>\ud835\udc3b\ud835\udc3b 16</td><td>\u00d7</td><td>\ud835\udc4a\ud835\udc4a 16</td><td>\u00d7 \ud835\udc36\ud835\udc36 3</td><td>\ud835\udc3b\ud835\udc3b 32</td><td>\u00d7</td><td>\ud835\udc4a\ud835\udc4a 32</td><td>\u00d7 \ud835\udc36\ud835\udc36 4</td><td>\ud835\udc3b\ud835\udc3b 4</td><td>\u00d7</td><td>\ud835\udc4a\ud835\udc4a 4</td><td>\u00d7 4\ud835\udc36\ud835\udc36</td><td>\ud835\udc3b\ud835\udc3b 4</td><td>\u00d7</td><td>\ud835\udc4a\ud835\udc4a 4</td><td>\u00d7 \ud835\udc41\ud835\udc41</td></tr><tr><td>Block</td><td>Transformer</td><td/><td/><td>Block</td><td>Transformer</td><td/><td/><td>Block</td><td>Transformer</td><td/><td/><td>Block</td><td>Transformer</td><td/><td/><td>Layer</td><td>MLP</td><td/><td/><td>MLP</td><td/><td/><td/></tr><tr><td/><td/><td/><td/><td/><td/><td/><td/><td/><td/><td/><td/><td/><td/><td/><td/><td/><td colspan=\"2\">F</td><td/><td/><td/><td colspan=\"2\">P</td></tr><tr><td/><td/><td/><td/><td/><td colspan=\"13\">Figure 7. The overall framework of encoder and decoder.</td><td/><td/><td/><td/><td/><td/></tr></table>",
+                "text": "A.1. More Details of Encoder and Decoder",
+                "html": null,
+                "type_str": "table",
+                "num": null
+            },
+            "TABREF7": {
+                "content": "<table><tr><td>Method</td><td colspan=\"3\">Num mAP(%) mIoU(%)</td></tr><tr><td>Category Labels</td><td>-</td><td>-</td><td>80.4</td></tr><tr><td>Without Augmented</td><td>-</td><td>-</td><td>76.8</td></tr><tr><td>Q2L(Liu et al., 2021)</td><td>-</td><td>96.6</td><td>77.9</td></tr><tr><td>MCAR(Gao &amp; Zhou, 2021)</td><td>-</td><td>94.3</td><td>76.2</td></tr><tr><td/><td>0</td><td>-</td><td>74.1</td></tr><tr><td>Prediction Map Filtering</td><td>100 500</td><td>--</td><td>75.2 75.7</td></tr><tr><td/><td>1000</td><td>-</td><td>74.3</td></tr></table>",
+                "text": "The impact of class labels during inference.",
+                "html": null,
+                "type_str": "table",
+                "num": null
+            },
+            "TABREF8": {
+                "content": "<table><tr><td/><td>\u03bb l</td><td>\u03bbg</td><td>mIoU(%)</td></tr><tr><td>default</td><td>0.01</td><td>0.01</td><td>77.9</td></tr><tr><td/><td>0.005</td><td/><td>77.7</td></tr><tr><td/><td>0.02</td><td/><td>77.2</td></tr><tr><td/><td>0.05</td><td/><td>76.8</td></tr><tr><td/><td/><td>0.005</td><td>77.4</td></tr><tr><td/><td/><td>0.02</td><td>77.6</td></tr><tr><td/><td/><td>0.05</td><td>77.1</td></tr></table>",
+                "text": "Impact of the weights of loss terms.",
+                "html": null,
+                "type_str": "table",
+                "num": null
+            },
+            "TABREF9": {
+                "content": "<table><tr><td>method</td><td colspan=\"3\">bkg aero bike bird boat bottle</td><td>bus</td><td>car</td><td>cat</td><td colspan=\"6\">chair cow table dog horse mbike person plant sheep</td><td>sofa</td><td>train</td><td>tv</td><td>Mean</td></tr><tr><td>KernelCut (Tang et al., 2018b)</td><td>-</td><td>86.2 37.3 85.5 69.4</td><td>77.8</td><td colspan=\"4\">91.7 85.1 91.2 38.8 85.1 55.5 85.6</td><td>85.8</td><td>81.7</td><td>84.1</td><td>61.4</td><td>84.3</td><td>43.1 81.4 74.2</td><td>75.0</td></tr><tr><td>BPG (Wang et al., 2019)</td><td colspan=\"2\">93.4 84.8 38.4 84.6 65.5</td><td>78.8</td><td colspan=\"4\">91.4 85.9 89.5 41.0 87.3 58.3 84.1</td><td>85.2</td><td>83.7</td><td>83.6</td><td>64.9</td><td>88.3</td><td>46.0</td><td>86.3 73.9</td><td>76.0</td></tr><tr><td>SPML (Ke et al., 2021)</td><td>-</td><td>89.0 38.4 86.0 72.6</td><td>77.9</td><td colspan=\"4\">90.0 83.9 91.0 40.0 88.3 57.7 87.7</td><td>82.8</td><td>79.1</td><td>86.5</td><td>57.1</td><td>87.4</td><td>50.5 81.2 76.9</td><td>76.1</td></tr><tr><td>Ours-MiT-B1</td><td colspan=\"2\">93.9 89.7 35.7 87.6 69.2</td><td>84.8</td><td colspan=\"4\">90.3 84.7 89.9 43.2 87.9 60.7 87.1</td><td>82.6</td><td>80.6</td><td>86.5</td><td>71.2</td><td>82.5</td><td>54.3 89.0 84.3</td><td>77.9</td></tr><tr><td colspan=\"3\">B.4. More Qualitative Results</td><td/><td/><td/><td/><td/><td/><td/><td/><td/></tr></table>",
+                "text": "Per-class comparison between our approach and others on PASCAL VOC 2012 val dataset.",
+                "html": null,
+                "type_str": "table",
+                "num": null
+            }
+        }
+    }
+}

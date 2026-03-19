@@ -1,0 +1,27 @@
+{
+  "paper_benchmark_name": "2D LSQ function",
+  "matched_benchmark_name": "2D LSQ function",
+  "status": "well_established_formula",
+  "materialization_strategy": "generate_definition",
+  "paper_research_field": "Constrained Bayesian Optimization",
+  "matched_research_field": "Synthetic Function Optimization",
+  "definition_summary": "A two-dimensional least-squares synthetic benchmark function designed for evaluating constrained Bayesian optimization strategies.",
+  "equations_or_components": [
+    "Analytic least-squares formulation (reference to literature required)"
+  ],
+  "variables_or_inputs": [
+    "x1, x2 (continuous parameters)"
+  ],
+  "constraints_or_bounds": [
+    "Implicit feasibility boundaries are built into the function's domain."
+  ],
+  "expected_artifacts": [
+    "benchmark_definition.txt"
+  ],
+  "license_or_access_notes": [
+    "No license restrictions; open for academic research."
+  ],
+  "match_reason": "The benchmark is listed exactly as in the paper and represents a synthetic least-squares type optimization function.",
+  "source_type": "literature_formula",
+  "source_url": ""
+}

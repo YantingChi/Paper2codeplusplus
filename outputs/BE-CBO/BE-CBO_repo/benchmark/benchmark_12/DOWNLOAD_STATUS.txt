@@ -1,0 +1,22 @@
+paper_benchmark_name: 30D cantilever beam design
+paper_research_field: Constrained Bayesian Optimization
+matched_benchmark_name: 30D cantilever beam design
+matched_research_field: Engineering Design Optimization
+name_match_type: exact
+field_match_status: same_field
+status: well_established_formula
+materialization_strategy: generate_definition
+source_type: literature_formula
+source_url: Not provided
+match_reason: A high-dimensional cantilever beam design problem that matches exactly with established benchmarks in design optimization literature.
+definition_summary: A thirty-dimensional cantilever beam design problem used to test the scalability and efficiency of optimization algorithms in high-dimensional constrained settings.
+equations_or_components:
+- Objective function for weight or deflection minimization and constraint equations based on stress and displacement.
+variables_or_inputs:
+- Beam cross-sectional dimensions divided among 30 design parameters
+constraints_or_bounds:
+- Engineering constraints on material stress and deflection limits.
+license_or_access_notes:
+- Benchmark is free for academic usage.
+expected_artifacts:
+- benchmark_definition.txt

@@ -1,0 +1,32 @@
+{
+  "paper_name": "Transformer",
+  "model": "o3-mini",
+  "paper_meta": {
+    "source_path": "examples/Transformer_cleaned.json",
+    "paper_format": "JSON",
+    "original_chars": 41496,
+    "used_chars": 41496,
+    "truncated": false
+  },
+  "prompt_token_estimate": 10764,
+  "extracted_info": {
+    "Evaluation Set-up": [
+      "Trained on WMT 2014 datasets using two configurations: a base model trained for 100,000 steps (approximately 12 hours) and a big model trained for 300,000 steps (3.5 days) on a single machine with 8 NVIDIA P100 GPUs.",
+      "Used Adam optimizer (β1=0.9, β2=0.98, ϵ=10^-9) with a learning rate schedule that warms up for 4000 steps, applied dropout (0.1 for base; 0.1 or 0.3 for big in different settings) and label smoothing (ϵ_ls = 0.1).",
+      "Batched sentence pairs by approximate sequence length with byte-pair encoding for English-German (≈4.5M sentence pairs, vocabulary ~37,000 tokens) and word-piece tokenization for English-French (36M sentence pairs, 32,000 vocabulary).",
+      "Employed beam search during inference (beam size 4 with length penalty α=0.6 for translation tasks and beam size 21 with extended maximum output length for constituency parsing).",
+      "For parsing experiments, used a 4-layer Transformer on the WSJ portion of the Penn Treebank, adjusting the maximum output length to input length + 300."
+    ],
+    "Benchmark evaluated on": [
+      "WMT 2014 English-to-German translation task",
+      "WMT 2014 English-to-French translation task",
+      "English constituency parsing on the WSJ portion of the Penn Treebank"
+    ],
+    "Expected Results": [
+      "Transformer (big) achieves a new state-of-the-art BLEU score of 28.4 on the WMT 2014 English-to-German translation task, outperforming previous models (including ensembles) by over 2 BLEU.",
+      "On the WMT 2014 English-to-French translation task, the Transformer establishes a new single-model state-of-the-art BLEU score of 41.8 (with one report of 41.0 BLEU in experimental details), at a fraction of the training cost of previous models.",
+      "In English constituency parsing, the Transformer attains competitive performance with a 91.3 F1 score on the WSJ-only setting and 92.7 F1 in a semi-supervised setting, surpassing most previous models except the Recurrent Neural Network Grammar."
+    ]
+  },
+  "raw_model_output": "{\n  \"Evaluation Set-up\": [\n    \"Trained on WMT 2014 datasets using two configurations: a base model trained for 100,000 steps (approximately 12 hours) and a big model trained for 300,000 steps (3.5 days) on a single machine with 8 NVIDIA P100 GPUs.\",\n    \"Used Adam optimizer (β1=0.9, β2=0.98, ϵ=10^-9) with a learning rate schedule that warms up for 4000 steps, applied dropout (0.1 for base; 0.1 or 0.3 for big in different settings) and label smoothing (ϵ_ls = 0.1).\",\n    \"Batched sentence pairs by approximate sequence length with byte-pair encoding for English-German (≈4.5M sentence pairs, vocabulary ~37,000 tokens) and word-piece tokenization for English-French (36M sentence pairs, 32,000 vocabulary).\",\n    \"Employed beam search during inference (beam size 4 with length penalty α=0.6 for translation tasks and beam size 21 with extended maximum output length for constituency parsing).\",\n    \"For parsing experiments, used a 4-layer Transformer on the WSJ portion of the Penn Treebank, adjusting the maximum output length to input length + 300.\"\n  ],\n  \"Benchmark evaluated on\": [\n    \"WMT 2014 English-to-German translation task\",\n    \"WMT 2014 English-to-French translation task\",\n    \"English constituency parsing on the WSJ portion of the Penn Treebank\"\n  ],\n  \"Expected Results\": [\n    \"Transformer (big) achieves a new state-of-the-art BLEU score of 28.4 on the WMT 2014 English-to-German translation task, outperforming previous models (including ensembles) by over 2 BLEU.\",\n    \"On the WMT 2014 English-to-French translation task, the Transformer establishes a new single-model state-of-the-art BLEU score of 41.8 (with one report of 41.0 BLEU in experimental details), at a fraction of the training cost of previous models.\",\n    \"In English constituency parsing, the Transformer attains competitive performance with a 91.3 F1 score on the WSJ-only setting and 92.7 F1 in a semi-supervised setting, surpassing most previous models except the Recurrent Neural Network Grammar.\"\n  ]\n}"
+}

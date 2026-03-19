@@ -1,0 +1,30 @@
+{
+    "run_id": "be-cbo-oracle-20260317_231814",
+    "uuid": "3efdc3dd-7375-4173-a74a-214032024393",
+    "dataset_path": "/home/yantingchi/Desktop/DK/Paper2Code/outputs/BE-CBO_repo/eval",
+    "dataset_name": null,
+    "dataset_version": null,
+    "output_path": "/home/yantingchi/Desktop/DK/Paper2Code/outputs/BE-CBO_repo/eval/tb_runs",
+    "agent_name": "oracle",
+    "no_rebuild": true,
+    "cleanup": false,
+    "log_level": 20,
+    "task_ids": [
+        "benchmark"
+    ],
+    "exclude_task_ids": null,
+    "n_tasks": null,
+    "n_concurrent_trials": 1,
+    "n_attempts": 1,
+    "dataset_size": 1,
+    "accuracy": 1.0,
+    "model_name": "Oracle",
+    "start_time": "2026-03-18T04:18:45.858238+00:00",
+    "end_time": "2026-03-18T04:18:48.027462+00:00",
+    "commit_hash": "1a6ffa9674b571da0ed040c470cb40c4d85f9b9b",
+    "username": "YantingChi",
+    "s3_bucket": null,
+    "agent_kwargs": null,
+    "pass_at_k": {},
+    "resumed_at": null
+}

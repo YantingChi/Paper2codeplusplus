@@ -1,0 +1,82 @@
+{
+  "paper_name": "Transformer",
+  "model": "o3-mini",
+  "paper_meta": {
+    "source_path": "examples/Transformer_cleaned.json",
+    "paper_format": "JSON",
+    "original_chars": 41496,
+    "used_chars": 41496,
+    "truncated": false
+  },
+  "prompt_token_estimate": 10947,
+  "extracted_info": {
+    "Evaluation Set-up": {
+      "hardware": [
+        "8 NVIDIA P100 GPUs"
+      ],
+      "machine": [
+        "Single machine"
+      ],
+      "docker_requirements": [
+        "Not specified"
+      ],
+      "other_runtime_requirements": [
+        "Not specified"
+      ]
+    },
+    "Benchmark evaluated on": [
+      "WMT 2014 English-to-German translation task",
+      "WMT 2014 English-to-French translation task",
+      "English constituency parsing (WSJ portion of Penn Treebank)"
+    ],
+    "Training": {
+      "is_training_required": "Yes",
+      "hyperparameters": [
+        "Adam optimizer with β1=0.9, β2=0.98, ε=1e-9",
+        "Learning rate schedule with linear warmup for 4000 steps then inverse square root decay",
+        "Residual dropout with rate 0.1 for base model (0.3 for Transformer big on English-to-French)",
+        "Label smoothing with ε_ls=0.1",
+        "Base model configuration: 6 layers, d_model=512, d_ff=2048, 8 attention heads (d_k=d_v=64)",
+        "Batching approximately 25000 source tokens and 25000 target tokens per batch",
+        "Training duration: 100,000 steps (12 hours) for base model; 300,000 steps (3.5 days) for big model"
+      ],
+      "random_seed": [
+        "Not specified"
+      ]
+    },
+    "Results": {
+      "metrics_used": [
+        "BLEU score",
+        "Perplexity",
+        "F1 score"
+      ],
+      "statistical_results": [
+        "Transformer (big) achieves 28.4 BLEU on WMT 2014 English-to-German",
+        "Transformer (big) achieves 41.8 BLEU on WMT 2014 English-to-French",
+        "Base model achieves 27.3 BLEU (English-to-German) and 38.1 BLEU (English-to-French)",
+        "Training times reported: 12 hours for base model and 3.5 days for big model on 8 GPUs",
+        "For English constituency parsing: F1 score of 91.3 (WSJ only) and 92.7 (semi-supervised)"
+      ],
+      "figure_results": [
+        "Figure 1 illustrates the Transformer model architecture",
+        "Figure 2 depicts Scaled Dot-Product and Multi-Head Attention mechanisms",
+        "Table 2 summarizes BLEU scores and training cost metrics",
+        "Table 3 details variations in the Transformer architecture and their impact on performance",
+        "Table 4 reports English constituency parsing F1 scores"
+      ]
+    },
+    "Expected Results": [
+      "28.4 BLEU on the WMT 2014 English-to-German translation task",
+      "41.8 BLEU on the WMT 2014 English-to-French translation task",
+      "Base model training completes in 12 hours on 8 GPUs, while the big model trains in 3.5 days on 8 GPUs",
+      "English constituency parsing results include an F1 score of 91.3 (WSJ only) and 92.7 (semi-supervised)"
+    ],
+    "Notes": [
+      "Checkpoint averaging was used: last 5 checkpoints for base models and last 20 for big models",
+      "Beam search applied with a beam size of 4 (translation) and 21 (parsing) along with a length penalty",
+      "Positional encodings used sinusoidal functions, with experiments showing similar performance to learned embeddings",
+      "Sentence pairs were batched by approximate sequence length to achieve roughly 25,000 tokens for source and target each"
+    ]
+  },
+  "raw_model_output": "{\n  \"Evaluation Set-up\": {\n    \"hardware\": [\n      \"8 NVIDIA P100 GPUs\"\n    ],\n    \"machine\": [\n      \"Single machine\"\n    ],\n    \"docker_requirements\": [\n      \"Not specified\"\n    ],\n    \"other_runtime_requirements\": [\n      \"Not specified\"\n    ]\n  },\n  \"Benchmark evaluated on\": [\n    \"WMT 2014 English-to-German translation task\",\n    \"WMT 2014 English-to-French translation task\",\n    \"English constituency parsing (WSJ portion of Penn Treebank)\"\n  ],\n  \"Training\": {\n    \"is_training_required\": \"Yes\",\n    \"hyperparameters\": [\n      \"Adam optimizer with β1=0.9, β2=0.98, ε=1e-9\",\n      \"Learning rate schedule with linear warmup for 4000 steps then inverse square root decay\",\n      \"Residual dropout with rate 0.1 for base model (0.3 for Transformer big on English-to-French)\",\n      \"Label smoothing with ε_ls=0.1\",\n      \"Base model configuration: 6 layers, d_model=512, d_ff=2048, 8 attention heads (d_k=d_v=64)\",\n      \"Batching approximately 25000 source tokens and 25000 target tokens per batch\",\n      \"Training duration: 100,000 steps (12 hours) for base model; 300,000 steps (3.5 days) for big model\"\n    ],\n    \"random_seed\": [\n      \"Not specified\"\n    ]\n  },\n  \"Results\": {\n    \"metrics_used\": [\n      \"BLEU score\",\n      \"Perplexity\",\n      \"F1 score\"\n    ],\n    \"statistical_results\": [\n      \"Transformer (big) achieves 28.4 BLEU on WMT 2014 English-to-German\",\n      \"Transformer (big) achieves 41.8 BLEU on WMT 2014 English-to-French\",\n      \"Base model achieves 27.3 BLEU (English-to-German) and 38.1 BLEU (English-to-French)\",\n      \"Training times reported: 12 hours for base model and 3.5 days for big model on 8 GPUs\",\n      \"For English constituency parsing: F1 score of 91.3 (WSJ only) and 92.7 (semi-supervised)\"\n    ],\n    \"figure_results\": [\n      \"Figure 1 illustrates the Transformer model architecture\",\n      \"Figure 2 depicts Scaled Dot-Product and Multi-Head Attention mechanisms\",\n      \"Table 2 summarizes BLEU scores and training cost metrics\",\n      \"Table 3 details variations in the Transformer architecture and their impact on performance\",\n      \"Table 4 reports English constituency parsing F1 scores\"\n    ]\n  },\n  \"Expected Results\": [\n    \"28.4 BLEU on the WMT 2014 English-to-German translation task\",\n    \"41.8 BLEU on the WMT 2014 English-to-French translation task\",\n    \"Base model training completes in 12 hours on 8 GPUs, while the big model trains in 3.5 days on 8 GPUs\",\n    \"English constituency parsing results include an F1 score of 91.3 (WSJ only) and 92.7 (semi-supervised)\"\n  ],\n  \"Notes\": [\n    \"Checkpoint averaging was used: last 5 checkpoints for base models and last 20 for big models\",\n    \"Beam search applied with a beam size of 4 (translation) and 21 (parsing) along with a length penalty\",\n    \"Positional encodings used sinusoidal functions, with experiments showing similar performance to learned embeddings\",\n    \"Sentence pairs were batched by approximate sequence length to achieve roughly 25,000 tokens for source and target each\"\n  ]\n}"
+}

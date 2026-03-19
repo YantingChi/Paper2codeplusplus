@@ -1,0 +1,27 @@
+paper_benchmark_name: 2D three-bar truss design
+paper_research_field: Constrained Bayesian Optimization
+matched_benchmark_name: 2D three-bar truss design
+matched_research_field: Constrained Bayesian Optimization
+name_match_type: exact
+field_match_status: same_field
+status: well_established_formula
+materialization_strategy: generate_definition
+source_type: literature_formula
+source_url: Not provided
+match_reason: The benchmark is taken directly from Ray & Saini (2001) with an analytic formulation.
+definition_summary: A two-variable truss design problem that minimizes the structure's volume subject to stress constraints.
+equations_or_components:
+- f(x) = l*(2*√2*x1 + x2)
+- c1(x) = 2 - (√(2*x1 + x2))/(√(2*x2 + 1 + 2*x1*x2))
+- c2(x) = 2 - (1/x1 + √(2*x2))
+- c3(x) = 2 - x2/(√(2*x2 + 1 + 2*x1*x2))
+variables_or_inputs:
+- x1
+- x2
+constraints_or_bounds:
+- x1 ∈ [0, 1]
+- x2 ∈ [0, 1]
+license_or_access_notes:
+- Formulation from literature; no license restrictions
+expected_artifacts:
+- spec.txt

@@ -1,0 +1,3488 @@
+{
+    "paper_id": "Social-Reward",
+    "header": {
+        "generated_with": "S2ORC 1.0.0",
+        "date_generated": "2025-02-24T23:36:24.140344Z"
+    },
+    "title": "SOCIAL REWARD: EVALUATING AND ENHANCING GENERATIVE AI THROUGH MILLION-USER FEED-BACK FROM AN ONLINE CREATIVE COMMUNITY",
+    "authors": [
+        {
+            "first": "Arman",
+            "middle": [],
+            "last": "Isajanyan",
+            "suffix": "",
+            "affiliation": {},
+            "email": "arman.isajanyan@picsart.com"
+        },
+        {
+            "first": "Artur",
+            "middle": [],
+            "last": "Shatveryan",
+            "suffix": "",
+            "affiliation": {},
+            "email": "artur.shatveryan@picsart.com"
+        },
+        {
+            "first": "David",
+            "middle": [],
+            "last": "Kocharyan",
+            "suffix": "",
+            "affiliation": {},
+            "email": "david.kocharyan@picsart.com"
+        },
+        {
+            "first": "Zhangyang",
+            "middle": [],
+            "last": "Wang",
+            "suffix": "",
+            "affiliation": {},
+            "email": ""
+        },
+        {
+            "first": "Humphrey",
+            "middle": [],
+            "last": "Shi",
+            "suffix": "",
+            "affiliation": {},
+            "email": "humphrey.shi@picsart.com"
+        }
+    ],
+    "year": "",
+    "venue": null,
+    "identifiers": {},
+    "abstract": "Social reward as a form of community recognition provides a strong source of motivation for users of online platforms to actively engage and contribute with content to accumulate peers approval. In the realm of text-conditioned image synthesis, the recent surge in progress has ushered in a collaborative era where users and AI systems coalesce to refine visual creations. This co-creative process in the landscape of online social networks empowers users to craft original visual artworks seeking for community validation. Nevertheless, assessing these models in the context of collective community preference introduces distinct challenges. Existing evaluation methods predominantly center on limited size user studies guided by image quality and alignment with prompts. This work pioneers a paradigm shift, unveiling Social Reward -an innovative reward modeling framework that leverages implicit feedback from social network users engaged in creative editing of generated images. We embark on an extensive journey of dataset curation and refinement, drawing from Picsart: an online visual creation and editing platform, yielding a first million-user-scale dataset of implicit human preferences for user-generated visual art named Picsart Image-Social. Our analysis exposes the shortcomings of current metrics in modeling community creative preference of text-to-image models' outputs, compelling us to introduce a novel predictive model explicitly tailored to address these limitations. Rigorous quantitative experiments and user study show that our Social Reward model aligns better with social popularity than existing metrics. Furthermore, we utilize Social Reward to fine-tune text-to-image models, yielding images that are more favored by not only Social Reward, but also other established metrics. These findings highlight the relevance and effectiveness of Social Reward in assessing community appreciation for AI-generated artworks, establishing a closer alignment with users' creative goals: creating popular visual art.",
+    "pdf_parse": {
+        "paper_id": "Social-Reward",
+        "_pdf_hash": "",
+        "abstract": [
+            {
+                "text": "Social reward as a form of community recognition provides a strong source of motivation for users of online platforms to actively engage and contribute with content to accumulate peers approval. In the realm of text-conditioned image synthesis, the recent surge in progress has ushered in a collaborative era where users and AI systems coalesce to refine visual creations. This co-creative process in the landscape of online social networks empowers users to craft original visual artworks seeking for community validation. Nevertheless, assessing these models in the context of collective community preference introduces distinct challenges. Existing evaluation methods predominantly center on limited size user studies guided by image quality and alignment with prompts. This work pioneers a paradigm shift, unveiling Social Reward -an innovative reward modeling framework that leverages implicit feedback from social network users engaged in creative editing of generated images. We embark on an extensive journey of dataset curation and refinement, drawing from Picsart: an online visual creation and editing platform, yielding a first million-user-scale dataset of implicit human preferences for user-generated visual art named Picsart Image-Social. Our analysis exposes the shortcomings of current metrics in modeling community creative preference of text-to-image models' outputs, compelling us to introduce a novel predictive model explicitly tailored to address these limitations. Rigorous quantitative experiments and user study show that our Social Reward model aligns better with social popularity than existing metrics. Furthermore, we utilize Social Reward to fine-tune text-to-image models, yielding images that are more favored by not only Social Reward, but also other established metrics. These findings highlight the relevance and effectiveness of Social Reward in assessing community appreciation for AI-generated artworks, establishing a closer alignment with users' creative goals: creating popular visual art.",
+                "cite_spans": [],
+                "ref_spans": [],
+                "eq_spans": [],
+                "section": "Abstract",
+                "sec_num": null
+            }
+        ],
+        "body_text": [
+            {
+                "text": "Social reward mechanisms play a pivotal role in incentivizing and modulating human behavior. Grounded in neurobiology and psychology, positive social feedback, such as approval, validation, and recognition, are essential for maintaining social cohesion and individual well-being (Rudolph, 2021; Baumeister & Leary, 1995) . This reward-driven behavior extends to online social platforms, where users seek satisfaction via the accumulation of their network's peer engagement with shared content in forms such as likes or views (Deters & Mehl, 2013; Lemai Nguyen & Nallaperuma, 2023) .",
+                "cite_spans": [
+                    {
+                        "start": 279,
+                        "end": 294,
+                        "text": "(Rudolph, 2021;",
+                        "ref_id": null
+                    },
+                    {
+                        "start": 295,
+                        "end": 320,
+                        "text": "Baumeister & Leary, 1995)",
+                        "ref_id": null
+                    },
+                    {
+                        "start": 525,
+                        "end": 546,
+                        "text": "(Deters & Mehl, 2013;",
+                        "ref_id": null
+                    },
+                    {
+                        "start": 547,
+                        "end": 580,
+                        "text": "Lemai Nguyen & Nallaperuma, 2023)",
+                        "ref_id": "BIBREF11"
+                    }
+                ],
+                "ref_spans": [],
+                "eq_spans": [],
+                "section": "INTRODUCTION",
+                "sec_num": "1"
+            },
+            {
+                "text": "Recently, the field of text-conditioned image synthesis has witnessed remarkable advancements, leading to the development of generative algorithms capable of producing high-fidelity images that closely adhere to textual descriptions. This technological breakthrough has significantly impacted the realm of online social networks, as it empowers users with a novel and creative means of content creation and sharing. As users leverage this technology to craft and post compelling visual content, Prompt Social Reward HPS v2 Image Reward PickScore",
+                "cite_spans": [],
+                "ref_spans": [],
+                "eq_spans": [],
+                "section": "INTRODUCTION",
+                "sec_num": "1"
+            },
+            {
+                "text": "Digital anime art of mattress-man with a serious expression in an empty warehouse, highly detailed energizing morning routines princess crown",
+                "cite_spans": [],
+                "ref_spans": [],
+                "eq_spans": [],
+                "section": "INTRODUCTION",
+                "sec_num": "1"
+            },
+            {
+                "text": "A beautiful woman standing in a dystopian city they simultaneously tap into the well-established reward mechanisms of social validation and recognition. Given the pace with which the number of synthetic images grows filling the digital spaces of online creative communities (as of August 2023 more than 15 billion synthetic images had been generated globally (Valyaeva, 2023) ) evaluating the performance of generative models within the context of social network popularity emerges as an important challenge.",
+                "cite_spans": [
+                    {
+                        "start": 359,
+                        "end": 375,
+                        "text": "(Valyaeva, 2023)",
+                        "ref_id": "BIBREF33"
+                    }
+                ],
+                "ref_spans": [],
+                "eq_spans": [],
+                "section": "INTRODUCTION",
+                "sec_num": "1"
+            },
+            {
+                "text": "While social network popularity can be defined in many ways, with likes, views, and other similar types of user interactions traditionally serving as popularity estimates (McParlane et al., 2014; Ding et al., 2019) , the nature of text-to-image technology, adopted by industry largely as co-editing tool integrated into creative platforms (Weisz et al., 2023; Huang & Grady, 2022) , introduces another dimension to social network content popularity measurement, namely the frequency of synthetic image reuses for editing purposes by community members. This metric resonates with the population of artists and creators receiving social rewards when their synthetic images are being leveraged in the editing process by network peers. The central question then can be summarized as, to what extent text-to-image models can produce visual content aligned with social popularity, which is defined as community preference for creative editing purposes?",
+                "cite_spans": [
+                    {
+                        "start": 171,
+                        "end": 195,
+                        "text": "(McParlane et al., 2014;",
+                        "ref_id": "BIBREF16"
+                    },
+                    {
+                        "start": 196,
+                        "end": 214,
+                        "text": "Ding et al., 2019)",
+                        "ref_id": "BIBREF3"
+                    },
+                    {
+                        "start": 339,
+                        "end": 359,
+                        "text": "(Weisz et al., 2023;",
+                        "ref_id": "BIBREF38"
+                    },
+                    {
+                        "start": 360,
+                        "end": 380,
+                        "text": "Huang & Grady, 2022)",
+                        "ref_id": "BIBREF7"
+                    }
+                ],
+                "ref_spans": [],
+                "eq_spans": [],
+                "section": "INTRODUCTION",
+                "sec_num": "1"
+            },
+            {
+                "text": "Recently, researchers have increasingly turned to human preferences as a guiding beacon, inspired by the transformative impact of human feedback in the realm of Large Language Models (LLM) (Ouyang et al., 2022; Nakano et al., 2022) . In the domain of text-to-image generation, reward models have been harnessed to channel human feedback into the learning process Xu et al. (2023a) ; Wu et al. (2023a) ; Kirstain et al. (2023) . These works, have sought to leverage human preferences to construct reward models that facilitate generative model evaluation and fine-tuning.",
+                "cite_spans": [
+                    {
+                        "start": 189,
+                        "end": 210,
+                        "text": "(Ouyang et al., 2022;",
+                        "ref_id": "BIBREF20"
+                    },
+                    {
+                        "start": 211,
+                        "end": 231,
+                        "text": "Nakano et al., 2022)",
+                        "ref_id": "BIBREF17"
+                    },
+                    {
+                        "start": 363,
+                        "end": 380,
+                        "text": "Xu et al. (2023a)",
+                        "ref_id": null
+                    },
+                    {
+                        "start": 383,
+                        "end": 400,
+                        "text": "Wu et al. (2023a)",
+                        "ref_id": null
+                    },
+                    {
+                        "start": 403,
+                        "end": 425,
+                        "text": "Kirstain et al. (2023)",
+                        "ref_id": "BIBREF10"
+                    }
+                ],
+                "ref_spans": [],
+                "eq_spans": [],
+                "section": "INTRODUCTION",
+                "sec_num": "1"
+            },
+            {
+                "text": "Despite the commendable efforts, the existing reward models have notable limitations in our domain of interest. Some of them rely on limited-size data annotation process, as presented in Table 1 , which cannot be deemed the equivalent of the \"community-scale\" feedback. Moreover, prompts utilized for dataset creation (collected from COCO Captions dataset (Chen et al., 2015) and open source prompt dataset DiffusionDB (Wang et al., 2023) ) along with the moderation process and guidelines that adhere mainly to image fidelity and textual alignment as annotation criteria, do not emphasize creative purpose and hence, potentially, are limiting in expressing collective community creative preference. On the other hand, some other approaches collect explicit organic user feedback, but as a downside, exhibit a relatively small scale of collected user preference and absence of \"collective feedback\" (when more than one user engages with a given image) as an important indicator of social popularity. While these approaches do capture a broad spectrum of user preferences, they nevertheless showcase insufficiency to model social popularity in the context of community-level editing preference. These limitations are substantiated by our extensive quantitative and qualitative analysis.",
+                "cite_spans": [
+                    {
+                        "start": 356,
+                        "end": 375,
+                        "text": "(Chen et al., 2015)",
+                        "ref_id": "BIBREF2"
+                    },
+                    {
+                        "start": 419,
+                        "end": 438,
+                        "text": "(Wang et al., 2023)",
+                        "ref_id": null
+                    }
+                ],
+                "ref_spans": [
+                    {
+                        "start": 193,
+                        "end": 194,
+                        "text": "1",
+                        "ref_id": "TABREF0"
+                    }
+                ],
+                "eq_spans": [],
+                "section": "INTRODUCTION",
+                "sec_num": "1"
+            },
+            {
+                "text": "To bridge this gap and address the unique demands of text-to-image in the framework of creative social popularity, we introduce a novel concept: Social Reward. This paradigm shift in reward modeling leverages collective implicit feedback from social network users who specifically employ generated images for creative purposes. This distinction underscores the relevance and applicability of Social Reward to the creative editing process, providing a more faithful estimation of alignment between AI-generated images and community-level creative preference. However, the collection of Social Reward data presents its own set of challenges, notably the inherent noise stemming from the implicit nature of user feedback, the absence of a formal annotation process with precise guidelines, and the unequal content exposure caused by social network-specific factors (such as some content being surfaced more frequently than the others, etc).",
+                "cite_spans": [],
+                "ref_spans": [],
+                "eq_spans": [],
+                "section": "INTRODUCTION",
+                "sec_num": "1"
+            },
+            {
+                "text": "In this work we embark on a comprehensive exploration, starting with data curation sourced from Picsart (https://picsart.com/): one of the world's leading online visual creation and editing platforms. Due to the inherent noise and subjectivity in individual user choices, the collective feedback, which implies multiple users' editing choices for the given content item, is leveraged as a cleaning mechanism of organic implicit user behavior. Several more data collection techniques have been utilized for addressing such biases as caption bias, content exposure time, and user follower base biases. Our analysis reveals the shortcomings of existing metrics in evaluating text-to-image models' fitness for generating popular art, which motivates us to introduce a new model explicitly designed to address these limitations. Moreover, we demonstrate the potential of our model in fine-tuning text-to-image models to better align with community-level creative preference.",
+                "cite_spans": [],
+                "ref_spans": [],
+                "eq_spans": [],
+                "section": "INTRODUCTION",
+                "sec_num": "1"
+            },
+            {
+                "text": "Our contributions are outlined as follows:",
+                "cite_spans": [],
+                "ref_spans": [],
+                "eq_spans": [],
+                "section": "INTRODUCTION",
+                "sec_num": "1"
+            },
+            {
+                "text": "\u2022 We identify an unexplored, but extremely relevant dimension in human preference reward modeling for text-to-image models: evaluating the performance within the context of social network popularity for creative editing. Our analysis provides compelling evidence that existing reward models are ill-suited to capture this dimension.",
+                "cite_spans": [],
+                "ref_spans": [],
+                "eq_spans": [],
+                "section": "INTRODUCTION",
+                "sec_num": "1"
+            },
+            {
+                "text": "\u2022 We embark on a journey of dataset curation and leveraging Picsart's creative community data. We build a large scale dataset of implicit human preferences motivated by creative editing intent over synthetic images, named Picsart Image-Social dataset. Contrary to existing methods, we utilize social network user feedback and curate dataset relying on editing community collective behavior.",
+                "cite_spans": [],
+                "ref_spans": [],
+                "eq_spans": [],
+                "section": "INTRODUCTION",
+                "sec_num": "1"
+            },
+            {
+                "text": "\u2022 Building upon this curated dataset, we develop and validate our Social Reward Model, showcasing its superiority for the given task, as evidenced in Table 4 and Figure 5 . Furthermore, our model captures distinct image attributes that go beyond mere aesthetics (see Figure 1 ), demonstrating its potential to enhance text-to-image model performance for community-level creative preference (see Table 5 and Figure 7 ).",
+                "cite_spans": [],
+                "ref_spans": [
+                    {
+                        "start": 156,
+                        "end": 157,
+                        "text": "4",
+                        "ref_id": "TABREF4"
+                    },
+                    {
+                        "start": 169,
+                        "end": 170,
+                        "text": "5",
+                        "ref_id": "FIGREF5"
+                    },
+                    {
+                        "start": 274,
+                        "end": 275,
+                        "text": "1",
+                        "ref_id": "FIGREF0"
+                    },
+                    {
+                        "start": 401,
+                        "end": 402,
+                        "text": "5",
+                        "ref_id": "TABREF6"
+                    },
+                    {
+                        "start": 414,
+                        "end": 415,
+                        "text": "7",
+                        "ref_id": "FIGREF6"
+                    }
+                ],
+                "eq_spans": [],
+                "section": "INTRODUCTION",
+                "sec_num": "1"
+            },
+            {
+                "text": "Text-to-image generative models allow synthesizing images conditioned on the text input. GANs (Goodfellow et al., 2014) allowed for the first successful results in this realm (Zhang et al., 2017; Xu et al., 2017; Zhu et al., 2019; Liao et al., 2022) . Transformer-based (Ramesh et al., 2021; Chang et al., 2023) models have also yielded great improvements. Recently diffusion-based architectures showed great ability of producing high fidelity images (Nichol et al., 2022; Ramesh et al., 2022; Xu et al., 2023b; Lu et al., 2023) . LDM (Rombach et al., 2022) employs a diffusion process in the underlying latent space rather than directly in the pixel space. This approach delivers notable performance gains while also enhancing processing speed.",
+                "cite_spans": [
+                    {
+                        "start": 94,
+                        "end": 119,
+                        "text": "(Goodfellow et al., 2014)",
+                        "ref_id": null
+                    },
+                    {
+                        "start": 175,
+                        "end": 195,
+                        "text": "(Zhang et al., 2017;",
+                        "ref_id": "BIBREF44"
+                    },
+                    {
+                        "start": 196,
+                        "end": 212,
+                        "text": "Xu et al., 2017;",
+                        "ref_id": "BIBREF42"
+                    },
+                    {
+                        "start": 213,
+                        "end": 230,
+                        "text": "Zhu et al., 2019;",
+                        "ref_id": "BIBREF45"
+                    },
+                    {
+                        "start": 231,
+                        "end": 249,
+                        "text": "Liao et al., 2022)",
+                        "ref_id": "BIBREF14"
+                    },
+                    {
+                        "start": 270,
+                        "end": 291,
+                        "text": "(Ramesh et al., 2021;",
+                        "ref_id": "BIBREF24"
+                    },
+                    {
+                        "start": 292,
+                        "end": 311,
+                        "text": "Chang et al., 2023)",
+                        "ref_id": "BIBREF1"
+                    },
+                    {
+                        "start": 451,
+                        "end": 472,
+                        "text": "(Nichol et al., 2022;",
+                        "ref_id": "BIBREF18"
+                    },
+                    {
+                        "start": 473,
+                        "end": 493,
+                        "text": "Ramesh et al., 2022;",
+                        "ref_id": "BIBREF25"
+                    },
+                    {
+                        "start": 494,
+                        "end": 511,
+                        "text": "Xu et al., 2023b;",
+                        "ref_id": null
+                    },
+                    {
+                        "start": 512,
+                        "end": 528,
+                        "text": "Lu et al., 2023)",
+                        "ref_id": "BIBREF15"
+                    },
+                    {
+                        "start": 535,
+                        "end": 557,
+                        "text": "(Rombach et al., 2022)",
+                        "ref_id": "BIBREF28"
+                    }
+                ],
+                "ref_spans": [],
+                "eq_spans": [],
+                "section": "TEXT-TO-IMAGE GENERATION",
+                "sec_num": "2.1"
+            },
+            {
+                "text": "The domain of predicting content popularity within social networks has garnered substantial attention in recent years, primarily due to its relevance in comprehending content diffusion dynamics, modeling community preference patterns, and the optimization of marketing strategies. Most existing works focus on the following types of media content: text (Oza & Naik, 2016; Gao et al., 2019) , video (Li et al., 2013; Rizoiu et al., 2017) and images (Khosla et al., 2014) ]. In the realm of image popularity prediction most existing works use either Flickr (McParlane et al., 2014) or Instagram (Ding et al., 2019) for their dataset curation. While significant research has been done on social content popularity topic, little attention has been put on the emerging field of synthetic/generated images and their fitness for popularity in a creative community.",
+                "cite_spans": [
+                    {
+                        "start": 353,
+                        "end": 371,
+                        "text": "(Oza & Naik, 2016;",
+                        "ref_id": "BIBREF21"
+                    },
+                    {
+                        "start": 372,
+                        "end": 389,
+                        "text": "Gao et al., 2019)",
+                        "ref_id": "BIBREF4"
+                    },
+                    {
+                        "start": 398,
+                        "end": 415,
+                        "text": "(Li et al., 2013;",
+                        "ref_id": "BIBREF12"
+                    },
+                    {
+                        "start": 416,
+                        "end": 436,
+                        "text": "Rizoiu et al., 2017)",
+                        "ref_id": "BIBREF27"
+                    },
+                    {
+                        "start": 448,
+                        "end": 469,
+                        "text": "(Khosla et al., 2014)",
+                        "ref_id": "BIBREF8"
+                    },
+                    {
+                        "start": 555,
+                        "end": 579,
+                        "text": "(McParlane et al., 2014)",
+                        "ref_id": "BIBREF16"
+                    },
+                    {
+                        "start": 593,
+                        "end": 612,
+                        "text": "(Ding et al., 2019)",
+                        "ref_id": "BIBREF3"
+                    }
+                ],
+                "ref_spans": [],
+                "eq_spans": [],
+                "section": "POPULARITY PREDICTION",
+                "sec_num": "2.2"
+            },
+            {
+                "text": "Given that the focus of this study lies in the realm of evaluating the performance of text-conditioned image generation models, it is imperative to assess the latest advancements in related research. While widely accepted evaluation methods within the image synthesis community, commonly referred to as \"automated metrics\" like FID (Heusel et al., 2018) and CLIP score (Radford et al., 2021) , have demonstrated certain drawbacks (Otani et al., 2023; Parmar et al., 2022; Xu et al., 2023a; Kirstain et al., 2023) , one notable concern is their limited alignment with human preferences.",
+                "cite_spans": [
+                    {
+                        "start": 332,
+                        "end": 353,
+                        "text": "(Heusel et al., 2018)",
+                        "ref_id": "BIBREF6"
+                    },
+                    {
+                        "start": 369,
+                        "end": 391,
+                        "text": "(Radford et al., 2021)",
+                        "ref_id": "BIBREF23"
+                    },
+                    {
+                        "start": 430,
+                        "end": 450,
+                        "text": "(Otani et al., 2023;",
+                        "ref_id": "BIBREF19"
+                    },
+                    {
+                        "start": 451,
+                        "end": 471,
+                        "text": "Parmar et al., 2022;",
+                        "ref_id": "BIBREF22"
+                    },
+                    {
+                        "start": 472,
+                        "end": 489,
+                        "text": "Xu et al., 2023a;",
+                        "ref_id": null
+                    },
+                    {
+                        "start": 490,
+                        "end": 512,
+                        "text": "Kirstain et al., 2023)",
+                        "ref_id": "BIBREF10"
+                    }
+                ],
+                "ref_spans": [],
+                "eq_spans": [],
+                "section": "TEXT-TO-IMAGE EVALUATION",
+                "sec_num": "2.3"
+            },
+            {
+                "text": "To tackle this issue, recent endeavors (Kirstain et al., 2023; Xu et al., 2023a; Wu et al., 2023a) have proposed direct modeling of human preference by learning scoring functions from datasets consisting of human-annotated prompts paired with synthetic images. While these studies represent a significant stride towards enabling practitioners to approximate human preference for generative model outputs, they still exhibit several inherent limitations concerning the core objective of our research, which revolves around addressing the challenge of predicting social popularity.",
+                "cite_spans": [
+                    {
+                        "start": 39,
+                        "end": 62,
+                        "text": "(Kirstain et al., 2023;",
+                        "ref_id": "BIBREF10"
+                    },
+                    {
+                        "start": 63,
+                        "end": 80,
+                        "text": "Xu et al., 2023a;",
+                        "ref_id": null
+                    },
+                    {
+                        "start": 81,
+                        "end": 98,
+                        "text": "Wu et al., 2023a)",
+                        "ref_id": null
+                    }
+                ],
+                "ref_spans": [],
+                "eq_spans": [],
+                "section": "TEXT-TO-IMAGE EVALUATION",
+                "sec_num": "2.3"
+            },
+            {
+                "text": "\u2022 A subset of the prompts used in HPD v2 (Wu et al., 2023a) is sourced from the COCO Captions dataset, which comprises captions linked to real images. This incorporation raises concerns about a potential domain mismatch when evaluating the scoring of generated images. Furthermore, the gathered feedback stems from a relatively restricted number of annotators, rendering it insufficient to encapsulate the preferences of a large-scale user base. In contrast, our feedback is drawn from a user community numbering in the millions individuals who actively engage with these images for editing purposes.",
+                "cite_spans": [
+                    {
+                        "start": 41,
+                        "end": 59,
+                        "text": "(Wu et al., 2023a)",
+                        "ref_id": null
+                    }
+                ],
+                "ref_spans": [],
+                "eq_spans": [],
+                "section": "TEXT-TO-IMAGE EVALUATION",
+                "sec_num": "2.3"
+            },
+            {
+                "text": "\u2022 Likewise, ImageReward (Xu et al., 2023a) dataset faces limitations not only in terms of annotators number but also in terms of a relatively low number of unique prompts and images.",
+                "cite_spans": [
+                    {
+                        "start": 24,
+                        "end": 42,
+                        "text": "(Xu et al., 2023a)",
+                        "ref_id": null
+                    }
+                ],
+                "ref_spans": [],
+                "eq_spans": [],
+                "section": "TEXT-TO-IMAGE EVALUATION",
+                "sec_num": "2.3"
+            },
+            {
+                "text": "\u2022 One important shared concern by both ImageReward and HPD v2 is the absence of specific guidance to direct annotators toward emphasizing creative editing goals. Instead, their focus was primarily on ensuring image fidelity and aligning text with images.",
+                "cite_spans": [],
+                "ref_spans": [],
+                "eq_spans": [],
+                "section": "TEXT-TO-IMAGE EVALUATION",
+                "sec_num": "2.3"
+            },
+            {
+                "text": "\u2022 We performed a prompt analysis to compare prompts derived from the datasets used for training scoring models, which includes prompts from ImageReward and Pick-a-Pic (Kirstain et al., 2023) 1 , with prompts crafted by our platform's creators, which by our popularity metric are reflective of creative image editing intent. It is evident that prompts in ImageReward and Pick-a-Pic datasets significantly deviate from those leveraged for creative editing.",
+                "cite_spans": [
+                    {
+                        "start": 167,
+                        "end": 190,
+                        "text": "(Kirstain et al., 2023)",
+                        "ref_id": "BIBREF10"
+                    }
+                ],
+                "ref_spans": [],
+                "eq_spans": [],
+                "section": "TEXT-TO-IMAGE EVALUATION",
+                "sec_num": "2.3"
+            },
+            {
+                "text": "\u2022 In Pick-a-Pic case prompts are generated by web app, created by paper authors for research purposes. Users had been invited to interact with applications via such channels as Twitter, Facebook, Discord, and Reddit. The relatively small scale of collected user preferences along with the absence of \"collective feedback\" (understood as different users' independent choice to interact with a given image) make Pick-a-Pic less optimal approach for community popularity modeling. Picsart stands as one of the world's largest digital creation platforms, encompassing a wide spectrum of AI-driven editing tools, notably including text-to-image capabilities. This comprehensive suite empowers creators of varying proficiency levels to conceive, refine, and disseminate photographic and video content. Central to the platform's appeal is its robust open-source content ecosystem, perpetually invigorated by a vibrant user community.",
+                "cite_spans": [],
+                "ref_spans": [],
+                "eq_spans": [],
+                "section": "TEXT-TO-IMAGE EVALUATION",
+                "sec_num": "2.3"
+            },
+            {
+                "text": "Picsart serves both personal and professional design needs, distinguished by a distinct social dimension. This social facet allows users to share their creative edits, which, in turn, can be harnessed by fellow members of the platform. Consequently, the popularity of a user escalates when they share images that find utility among their peers. Picsart also incorporates a sophisticated search component, enabling users to locate and utilize one another's edits effectively.",
+                "cite_spans": [],
+                "ref_spans": [],
+                "eq_spans": [],
+                "section": "TEXT-TO-IMAGE EVALUATION",
+                "sec_num": "2.3"
+            },
+            {
+                "text": "In the realm of popularity prediction, most studies commonly employ metrics such as comments, views, or likes as labels for prediction (McParlane et al., 2014; Khosla et al., 2014; Ding et al., 2019) . However, Picsart's distinct creative nature has prompted us to explore a rather unique metric, called remix: the number of times an image has been reused for editing purposes by other users. This intriguing metric represents one of the most prevalent editing behaviors within our community. What sets remixing apart from conventional popularity signals is its deeper level of user engagement. It is not merely a passive indicator, but rather a testament to active involvement, that allows discerning, which synthetic images hold greater appeal for transformative and artistic modifications. Essentially, our community implicitly conducts a form of collective voting, determining the fitness of promptimage pairs for creative editing.",
+                "cite_spans": [
+                    {
+                        "start": 135,
+                        "end": 159,
+                        "text": "(McParlane et al., 2014;",
+                        "ref_id": "BIBREF16"
+                    },
+                    {
+                        "start": 160,
+                        "end": 180,
+                        "text": "Khosla et al., 2014;",
+                        "ref_id": "BIBREF8"
+                    },
+                    {
+                        "start": 181,
+                        "end": 199,
+                        "text": "Ding et al., 2019)",
+                        "ref_id": "BIBREF3"
+                    }
+                ],
+                "ref_spans": [],
+                "eq_spans": [],
+                "section": "DATA COLLECTION",
+                "sec_num": "3.2"
+            },
+            {
+                "text": "We have established specific criteria for identifying positive (popular) and negative (unpopular) images associated with a given prompt, grounded in the following community-driven editing signals:",
+                "cite_spans": [],
+                "ref_spans": [],
+                "eq_spans": [],
+                "section": "DATA COLLECTION",
+                "sec_num": "3.2"
+            },
+            {
+                "text": "\u2022 Content Signal: We consider the frequency with which a given image has been remixed by members of the community. \u2022 Creator Signal: When an image is remixed by top influencer artists within our community.",
+                "cite_spans": [],
+                "ref_spans": [],
+                "eq_spans": [],
+                "section": "DATA COLLECTION",
+                "sec_num": "3.2"
+            },
+            {
+                "text": "In addition to visual and textual attributes, there exists a multitude of factors influencing image popularity. Much like the approach followed by Ding et al. (2019) , we have taken careful measures in collecting data to mitigate potential sources of biases:",
+                "cite_spans": [
+                    {
+                        "start": 147,
+                        "end": 165,
+                        "text": "Ding et al. (2019)",
+                        "ref_id": "BIBREF3"
+                    }
+                ],
+                "ref_spans": [],
+                "eq_spans": [],
+                "section": "DATA COLLECTION",
+                "sec_num": "3.2"
+            },
+            {
+                "text": "\u2022 Prompt Bias: To reduce the impact of the prompt that can cause non-even content distribution in the platform, we condition our model on the prompt, accompanied by a pair of popular and non-popular images. \u2022 Content Exposure Time Bias: Since some images receive higher viewership than others, for the given prompt we select unpopular images with relatively close exposure time to popular ones. ",
+                "cite_spans": [],
+                "ref_spans": [],
+                "eq_spans": [],
+                "section": "DATA COLLECTION",
+                "sec_num": "3.2"
+            },
+            {
+                "text": "To demonstrate the distinctiveness of the Picsart Image-Social dataset in comparison to those employed by existing solutions and to highlight the limitations of these solutions, we undertook a comprehensive analysis. Our three-fold analysis (prompt analysis, comparative quantitative evaluation on collected test set and comparative label explainability analysis of score models datasets) reveals that current evaluation models are poorly suitable for estimating the social popularity of images.",
+                "cite_spans": [],
+                "ref_spans": [],
+                "eq_spans": [],
+                "section": "EMPIRICAL ANALYSIS OF EXISTING EVALUATION FRAMEWORKS",
+                "sec_num": "3.3"
+            },
+            {
+                "text": "Training datasets of Picsart Image-Social, ImageReward and Pick-a-Pic have different sources which also indicates distinct motives for image generation. To illustrate Picsart Image-Social's uniqueness and that it reflects creative editing intent, we conducted a cluster analysis on the Sentence-BERT (Reimers & Gurevych, 2019) embedding of the prompts in the training datasets. For fair comparison we sampled an equal amount (6000 unique prompts) of data from each dataset, filtered non-english prompts and truncated prompts to only include the first 5 words. Clustering was done using Ward's hierarchical clustering method (Ward, 1963) , identifying 173 clusters. Clusters distribution of the datasets in Figure 4 and KL divergence between cluster distributions (Table 2 ) reveal Picsart Image-Social to exhibit the most pronounced dissimilarity from the others. Interestingly, the clusters where our training dataset manifests the highest density in comparison with ImageReward and Pick-a-Pic are characterized by themes such as background photos, flowers, interior and exterior design, and fashion, which are more aligned with popular content themes in visual creative art (see Figure 3 ).",
+                "cite_spans": [
+                    {
+                        "start": 300,
+                        "end": 326,
+                        "text": "(Reimers & Gurevych, 2019)",
+                        "ref_id": "BIBREF26"
+                    },
+                    {
+                        "start": 624,
+                        "end": 636,
+                        "text": "(Ward, 1963)",
+                        "ref_id": "BIBREF37"
+                    }
+                ],
+                "ref_spans": [
+                    {
+                        "start": 713,
+                        "end": 714,
+                        "text": "4",
+                        "ref_id": "FIGREF2"
+                    },
+                    {
+                        "start": 770,
+                        "end": 771,
+                        "text": "2",
+                        "ref_id": "TABREF2"
+                    },
+                    {
+                        "start": 1188,
+                        "end": 1189,
+                        "text": "3",
+                        "ref_id": null
+                    }
+                ],
+                "eq_spans": [],
+                "section": "PROMPT ANALYSIS",
+                "sec_num": "3.3.1"
+            },
+            {
+                "text": "To gauge the effectiveness of existing solutions in predicting social popularity, specifically in the context of image editing, we conducted an evaluation of three models: PickScore (Kirstain et al., 2023) , ImageReward (Xu et al., 2023a) , and HPS v2 (Wu et al., 2023a) , using the Picsart Image-Social test dataset utilizing their respective model evaluation code bases. Our primary evaluation metric was pairwise accuracy. Table 4 presents the results of this evaluation, with PickScore achieving the highest accuracy rate of 62.6%. Notably, this accuracy rate remains relatively modest. This outcome can be primarily attributed to PickScore's data collection approach, which involved incorporating real user preferences, in contrast to ImageReward (60.48%) and HPS v2 (59.4%), which relied on annotations from moderators.",
+                "cite_spans": [
+                    {
+                        "start": 182,
+                        "end": 205,
+                        "text": "(Kirstain et al., 2023)",
+                        "ref_id": "BIBREF10"
+                    },
+                    {
+                        "start": 220,
+                        "end": 238,
+                        "text": "(Xu et al., 2023a)",
+                        "ref_id": null
+                    },
+                    {
+                        "start": 252,
+                        "end": 270,
+                        "text": "(Wu et al., 2023a)",
+                        "ref_id": null
+                    }
+                ],
+                "ref_spans": [
+                    {
+                        "start": 432,
+                        "end": 433,
+                        "text": "4",
+                        "ref_id": "TABREF4"
+                    }
+                ],
+                "eq_spans": [],
+                "section": "QUANTITATIVE ANALYSIS",
+                "sec_num": "3.3.2"
+            },
+            {
+                "text": "To draw insight from the relatively sub-optimal performance of existing score models on the Picsart Image-Social dataset we utilize vanilla CLIP (Radford et al., 2021) and LAION (Schuhmann et al., 2022) aesthetic models as estimators of text-image alignment and aesthetics/fidelity, since two of the three of analyzed models (HPS v2 and ImageReward) used those criteria as annotation guidelines during data collection stage.",
+                "cite_spans": [
+                    {
+                        "start": 145,
+                        "end": 167,
+                        "text": "(Radford et al., 2021)",
+                        "ref_id": "BIBREF23"
+                    },
+                    {
+                        "start": 178,
+                        "end": 202,
+                        "text": "(Schuhmann et al., 2022)",
+                        "ref_id": "BIBREF31"
+                    }
+                ],
+                "ref_spans": [],
+                "eq_spans": [],
+                "section": "AGREEMENT OF CLIP AND LAION AESTHETIC SCORES WITH EXISTING METRICS",
+                "sec_num": "3.3.3"
+            },
+            {
+                "text": "By conducting the inference of vanilla CLIP and LAION aesthetic models on every score model's test sets (including Picsart Image-Social) and calculating pairwise accuracy, we can observe, as depicted in Table 3 , that CLIP and LAION aesthetic scores exhibit the lowest levels of predictive efficacy on Picsart Image-Social dataset. This result underscores the notion that human preferences in our dataset reflect an image quality dimension that is discernibly separate from concepts of general fidelity and text-image alignment. This observation extends our understanding of the comparatively modest performance of other scoring models on the Picsart Image-Social dataset. ",
+                "cite_spans": [],
+                "ref_spans": [
+                    {
+                        "start": 209,
+                        "end": 210,
+                        "text": "3",
+                        "ref_id": "TABREF3"
+                    }
+                ],
+                "eq_spans": [],
+                "section": "AGREEMENT OF CLIP AND LAION AESTHETIC SCORES WITH EXISTING METRICS",
+                "sec_num": "3.3.3"
+            },
+            {
+                "text": "In this section, we present our Social Reward model, which has been trained using user feedback collected from Picsart. We will describe the various backbone models and loss functions considered during our experiments, and conduct comparative analysis with existing solutions.",
+                "cite_spans": [],
+                "ref_spans": [],
+                "eq_spans": [],
+                "section": "SOCIAL REWARD: A NEW METRIC MODEL",
+                "sec_num": "4"
+            },
+            {
+                "text": "Model: Social Reward is trained through fine-tuning of the CLIP model. When provided with a prompt and an image, our scoring function calculates a real-valued score. This score is determined by representing the prompt using a transformer-based text encoder and the image using a transformer-based image encoder, both as d-dimensional vectors and then computing their cosine similarity. Fine-tuning the last two residual blocks of the textual encoder and the last three residual blocks of the visual encoder in CLIP yields superior results on our validation dataset.",
+                "cite_spans": [],
+                "ref_spans": [],
+                "eq_spans": [],
+                "section": "SOCIAL REWARD MODEL TRAINING",
+                "sec_num": "4.1"
+            },
+            {
+                "text": "We experimented with various loss functions and observed that the triplet (Schroff et al., 2015) loss yielded the most favorable outcomes (please refer to Appendix B for details): ",
+                "cite_spans": [
+                    {
+                        "start": 74,
+                        "end": 96,
+                        "text": "(Schroff et al., 2015)",
+                        "ref_id": "BIBREF30"
+                    }
+                ],
+                "ref_spans": [],
+                "eq_spans": [],
+                "section": "Loss function:",
+                "sec_num": null
+            },
+            {
+                "text": "L triplet (a, p, n) = max(0, \u2225a -p\u2225 2 -\u2225a -n\u2225 2 + \u03b1),",
+                "cite_spans": [],
+                "ref_spans": [],
+                "eq_spans": [],
+                "section": "Loss function:",
+                "sec_num": null
+            },
+            {
+                "text": "where a is the vector representation of the prompt, p is the vector representation of the positive image, n is the vector representation of the negative image and \u03b1 is margin.",
+                "cite_spans": [],
+                "ref_spans": [],
+                "eq_spans": [],
+                "section": "Loss function:",
+                "sec_num": null
+            },
+            {
+                "text": "Hyperparameters: We employed the AdamW optimizer with a learning rate of 0.0003 and a batch size of 32, utilizing a distributed computing setup consisting of 8 A100 GPUs.",
+                "cite_spans": [],
+                "ref_spans": [],
+                "eq_spans": [],
+                "section": "Loss function:",
+                "sec_num": null
+            },
+            {
+                "text": "Experiments: We conducted a wide range of experiments including the exploration of various model backbones (such as CLIP and BLIP (Li et al., 2022) ), fine-tuning with different components of these models (visual and textual encoders), and more ablation studies. We compared our model with existing solutions using a dedicated test dataset. We assessed our performance using the pairwise accuracy metric, based on prompt-image cosine similarity distance. As shown in Table 4 our model outperformed existing solutions in this evaluation.",
+                "cite_spans": [
+                    {
+                        "start": 130,
+                        "end": 147,
+                        "text": "(Li et al., 2022)",
+                        "ref_id": "BIBREF13"
+                    }
+                ],
+                "ref_spans": [
+                    {
+                        "start": 473,
+                        "end": 474,
+                        "text": "4",
+                        "ref_id": "TABREF4"
+                    }
+                ],
+                "eq_spans": [],
+                "section": "Loss function:",
+                "sec_num": null
+            },
+            {
+                "text": "The codebase for Social Reward model training and evaluation is provided as supplementary material. Figure 6 demonstrates ranking of the images by Social Reward score (for more visuals see Appendix Figure 9 ). To validate the results and check their generalizability we conducted a user study and compared with PickScore model, as it has the second highest accuracy on our dataset and also involves real users feedback. We generated 20 images with Stable Diffusion 2.1-base (Rombach et al., 2022) with the 100 prompts sampled from PickScore's test set and chose the best image by Social Reward and PickScore. Then we contacted number of popular creators from Picsart and collected their feedback with respect to which of the two images is more likely to get popular on the platform. Figure 5 shows Social Reward outperforms PickScore in ability to estimate social popularity and generalizes well to prompts outside of its training distribution.",
+                "cite_spans": [
+                    {
+                        "start": 474,
+                        "end": 496,
+                        "text": "(Rombach et al., 2022)",
+                        "ref_id": "BIBREF28"
+                    }
+                ],
+                "ref_spans": [
+                    {
+                        "start": 107,
+                        "end": 108,
+                        "text": "6",
+                        "ref_id": "FIGREF4"
+                    },
+                    {
+                        "start": 205,
+                        "end": 206,
+                        "text": "9",
+                        "ref_id": null
+                    },
+                    {
+                        "start": 790,
+                        "end": 791,
+                        "text": "5",
+                        "ref_id": "FIGREF5"
+                    }
+                ],
+                "eq_spans": [],
+                "section": "SOCIAL REWARD MODEL EVALUATION",
+                "sec_num": "4.2"
+            },
+            {
+                "text": "Training: Social Reward can be used to fine-tune generative models to better align with the creative preferences of the community. For 1 million generated images by the users of our community, we calculated the Social Reward score and adapted the fine-tuning method from Wu et al. (2023b) , for a given prompt choosing the image with the highest score and the image with the lowest score. For the image with the lowest score, we added a special token ('t@y quality') to be used at inference time as a negative prompt. We also adapted the common practice of adding 625k subset of LAION-5B (Schuhmann et al., 2022) for regularization. The final training dataset consists of 330.000 images, half of which come from LAION's subset. We fine-tune both the U-Net and the textual encoder of Stable Diffusion 2.1-base model with a learning rate of 1e-5.",
+                "cite_spans": [
+                    {
+                        "start": 271,
+                        "end": 288,
+                        "text": "Wu et al. (2023b)",
+                        "ref_id": null
+                    },
+                    {
+                        "start": 588,
+                        "end": 612,
+                        "text": "(Schuhmann et al., 2022)",
+                        "ref_id": "BIBREF31"
+                    }
+                ],
+                "ref_spans": [],
+                "eq_spans": [],
+                "section": "USING SOCIAL REWARD TO FINE-TUNE T2I MODELS",
+                "sec_num": "4.3"
+            },
+            {
+                "text": "Evaluation: We calculate several metrics for images generated by vanilla and fine-tuned models.",
+                "cite_spans": [],
+                "ref_spans": [],
+                "eq_spans": [],
+                "section": "USING SOCIAL REWARD TO FINE-TUNE T2I MODELS",
+                "sec_num": "4.3"
+            },
+            {
+                "text": "Evaluation is done on 2 separate sets of prompts: internal and general. Internal prompts are selected from our fine-tuning validation prompts set, while general prompts are taken from DiffusionDB (Wang et al., 2023) . For each prompt, we generate 4 images with each model using DDIM scheduler (Song et al., 2022) for 30 steps. In Table 5 , we present average scores and in Table 6 the percentage of times the fine-tuned model outperformed the baseline for each metric and prompt set. Visual comparisons are in Figure 7 and Appendix Figure 10 .",
+                "cite_spans": [
+                    {
+                        "start": 196,
+                        "end": 215,
+                        "text": "(Wang et al., 2023)",
+                        "ref_id": null
+                    },
+                    {
+                        "start": 293,
+                        "end": 312,
+                        "text": "(Song et al., 2022)",
+                        "ref_id": "BIBREF32"
+                    }
+                ],
+                "ref_spans": [
+                    {
+                        "start": 336,
+                        "end": 337,
+                        "text": "5",
+                        "ref_id": "TABREF6"
+                    },
+                    {
+                        "start": 379,
+                        "end": 380,
+                        "text": "6",
+                        "ref_id": null
+                    },
+                    {
+                        "start": 517,
+                        "end": 518,
+                        "text": "7",
+                        "ref_id": "FIGREF6"
+                    },
+                    {
+                        "start": 539,
+                        "end": 541,
+                        "text": "10",
+                        "ref_id": "FIGREF8"
+                    }
+                ],
+                "eq_spans": [],
+                "section": "USING SOCIAL REWARD TO FINE-TUNE T2I MODELS",
+                "sec_num": "4.3"
+            },
+            {
+                "text": "Baseline Prompt We initiate the data collection process by identifying the most popular synthetic images on Picsart, focusing on those with the highest number of remixes over a 10-month period. These images are then arranged based on remix count in descending order. The top 1% of these images are categorized as positive images, utilizing the \"content signal\" approach. Furthermore, if an image has been remixed by an influencer user, it is also included in the set of positive images, employing the \"creator signal\".",
+                "cite_spans": [],
+                "ref_spans": [],
+                "eq_spans": [],
+                "section": "Fine-tune",
+                "sec_num": null
+            },
+            {
+                "text": "Subsequently, we gather prompts associated with the selected positive images. From these prompts, we retrieve all images that have garnered at least one remix and analyze the distribution of view counts before the first remix. By cutting this distribution at the 99th percentile, we establish a view count threshold for subsequent steps.",
+                "cite_spans": [],
+                "ref_spans": [],
+                "eq_spans": [],
+                "section": "Fine-tune",
+                "sec_num": null
+            },
+            {
+                "text": "For negative images, we identify all images, linked to the same prompts, that have received zero remixes (there are large amounts of this kind of images due to \"Pareto-like\" nature of content diffusion in social platforms). For each prompt, we filter out \"zero-remix\" images falling below the established view count threshold. This process ensures that only images with sufficient evidence of negative user feedback are labeled as such.",
+                "cite_spans": [],
+                "ref_spans": [],
+                "eq_spans": [],
+                "section": "Fine-tune",
+                "sec_num": null
+            },
+            {
+                "text": "Throughout the data collection procedure, all cases which cause inconsistencies are dropped. For instance, we omit prompts lacking images other than those labeled as positive or prompts with no images receiving zero remixes, etc.",
+                "cite_spans": [],
+                "ref_spans": [],
+                "eq_spans": [],
+                "section": "Fine-tune",
+                "sec_num": null
+            },
+            {
+                "text": "To further refine the dataset, we employ in-house mature content detection models to filter out images classified within the NSFW category. This comprehensive approach enhances the reliability and accuracy of our collected data.",
+                "cite_spans": [],
+                "ref_spans": [],
+                "eq_spans": [],
+                "section": "Fine-tune",
+                "sec_num": null
+            },
+            {
+                "text": "Out of about 1.7 million images popular ones (deemed as positive) constitute 8%. The main reason behind the smaller number of positive images in Picsart Image-Social dataset is typical \"Pareto like\" pattern observed in majority social networks where minority of the content gathers majority of community engagement.",
+                "cite_spans": [],
+                "ref_spans": [],
+                "eq_spans": [],
+                "section": "A.3 DATASET IMPORTANT CHARACTERISTICS",
+                "sec_num": null
+            },
+            {
+                "text": "\"Creator signal\" that had been leveraged in collecting positive samples for Picsart Image-Social dataset is presented by 174 influencer users. Users are categorized as influential in Picsart if they have a certain amount of followers, are frequently posting new content, which gathers large volumes of community remixes.",
+                "cite_spans": [],
+                "ref_spans": [],
+                "eq_spans": [],
+                "section": "A.3 DATASET IMPORTANT CHARACTERISTICS",
+                "sec_num": null
+            },
+            {
+                "text": "Engagement levels of individual users, in our case, expectedly follow power law distribution logic (pattern which usually describes user activity in online social platforms). For instance, the least active 50% of our users generate about 30% of remixes. Whereas the most active 10% generate about 40% of remixes.",
+                "cite_spans": [],
+                "ref_spans": [],
+                "eq_spans": [],
+                "section": "A.3 DATASET IMPORTANT CHARACTERISTICS",
+                "sec_num": null
+            },
+            {
+                "text": "We investigated a range of loss functions, such as the Binary Cross Entropy, Reweighted Cross-Entropy Loss (Wang et al., 2021) , and metric losses such as InfoNCE (van den Oord et al., 2019) , Contrastive (Khosla et al., 2021) and Triplet (Schroff et al., 2015) . The best results were obtained using the Triplet loss. Performance comparison of the model trained under different loss functions is presented in the Table 7 . ",
+                "cite_spans": [
+                    {
+                        "start": 107,
+                        "end": 126,
+                        "text": "(Wang et al., 2021)",
+                        "ref_id": "BIBREF35"
+                    },
+                    {
+                        "start": 163,
+                        "end": 190,
+                        "text": "(van den Oord et al., 2019)",
+                        "ref_id": null
+                    },
+                    {
+                        "start": 205,
+                        "end": 226,
+                        "text": "(Khosla et al., 2021)",
+                        "ref_id": null
+                    },
+                    {
+                        "start": 239,
+                        "end": 261,
+                        "text": "(Schroff et al., 2015)",
+                        "ref_id": "BIBREF30"
+                    }
+                ],
+                "ref_spans": [
+                    {
+                        "start": 420,
+                        "end": 421,
+                        "text": "7",
+                        "ref_id": "TABREF7"
+                    }
+                ],
+                "eq_spans": [],
+                "section": "B LOSS EXPERIMENTS",
+                "sec_num": null
+            },
+            {
+                "text": "Picsart is a company that complies with GDPR, CCPA, and other data protection legislation and is collecting, storing, and processing users' data by the consent received. It also allows the users to opt out of certain processing purposes, as requested.",
+                "cite_spans": [],
+                "ref_spans": [],
+                "eq_spans": [],
+                "section": "",
+                "sec_num": null
+            }
+        ],
+        "back_matter": [],
+        "bib_entries": {
+            "BIBREF0": {
+                "ref_id": "b0",
+                "title": "The need to belong: Desire for interpersonal attachments as a fundamental human motivation",
+                "authors": [
+                    {
+                        "first": "Roy",
+                        "middle": [],
+                        "last": "Baumeister",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "Mark",
+                        "middle": [],
+                        "last": "Leary",
+                        "suffix": ""
+                    }
+                ],
+                "year": null,
+                "venue": "Psychological bulletin",
+                "volume": "117",
+                "issue": "",
+                "pages": "",
+                "other_ids": {
+                    "DOI": [
+                        "10.1037/0033-2909.117.3.497"
+                    ]
+                },
+                "num": null,
+                "urls": [],
+                "raw_text": "Roy Baumeister and Mark Leary. The need to belong: Desire for interpersonal attachments as a fundamental human motivation. Psychological bulletin, 117:497-529, 06 1995. doi: 10.1037/ 0033-2909.117.3.497.",
+                "links": null
+            },
+            "BIBREF1": {
+                "ref_id": "b1",
+                "title": "Muse: Text-to-image generation via masked generative transformers",
+                "authors": [
+                    {
+                        "first": "Huiwen",
+                        "middle": [],
+                        "last": "Chang",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "Han",
+                        "middle": [],
+                        "last": "Zhang",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "Jarred",
+                        "middle": [],
+                        "last": "Barber",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "Jose",
+                        "middle": [],
+                        "last": "Maschinot",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "Lu",
+                        "middle": [],
+                        "last": "Lezama",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "Ming-Hsuan",
+                        "middle": [],
+                        "last": "Jiang",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "Kevin",
+                        "middle": [],
+                        "last": "Yang",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "William",
+                        "middle": [
+                            "T"
+                        ],
+                        "last": "Murphy",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "Michael",
+                        "middle": [],
+                        "last": "Freeman",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "Yuanzhen",
+                        "middle": [],
+                        "last": "Rubinstein",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "Dilip",
+                        "middle": [],
+                        "last": "Li",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "",
+                        "middle": [],
+                        "last": "Krishnan",
+                        "suffix": ""
+                    }
+                ],
+                "year": 2023,
+                "venue": "",
+                "volume": "",
+                "issue": "",
+                "pages": "",
+                "other_ids": {},
+                "num": null,
+                "urls": [],
+                "raw_text": "Huiwen Chang, Han Zhang, Jarred Barber, AJ Maschinot, Jose Lezama, Lu Jiang, Ming-Hsuan Yang, Kevin Murphy, William T. Freeman, Michael Rubinstein, Yuanzhen Li, and Dilip Krishnan. Muse: Text-to-image generation via masked generative transformers, 2023.",
+                "links": null
+            },
+            "BIBREF2": {
+                "ref_id": "b2",
+                "title": "Fenne Deters and Matthias Mehl. Does posting facebook status updates increase or decrease loneliness? an online social networking experiment",
+                "authors": [
+                    {
+                        "first": "Xinlei",
+                        "middle": [],
+                        "last": "Chen",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "Hao",
+                        "middle": [],
+                        "last": "Fang",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "Tsung-Yi",
+                        "middle": [],
+                        "last": "Lin",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "Ramakrishna",
+                        "middle": [],
+                        "last": "Vedantam",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "Saurabh",
+                        "middle": [],
+                        "last": "Gupta",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "Piotr",
+                        "middle": [],
+                        "last": "Dollar",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "C",
+                        "middle": [
+                            "Lawrence"
+                        ],
+                        "last": "Zitnick",
+                        "suffix": ""
+                    }
+                ],
+                "year": 2015,
+                "venue": "Social Psychological and Personality Science",
+                "volume": "4",
+                "issue": "",
+                "pages": "",
+                "other_ids": {
+                    "DOI": [
+                        "10.1177/1948550612469233"
+                    ]
+                },
+                "num": null,
+                "urls": [],
+                "raw_text": "Xinlei Chen, Hao Fang, Tsung-Yi Lin, Ramakrishna Vedantam, Saurabh Gupta, Piotr Dollar, and C. Lawrence Zitnick. Microsoft coco captions: Data collection and evaluation server, 2015. Fenne Deters and Matthias Mehl. Does posting facebook status updates increase or decrease loneli- ness? an online social networking experiment. Social Psychological and Personality Science, 4: 579-586, 09 2013. doi: 10.1177/1948550612469233.",
+                "links": null
+            },
+            "BIBREF3": {
+                "ref_id": "b3",
+                "title": "Intrinsic image popularity assessment",
+                "authors": [
+                    {
+                        "first": "Keyan",
+                        "middle": [],
+                        "last": "Ding",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "Kede",
+                        "middle": [],
+                        "last": "Ma",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "Shiqi",
+                        "middle": [],
+                        "last": "Wang",
+                        "suffix": ""
+                    }
+                ],
+                "year": 2019,
+                "venue": "Proceedings of the 27th ACM International Conference on Multimedia. ACM",
+                "volume": "",
+                "issue": "",
+                "pages": "",
+                "other_ids": {
+                    "DOI": [
+                        "10.1145/3343031.3351007"
+                    ]
+                },
+                "num": null,
+                "urls": [],
+                "raw_text": "Keyan Ding, Kede Ma, and Shiqi Wang. Intrinsic image popularity assessment. In Proceedings of the 27th ACM International Conference on Multimedia. ACM, oct 2019. doi: 10.1145/3343031. 3351007. URL https://doi.org/10.1145%2F3343031.3351007.",
+                "links": null
+            },
+            "BIBREF4": {
+                "ref_id": "b4",
+                "title": "Taxonomy and evaluation for microblog popularity prediction",
+                "authors": [
+                    {
+                        "first": "Xiaofeng",
+                        "middle": [],
+                        "last": "Gao",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "Zhenhao",
+                        "middle": [],
+                        "last": "Cao",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "Sha",
+                        "middle": [],
+                        "last": "Li",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "Bin",
+                        "middle": [],
+                        "last": "Yao",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "Guihai",
+                        "middle": [],
+                        "last": "Chen",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "Shaojie",
+                        "middle": [],
+                        "last": "Tang",
+                        "suffix": ""
+                    }
+                ],
+                "year": 2019,
+                "venue": "ACM Trans. Knowl. Discov. Data",
+                "volume": "13",
+                "issue": "2",
+                "pages": "",
+                "other_ids": {
+                    "DOI": [
+                        "10.1145/3301303"
+                    ],
+                    "ISSN": [
+                        "1556-4681"
+                    ]
+                },
+                "num": null,
+                "urls": [],
+                "raw_text": "Xiaofeng Gao, Zhenhao Cao, Sha Li, Bin Yao, Guihai Chen, and Shaojie Tang. Taxonomy and eval- uation for microblog popularity prediction. ACM Trans. Knowl. Discov. Data, 13(2), mar 2019. ISSN 1556-4681. doi: 10.1145/3301303. URL https://doi.org/10.1145/3301303.",
+                "links": null
+            },
+            "BIBREF6": {
+                "ref_id": "b6",
+                "title": "Gans trained by a two time-scale update rule converge to a local nash equilibrium",
+                "authors": [
+                    {
+                        "first": "Martin",
+                        "middle": [],
+                        "last": "Heusel",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "Hubert",
+                        "middle": [],
+                        "last": "Ramsauer",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "Thomas",
+                        "middle": [],
+                        "last": "Unterthiner",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "Bernhard",
+                        "middle": [],
+                        "last": "Nessler",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "Sepp",
+                        "middle": [],
+                        "last": "Hochreiter",
+                        "suffix": ""
+                    }
+                ],
+                "year": 2018,
+                "venue": "",
+                "volume": "",
+                "issue": "",
+                "pages": "",
+                "other_ids": {},
+                "num": null,
+                "urls": [],
+                "raw_text": "Martin Heusel, Hubert Ramsauer, Thomas Unterthiner, Bernhard Nessler, and Sepp Hochreiter. Gans trained by a two time-scale update rule converge to a local nash equilibrium, 2018.",
+                "links": null
+            },
+            "BIBREF7": {
+                "ref_id": "b7",
+                "title": "Generative ai: A creative new world",
+                "authors": [
+                    {
+                        "first": "Sonya",
+                        "middle": [],
+                        "last": "Huang",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "Pat",
+                        "middle": [],
+                        "last": "Grady",
+                        "suffix": ""
+                    }
+                ],
+                "year": 2022,
+                "venue": "",
+                "volume": "",
+                "issue": "",
+                "pages": "",
+                "other_ids": {},
+                "num": null,
+                "urls": [],
+                "raw_text": "Sonya Huang and Pat Grady. Generative ai: A creative new world. https://www. sequoiacap.com/article/generative-ai-a-creative-new-world/, 2022.",
+                "links": null
+            },
+            "BIBREF8": {
+                "ref_id": "b8",
+                "title": "What makes an image popular?",
+                "authors": [
+                    {
+                        "first": "Aditya",
+                        "middle": [],
+                        "last": "Khosla",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "Atish",
+                        "middle": [
+                            "Das"
+                        ],
+                        "last": "Sarma",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "Raffay",
+                        "middle": [],
+                        "last": "Hamid",
+                        "suffix": ""
+                    }
+                ],
+                "year": 2014,
+                "venue": "Proceedings of the 23rd International Conference on World Wide Web, WWW '14",
+                "volume": "",
+                "issue": "",
+                "pages": "867--876",
+                "other_ids": {
+                    "DOI": [
+                        "10.1145/2566486.2567996"
+                    ]
+                },
+                "num": null,
+                "urls": [],
+                "raw_text": "Aditya Khosla, Atish Das Sarma, and Raffay Hamid. What makes an image popular? In Proceedings of the 23rd International Conference on World Wide Web, WWW '14, pp. 867-876, New York, NY, USA, 2014. Association for Computing Machinery. ISBN 9781450327442. doi: 10.1145/ 2566486.2567996. URL https://doi.org/10.1145/2566486.2567996.",
+                "links": null
+            },
+            "BIBREF10": {
+                "ref_id": "b10",
+                "title": "Picka-pic: An open dataset of user preferences for text-to-image generation",
+                "authors": [
+                    {
+                        "first": "Yuval",
+                        "middle": [],
+                        "last": "Kirstain",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "Adam",
+                        "middle": [],
+                        "last": "Polyak",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "Uriel",
+                        "middle": [],
+                        "last": "Singer",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "Shahbuland",
+                        "middle": [],
+                        "last": "Matiana",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "Joe",
+                        "middle": [],
+                        "last": "Penna",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "Omer",
+                        "middle": [],
+                        "last": "Levy",
+                        "suffix": ""
+                    }
+                ],
+                "year": 2023,
+                "venue": "",
+                "volume": "",
+                "issue": "",
+                "pages": "",
+                "other_ids": {},
+                "num": null,
+                "urls": [],
+                "raw_text": "Yuval Kirstain, Adam Polyak, Uriel Singer, Shahbuland Matiana, Joe Penna, and Omer Levy. Pick- a-pic: An open dataset of user preferences for text-to-image generation, 2023.",
+                "links": null
+            },
+            "BIBREF11": {
+                "ref_id": "b11",
+                "title": "Realising the potential of digital health communities: a study of the role of social factors in community engagement",
+                "authors": [
+                    {
+                        "first": "Argho",
+                        "middle": [],
+                        "last": "Bandyopadhyay",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "Lemai",
+                        "middle": [],
+                        "last": "Nguyen",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "Ojelanki",
+                        "middle": [],
+                        "last": "Ngwenyama",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "Kaushalya",
+                        "middle": [],
+                        "last": "Nallaperuma",
+                        "suffix": ""
+                    }
+                ],
+                "year": 2023,
+                "venue": "European Journal of Information Systems",
+                "volume": "0",
+                "issue": "0",
+                "pages": "1--36",
+                "other_ids": {
+                    "DOI": [
+                        "10.1080/0960085X.2023.2252390"
+                    ]
+                },
+                "num": null,
+                "urls": [],
+                "raw_text": "Argho Bandyopadhyay Lemai Nguyen, Ojelanki Ngwenyama and Kaushalya Nallaperuma. Real- ising the potential of digital health communities: a study of the role of social factors in com- munity engagement. European Journal of Information Systems, 0(0):1-36, 2023. doi: 10. 1080/0960085X.2023.2252390. URL https://doi.org/10.1080/0960085X.2023. 2252390.",
+                "links": null
+            },
+            "BIBREF12": {
+                "ref_id": "b12",
+                "title": "On popularity prediction of videos shared in online social networks",
+                "authors": [
+                    {
+                        "first": "Haitao",
+                        "middle": [],
+                        "last": "Li",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "Xiaoqiang",
+                        "middle": [],
+                        "last": "Ma",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "Feng",
+                        "middle": [],
+                        "last": "Wang",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "Jiangchuan",
+                        "middle": [],
+                        "last": "Liu",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "Ke",
+                        "middle": [],
+                        "last": "Xu",
+                        "suffix": ""
+                    }
+                ],
+                "year": 2013,
+                "venue": "Proceedings of the 22nd ACM International Conference on Information & Knowledge Management, CIKM '13",
+                "volume": "",
+                "issue": "",
+                "pages": "169--178",
+                "other_ids": {
+                    "DOI": [
+                        "10.1145/2505515.2505523"
+                    ]
+                },
+                "num": null,
+                "urls": [],
+                "raw_text": "Haitao Li, Xiaoqiang Ma, Feng Wang, Jiangchuan Liu, and Ke Xu. On popularity predic- tion of videos shared in online social networks. In Proceedings of the 22nd ACM Interna- tional Conference on Information & Knowledge Management, CIKM '13, pp. 169-178, New York, NY, USA, 2013. Association for Computing Machinery. ISBN 9781450322638. doi: 10.1145/2505515.2505523. URL https://doi.org/10.1145/2505515.2505523.",
+                "links": null
+            },
+            "BIBREF13": {
+                "ref_id": "b13",
+                "title": "Blip: Bootstrapping language-image pretraining for unified vision-language understanding and generation",
+                "authors": [
+                    {
+                        "first": "Junnan",
+                        "middle": [],
+                        "last": "Li",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "Dongxu",
+                        "middle": [],
+                        "last": "Li",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "Caiming",
+                        "middle": [],
+                        "last": "Xiong",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "Steven",
+                        "middle": [],
+                        "last": "Hoi",
+                        "suffix": ""
+                    }
+                ],
+                "year": 2022,
+                "venue": "",
+                "volume": "",
+                "issue": "",
+                "pages": "",
+                "other_ids": {},
+                "num": null,
+                "urls": [],
+                "raw_text": "Junnan Li, Dongxu Li, Caiming Xiong, and Steven Hoi. Blip: Bootstrapping language-image pre- training for unified vision-language understanding and generation, 2022.",
+                "links": null
+            },
+            "BIBREF14": {
+                "ref_id": "b14",
+                "title": "Text to image generation with semantic-spatial aware gan",
+                "authors": [
+                    {
+                        "first": "Wentong",
+                        "middle": [],
+                        "last": "Liao",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "Kai",
+                        "middle": [],
+                        "last": "Hu",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "Michael",
+                        "middle": [
+                            "Ying"
+                        ],
+                        "last": "Yang",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "Bodo",
+                        "middle": [],
+                        "last": "Rosenhahn",
+                        "suffix": ""
+                    }
+                ],
+                "year": 2022,
+                "venue": "Proceedings of the IEEE/CVF Conference on Computer Vision and Pattern Recognition (CVPR)",
+                "volume": "",
+                "issue": "",
+                "pages": "18187--18196",
+                "other_ids": {},
+                "num": null,
+                "urls": [],
+                "raw_text": "Wentong Liao, Kai Hu, Michael Ying Yang, and Bodo Rosenhahn. Text to image generation with semantic-spatial aware gan. In Proceedings of the IEEE/CVF Conference on Computer Vision and Pattern Recognition (CVPR), pp. 18187-18196, June 2022.",
+                "links": null
+            },
+            "BIBREF15": {
+                "ref_id": "b15",
+                "title": "Specialist diffusion: Plug-and-play sample-efficient fine-tuning of text-to-image diffusion models to learn any unseen style",
+                "authors": [
+                    {
+                        "first": "Haoming",
+                        "middle": [],
+                        "last": "Lu",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "Hazarapet",
+                        "middle": [],
+                        "last": "Tunanyan",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "Kai",
+                        "middle": [],
+                        "last": "Wang",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "Shant",
+                        "middle": [],
+                        "last": "Navasardyan",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "Zhangyang",
+                        "middle": [],
+                        "last": "Wang",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "Humphrey",
+                        "middle": [],
+                        "last": "Shi",
+                        "suffix": ""
+                    }
+                ],
+                "year": 2023,
+                "venue": "Proceedings of the IEEE/CVF Conference on Computer Vision and Pattern Recognition",
+                "volume": "",
+                "issue": "",
+                "pages": "14267--14276",
+                "other_ids": {},
+                "num": null,
+                "urls": [],
+                "raw_text": "Haoming Lu, Hazarapet Tunanyan, Kai Wang, Shant Navasardyan, Zhangyang Wang, and Humphrey Shi. Specialist diffusion: Plug-and-play sample-efficient fine-tuning of text-to-image diffusion models to learn any unseen style. In Proceedings of the IEEE/CVF Conference on Computer Vision and Pattern Recognition, pp. 14267-14276, 2023.",
+                "links": null
+            },
+            "BIBREF16": {
+                "ref_id": "b16",
+                "title": "nobody comes here anymore, it's too crowded\"; predicting image popularity on flickr",
+                "authors": [
+                    {
+                        "first": "Philip",
+                        "middle": [
+                            "J"
+                        ],
+                        "last": "Mcparlane",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "Yashar",
+                        "middle": [],
+                        "last": "Moshfeghi",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "Joemon",
+                        "middle": [
+                            "M"
+                        ],
+                        "last": "Jose",
+                        "suffix": ""
+                    }
+                ],
+                "year": 2014,
+                "venue": "Proceedings of International Conference on Multimedia Retrieval, ICMR '14",
+                "volume": "",
+                "issue": "",
+                "pages": "385--391",
+                "other_ids": {
+                    "DOI": [
+                        "10.1145/2578726.2578776"
+                    ]
+                },
+                "num": null,
+                "urls": [],
+                "raw_text": "Philip J. McParlane, Yashar Moshfeghi, and Joemon M. Jose. \"nobody comes here anymore, it's too crowded\"; predicting image popularity on flickr. In Proceedings of International Conference on Multimedia Retrieval, ICMR '14, pp. 385-391, New York, NY, USA, 2014. Association for Computing Machinery. ISBN 9781450327824. doi: 10.1145/2578726.2578776. URL https: //doi.org/10.1145/2578726.2578776.",
+                "links": null
+            },
+            "BIBREF17": {
+                "ref_id": "b17",
+                "title": "Browser-assisted question-answering with human feedback",
+                "authors": [
+                    {
+                        "first": "Reiichiro",
+                        "middle": [],
+                        "last": "Nakano",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "Jacob",
+                        "middle": [],
+                        "last": "Hilton",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "Suchir",
+                        "middle": [],
+                        "last": "Balaji",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "Jeff",
+                        "middle": [],
+                        "last": "Wu",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "Long",
+                        "middle": [],
+                        "last": "Ouyang",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "Christina",
+                        "middle": [],
+                        "last": "Kim",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "Christopher",
+                        "middle": [],
+                        "last": "Hesse",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "Shantanu",
+                        "middle": [],
+                        "last": "Jain",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "Vineet",
+                        "middle": [],
+                        "last": "Kosaraju",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "William",
+                        "middle": [],
+                        "last": "Saunders",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "Xu",
+                        "middle": [],
+                        "last": "Jiang",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "Karl",
+                        "middle": [],
+                        "last": "Cobbe",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "Tyna",
+                        "middle": [],
+                        "last": "Eloundou",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "Gretchen",
+                        "middle": [],
+                        "last": "Krueger",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "Kevin",
+                        "middle": [],
+                        "last": "Button",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "Matthew",
+                        "middle": [],
+                        "last": "Knight",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "Benjamin",
+                        "middle": [],
+                        "last": "Chess",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "John",
+                        "middle": [],
+                        "last": "Schulman",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "",
+                        "middle": [],
+                        "last": "Webgpt",
+                        "suffix": ""
+                    }
+                ],
+                "year": 2022,
+                "venue": "",
+                "volume": "",
+                "issue": "",
+                "pages": "",
+                "other_ids": {},
+                "num": null,
+                "urls": [],
+                "raw_text": "Reiichiro Nakano, Jacob Hilton, Suchir Balaji, Jeff Wu, Long Ouyang, Christina Kim, Christopher Hesse, Shantanu Jain, Vineet Kosaraju, William Saunders, Xu Jiang, Karl Cobbe, Tyna Eloundou, Gretchen Krueger, Kevin Button, Matthew Knight, Benjamin Chess, and John Schulman. Webgpt: Browser-assisted question-answering with human feedback, 2022.",
+                "links": null
+            },
+            "BIBREF18": {
+                "ref_id": "b18",
+                "title": "Glide: Towards photorealistic image generation and editing with text-guided diffusion models",
+                "authors": [
+                    {
+                        "first": "Alex",
+                        "middle": [],
+                        "last": "Nichol",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "Prafulla",
+                        "middle": [],
+                        "last": "Dhariwal",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "Aditya",
+                        "middle": [],
+                        "last": "Ramesh",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "Pranav",
+                        "middle": [],
+                        "last": "Shyam",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "Pamela",
+                        "middle": [],
+                        "last": "Mishkin",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "Bob",
+                        "middle": [],
+                        "last": "Mcgrew",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "Ilya",
+                        "middle": [],
+                        "last": "Sutskever",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "Mark",
+                        "middle": [],
+                        "last": "Chen",
+                        "suffix": ""
+                    }
+                ],
+                "year": 2022,
+                "venue": "",
+                "volume": "",
+                "issue": "",
+                "pages": "",
+                "other_ids": {},
+                "num": null,
+                "urls": [],
+                "raw_text": "Alex Nichol, Prafulla Dhariwal, Aditya Ramesh, Pranav Shyam, Pamela Mishkin, Bob McGrew, Ilya Sutskever, and Mark Chen. Glide: Towards photorealistic image generation and editing with text-guided diffusion models, 2022.",
+                "links": null
+            },
+            "BIBREF19": {
+                "ref_id": "b19",
+                "title": "Esa Rahtu, Janne Heikkil\u00e4, and Shin'ichi Satoh. Toward verifiable and reproducible human evaluation for textto-image generation",
+                "authors": [
+                    {
+                        "first": "Mayu",
+                        "middle": [],
+                        "last": "Otani",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "Riku",
+                        "middle": [],
+                        "last": "Togashi",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "Yu",
+                        "middle": [],
+                        "last": "Sawai",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "Ryosuke",
+                        "middle": [],
+                        "last": "Ishigami",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "Yuta",
+                        "middle": [],
+                        "last": "Nakashima",
+                        "suffix": ""
+                    }
+                ],
+                "year": 2023,
+                "venue": "",
+                "volume": "",
+                "issue": "",
+                "pages": "",
+                "other_ids": {},
+                "num": null,
+                "urls": [],
+                "raw_text": "Mayu Otani, Riku Togashi, Yu Sawai, Ryosuke Ishigami, Yuta Nakashima, Esa Rahtu, Janne Heikkil\u00e4, and Shin'ichi Satoh. Toward verifiable and reproducible human evaluation for text- to-image generation, 2023.",
+                "links": null
+            },
+            "BIBREF20": {
+                "ref_id": "b20",
+                "title": "Training language models to follow instructions with human feedback",
+                "authors": [
+                    {
+                        "first": "Long",
+                        "middle": [],
+                        "last": "Ouyang",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "Jeff",
+                        "middle": [],
+                        "last": "Wu",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "Xu",
+                        "middle": [],
+                        "last": "Jiang",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "Diogo",
+                        "middle": [],
+                        "last": "Almeida",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "Carroll",
+                        "middle": [
+                            "L"
+                        ],
+                        "last": "Wainwright",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "Pamela",
+                        "middle": [],
+                        "last": "Mishkin",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "Chong",
+                        "middle": [],
+                        "last": "Zhang",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "Sandhini",
+                        "middle": [],
+                        "last": "Agarwal",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "Katarina",
+                        "middle": [],
+                        "last": "Slama",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "Alex",
+                        "middle": [],
+                        "last": "Ray",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "John",
+                        "middle": [],
+                        "last": "Schulman",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "Jacob",
+                        "middle": [],
+                        "last": "Hilton",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "Fraser",
+                        "middle": [],
+                        "last": "Kelton",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "Luke",
+                        "middle": [],
+                        "last": "Miller",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "Maddie",
+                        "middle": [],
+                        "last": "Simens",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "Amanda",
+                        "middle": [],
+                        "last": "Askell",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "Peter",
+                        "middle": [],
+                        "last": "Welinder",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "Paul",
+                        "middle": [],
+                        "last": "Christiano",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "Jan",
+                        "middle": [],
+                        "last": "Leike",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "Ryan",
+                        "middle": [],
+                        "last": "Lowe",
+                        "suffix": ""
+                    }
+                ],
+                "year": 2022,
+                "venue": "",
+                "volume": "",
+                "issue": "",
+                "pages": "",
+                "other_ids": {},
+                "num": null,
+                "urls": [],
+                "raw_text": "Long Ouyang, Jeff Wu, Xu Jiang, Diogo Almeida, Carroll L. Wainwright, Pamela Mishkin, Chong Zhang, Sandhini Agarwal, Katarina Slama, Alex Ray, John Schulman, Jacob Hilton, Fraser Kel- ton, Luke Miller, Maddie Simens, Amanda Askell, Peter Welinder, Paul Christiano, Jan Leike, and Ryan Lowe. Training language models to follow instructions with human feedback, 2022.",
+                "links": null
+            },
+            "BIBREF21": {
+                "ref_id": "b21",
+                "title": "Prediction of online lectures popularity: A text mining approach",
+                "authors": [
+                    {
+                        "first": "S",
+                        "middle": [],
+                        "last": "Kavita",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "Poornima",
+                        "middle": [
+                            "G"
+                        ],
+                        "last": "Oza",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "",
+                        "middle": [],
+                        "last": "Naik",
+                        "suffix": ""
+                    }
+                ],
+                "year": 2016,
+                "venue": "nd International Conference on Intelligent Computing, Communication Convergence, ICCC 2016",
+                "volume": "92",
+                "issue": "",
+                "pages": "24--25",
+                "other_ids": {
+                    "DOI": [
+                        "10.1016/j.procs.2016.07.369"
+                    ]
+                },
+                "num": null,
+                "urls": [],
+                "raw_text": "Kavita S. Oza and Poornima G. Naik. Prediction of online lectures popularity: A text min- ing approach. Procedia Computer Science, 92:468-474, 2016. ISSN 1877-0509. doi: https://doi.org/10.1016/j.procs.2016.07.369. URL https://www.sciencedirect.com/ science/article/pii/S1877050916316258. 2nd International Conference on Intelli- gent Computing, Communication Convergence, ICCC 2016, 24-25 January 2016, Bhubaneswar, Odisha, India.",
+                "links": null
+            },
+            "BIBREF22": {
+                "ref_id": "b22",
+                "title": "On aliased resizing and surprising subtleties in gan evaluation",
+                "authors": [
+                    {
+                        "first": "Gaurav",
+                        "middle": [],
+                        "last": "Parmar",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "Richard",
+                        "middle": [],
+                        "last": "Zhang",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "Jun-Yan",
+                        "middle": [],
+                        "last": "Zhu",
+                        "suffix": ""
+                    }
+                ],
+                "year": 2022,
+                "venue": "",
+                "volume": "",
+                "issue": "",
+                "pages": "",
+                "other_ids": {},
+                "num": null,
+                "urls": [],
+                "raw_text": "Gaurav Parmar, Richard Zhang, and Jun-Yan Zhu. On aliased resizing and surprising subtleties in gan evaluation, 2022.",
+                "links": null
+            },
+            "BIBREF23": {
+                "ref_id": "b23",
+                "title": "Learning transferable visual models from natural language supervision",
+                "authors": [
+                    {
+                        "first": "Alec",
+                        "middle": [],
+                        "last": "Radford",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "Jong",
+                        "middle": [
+                            "Wook"
+                        ],
+                        "last": "Kim",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "Chris",
+                        "middle": [],
+                        "last": "Hallacy",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "Aditya",
+                        "middle": [],
+                        "last": "Ramesh",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "Gabriel",
+                        "middle": [],
+                        "last": "Goh",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "Sandhini",
+                        "middle": [],
+                        "last": "Agarwal",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "Girish",
+                        "middle": [],
+                        "last": "Sastry",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "Amanda",
+                        "middle": [],
+                        "last": "Askell",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "Pamela",
+                        "middle": [],
+                        "last": "Mishkin",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "Jack",
+                        "middle": [],
+                        "last": "Clark",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "Gretchen",
+                        "middle": [],
+                        "last": "Krueger",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "Ilya",
+                        "middle": [],
+                        "last": "Sutskever",
+                        "suffix": ""
+                    }
+                ],
+                "year": 2021,
+                "venue": "",
+                "volume": "",
+                "issue": "",
+                "pages": "",
+                "other_ids": {},
+                "num": null,
+                "urls": [],
+                "raw_text": "Alec Radford, Jong Wook Kim, Chris Hallacy, Aditya Ramesh, Gabriel Goh, Sandhini Agar- wal, Girish Sastry, Amanda Askell, Pamela Mishkin, Jack Clark, Gretchen Krueger, and Ilya Sutskever. Learning transferable visual models from natural language supervision, 2021.",
+                "links": null
+            },
+            "BIBREF24": {
+                "ref_id": "b24",
+                "title": "Zero-shot text-to-image generation",
+                "authors": [
+                    {
+                        "first": "Aditya",
+                        "middle": [],
+                        "last": "Ramesh",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "Mikhail",
+                        "middle": [],
+                        "last": "Pavlov",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "Gabriel",
+                        "middle": [],
+                        "last": "Goh",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "Scott",
+                        "middle": [],
+                        "last": "Gray",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "Chelsea",
+                        "middle": [],
+                        "last": "Voss",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "Alec",
+                        "middle": [],
+                        "last": "Radford",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "Mark",
+                        "middle": [],
+                        "last": "Chen",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "Ilya",
+                        "middle": [],
+                        "last": "Sutskever",
+                        "suffix": ""
+                    }
+                ],
+                "year": 2021,
+                "venue": "",
+                "volume": "",
+                "issue": "",
+                "pages": "",
+                "other_ids": {},
+                "num": null,
+                "urls": [],
+                "raw_text": "Aditya Ramesh, Mikhail Pavlov, Gabriel Goh, Scott Gray, Chelsea Voss, Alec Radford, Mark Chen, and Ilya Sutskever. Zero-shot text-to-image generation, 2021.",
+                "links": null
+            },
+            "BIBREF25": {
+                "ref_id": "b25",
+                "title": "Hierarchical textconditional image generation with clip latents",
+                "authors": [
+                    {
+                        "first": "Aditya",
+                        "middle": [],
+                        "last": "Ramesh",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "Prafulla",
+                        "middle": [],
+                        "last": "Dhariwal",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "Alex",
+                        "middle": [],
+                        "last": "Nichol",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "Casey",
+                        "middle": [],
+                        "last": "Chu",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "Mark",
+                        "middle": [],
+                        "last": "Chen",
+                        "suffix": ""
+                    }
+                ],
+                "year": 2022,
+                "venue": "",
+                "volume": "",
+                "issue": "",
+                "pages": "",
+                "other_ids": {},
+                "num": null,
+                "urls": [],
+                "raw_text": "Aditya Ramesh, Prafulla Dhariwal, Alex Nichol, Casey Chu, and Mark Chen. Hierarchical text- conditional image generation with clip latents, 2022.",
+                "links": null
+            },
+            "BIBREF26": {
+                "ref_id": "b26",
+                "title": "Sentence-bert: Sentence embeddings using siamese bertnetworks",
+                "authors": [
+                    {
+                        "first": "Nils",
+                        "middle": [],
+                        "last": "Reimers",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "Iryna",
+                        "middle": [],
+                        "last": "Gurevych",
+                        "suffix": ""
+                    }
+                ],
+                "year": 2019,
+                "venue": "",
+                "volume": "",
+                "issue": "",
+                "pages": "",
+                "other_ids": {},
+                "num": null,
+                "urls": [],
+                "raw_text": "Nils Reimers and Iryna Gurevych. Sentence-bert: Sentence embeddings using siamese bert- networks, 2019.",
+                "links": null
+            },
+            "BIBREF27": {
+                "ref_id": "b27",
+                "title": "Expecting to be HIP",
+                "authors": [
+                    {
+                        "first": "Marian-Andrei",
+                        "middle": [],
+                        "last": "Rizoiu",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "Lexing",
+                        "middle": [],
+                        "last": "Xie",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "Scott",
+                        "middle": [],
+                        "last": "Sanner",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "Manuel",
+                        "middle": [],
+                        "last": "Cebrian",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "Honglin",
+                        "middle": [],
+                        "last": "Yu",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "Pascal",
+                        "middle": [],
+                        "last": "Van Hentenryck",
+                        "suffix": ""
+                    }
+                ],
+                "year": 2017,
+                "venue": "Proceedings of the 26th International Conference on World Wide Web. International World Wide Web Conferences Steering Committee",
+                "volume": "",
+                "issue": "",
+                "pages": "",
+                "other_ids": {
+                    "DOI": [
+                        "10.1145/3038912.3052650"
+                    ]
+                },
+                "num": null,
+                "urls": [],
+                "raw_text": "Marian-Andrei Rizoiu, Lexing Xie, Scott Sanner, Manuel Cebrian, Honglin Yu, and Pascal Van Hentenryck. Expecting to be HIP. In Proceedings of the 26th International Conference on World Wide Web. International World Wide Web Conferences Steering Committee, apr 2017. doi: 10. 1145/3038912.3052650. URL https://doi.org/10.1145%2F3038912.3052650.",
+                "links": null
+            },
+            "BIBREF28": {
+                "ref_id": "b28",
+                "title": "Highresolution image synthesis with latent diffusion models",
+                "authors": [
+                    {
+                        "first": "Robin",
+                        "middle": [],
+                        "last": "Rombach",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "Andreas",
+                        "middle": [],
+                        "last": "Blattmann",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "Dominik",
+                        "middle": [],
+                        "last": "Lorenz",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "Patrick",
+                        "middle": [],
+                        "last": "Esser",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "Bj\u00f6rn",
+                        "middle": [],
+                        "last": "Ommer",
+                        "suffix": ""
+                    }
+                ],
+                "year": 2022,
+                "venue": "",
+                "volume": "",
+                "issue": "",
+                "pages": "",
+                "other_ids": {},
+                "num": null,
+                "urls": [],
+                "raw_text": "Robin Rombach, Andreas Blattmann, Dominik Lorenz, Patrick Esser, and Bj\u00f6rn Ommer. High- resolution image synthesis with latent diffusion models, 2022.",
+                "links": null
+            },
+            "BIBREF29": {
+                "ref_id": "b29",
+                "title": "Chapter three -understanding peer relationships during childhood and adolescence through the lens of social motivation",
+                "authors": [
+                    {
+                        "first": "Karen",
+                        "middle": [
+                            "D"
+                        ],
+                        "last": "Rudolph",
+                        "suffix": ""
+                    }
+                ],
+                "year": null,
+                "venue": "of Advances in Motivation Science, pp",
+                "volume": "8",
+                "issue": "",
+                "pages": "",
+                "other_ids": {
+                    "DOI": [
+                        "10.1016/bs.adms.2020.08.001"
+                    ]
+                },
+                "num": null,
+                "urls": [],
+                "raw_text": "Karen D. Rudolph. Chapter three -understanding peer relationships during childhood and ado- lescence through the lens of social motivation. In Andrew J. Elliot (ed.), Advances in Motiva- tion Science, volume 8 of Advances in Motivation Science, pp. 105-151. Elsevier, 2021. doi: https://doi.org/10.1016/bs.adms.2020.08.001. URL https://www.sciencedirect.com/ science/article/pii/S2215091920300146.",
+                "links": null
+            },
+            "BIBREF30": {
+                "ref_id": "b30",
+                "title": "Facenet: A unified embedding for face recognition and clustering",
+                "authors": [
+                    {
+                        "first": "Florian",
+                        "middle": [],
+                        "last": "Schroff",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "Dmitry",
+                        "middle": [],
+                        "last": "Kalenichenko",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "James",
+                        "middle": [],
+                        "last": "Philbin",
+                        "suffix": ""
+                    }
+                ],
+                "year": 2015,
+                "venue": "Proceedings of the IEEE Conference on Computer Vision and Pattern Recognition (CVPR)",
+                "volume": "",
+                "issue": "",
+                "pages": "",
+                "other_ids": {},
+                "num": null,
+                "urls": [],
+                "raw_text": "Florian Schroff, Dmitry Kalenichenko, and James Philbin. Facenet: A unified embedding for face recognition and clustering. In Proceedings of the IEEE Conference on Computer Vision and Pattern Recognition (CVPR), June 2015.",
+                "links": null
+            },
+            "BIBREF31": {
+                "ref_id": "b31",
+                "title": "Laion-5b: An open large-scale dataset for training next generation image-text models",
+                "authors": [
+                    {
+                        "first": "Christoph",
+                        "middle": [],
+                        "last": "Schuhmann",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "Romain",
+                        "middle": [],
+                        "last": "Beaumont",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "Richard",
+                        "middle": [],
+                        "last": "Vencu",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "Cade",
+                        "middle": [],
+                        "last": "Gordon",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "Ross",
+                        "middle": [],
+                        "last": "Wightman",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "Mehdi",
+                        "middle": [],
+                        "last": "Cherti",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "Theo",
+                        "middle": [],
+                        "last": "Coombes",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "Aarush",
+                        "middle": [],
+                        "last": "Katta",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "Clayton",
+                        "middle": [],
+                        "last": "Mullis",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "Mitchell",
+                        "middle": [],
+                        "last": "Wortsman",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "Patrick",
+                        "middle": [],
+                        "last": "Schramowski",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "Srivatsa",
+                        "middle": [],
+                        "last": "Kundurthy",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "Katherine",
+                        "middle": [],
+                        "last": "Crowson",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "Ludwig",
+                        "middle": [],
+                        "last": "Schmidt",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "Robert",
+                        "middle": [],
+                        "last": "Kaczmarczyk",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "Jenia",
+                        "middle": [],
+                        "last": "Jitsev",
+                        "suffix": ""
+                    }
+                ],
+                "year": 2022,
+                "venue": "",
+                "volume": "",
+                "issue": "",
+                "pages": "",
+                "other_ids": {},
+                "num": null,
+                "urls": [],
+                "raw_text": "Christoph Schuhmann, Romain Beaumont, Richard Vencu, Cade Gordon, Ross Wightman, Mehdi Cherti, Theo Coombes, Aarush Katta, Clayton Mullis, Mitchell Wortsman, Patrick Schramowski, Srivatsa Kundurthy, Katherine Crowson, Ludwig Schmidt, Robert Kaczmarczyk, and Jenia Jitsev. Laion-5b: An open large-scale dataset for training next generation image-text models, 2022.",
+                "links": null
+            },
+            "BIBREF32": {
+                "ref_id": "b32",
+                "title": "Denoising diffusion implicit models",
+                "authors": [
+                    {
+                        "first": "Jiaming",
+                        "middle": [],
+                        "last": "Song",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "Chenlin",
+                        "middle": [],
+                        "last": "Meng",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "Stefano",
+                        "middle": [],
+                        "last": "Ermon",
+                        "suffix": ""
+                    }
+                ],
+                "year": 2022,
+                "venue": "",
+                "volume": "",
+                "issue": "",
+                "pages": "",
+                "other_ids": {},
+                "num": null,
+                "urls": [],
+                "raw_text": "Jiaming Song, Chenlin Meng, and Stefano Ermon. Denoising diffusion implicit models, 2022.",
+                "links": null
+            },
+            "BIBREF33": {
+                "ref_id": "b33",
+                "title": "Aaron van den Oord, Yazhe Li, and Oriol Vinyals. Representation learning with contrastive predictive coding",
+                "authors": [
+                    {
+                        "first": "Alina",
+                        "middle": [],
+                        "last": "Valyaeva",
+                        "suffix": ""
+                    }
+                ],
+                "year": 2019,
+                "venue": "",
+                "volume": "",
+                "issue": "",
+                "pages": "",
+                "other_ids": {},
+                "num": null,
+                "urls": [],
+                "raw_text": "Alina Valyaeva. Ai has already created as many images as photographers have taken in 150 years. statistics for 2023. https://journal.everypixel.com/ai-image-statistics, 2023. Aaron van den Oord, Yazhe Li, and Oriol Vinyals. Representation learning with contrastive predic- tive coding, 2019.",
+                "links": null
+            },
+            "BIBREF34": {
+                "ref_id": "b34",
+                "title": "Visualizing data using t-sne",
+                "authors": [
+                    {
+                        "first": "Laurens",
+                        "middle": [],
+                        "last": "Van Der Maaten",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "Geoffrey",
+                        "middle": [],
+                        "last": "Hinton",
+                        "suffix": ""
+                    }
+                ],
+                "year": 2008,
+                "venue": "Journal of Machine Learning Research",
+                "volume": "9",
+                "issue": "86",
+                "pages": "2579--2605",
+                "other_ids": {},
+                "num": null,
+                "urls": [],
+                "raw_text": "Laurens van der Maaten and Geoffrey Hinton. Visualizing data using t-sne. Journal of Ma- chine Learning Research, 9(86):2579-2605, 2008. URL http://jmlr.org/papers/v9/ vandermaaten08a.html.",
+                "links": null
+            },
+            "BIBREF35": {
+                "ref_id": "b35",
+                "title": "Denoising implicit feedback for recommendation",
+                "authors": [
+                    {
+                        "first": "Wenjie",
+                        "middle": [],
+                        "last": "Wang",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "Fuli",
+                        "middle": [],
+                        "last": "Feng",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "Xiangnan",
+                        "middle": [],
+                        "last": "He",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "Liqiang",
+                        "middle": [],
+                        "last": "Nie",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "Tat-Seng",
+                        "middle": [],
+                        "last": "Chua",
+                        "suffix": ""
+                    }
+                ],
+                "year": 2021,
+                "venue": "Proceedings of the 14th ACM International Conference on Web Search and Data Mining, WSDM '21",
+                "volume": "",
+                "issue": "",
+                "pages": "",
+                "other_ids": {
+                    "DOI": [
+                        "10.1145/3437963.3441800"
+                    ]
+                },
+                "num": null,
+                "urls": [],
+                "raw_text": "Wenjie Wang, Fuli Feng, Xiangnan He, Liqiang Nie, and Tat-Seng Chua. Denoising implicit feed- back for recommendation. In Proceedings of the 14th ACM International Conference on Web Search and Data Mining, WSDM '21. ACM, March 2021. doi: 10.1145/3437963.3441800. URL http://dx.doi.org/10.1145/3437963.3441800.",
+                "links": null
+            },
+            "BIBREF36": {
+                "ref_id": "b36",
+                "title": "Diffusiondb: A large-scale prompt gallery dataset for text-to-image generative models",
+                "authors": [
+                    {
+                        "first": "J",
+                        "middle": [],
+                        "last": "Zijie",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "Evan",
+                        "middle": [],
+                        "last": "Wang",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "David",
+                        "middle": [],
+                        "last": "Montoya",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "Haoyang",
+                        "middle": [],
+                        "last": "Munechika",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "Benjamin",
+                        "middle": [],
+                        "last": "Yang",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "Duen",
+                        "middle": [],
+                        "last": "Hoover",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "Chau",
+                        "middle": [],
+                        "last": "Horng",
+                        "suffix": ""
+                    }
+                ],
+                "year": 2023,
+                "venue": "",
+                "volume": "",
+                "issue": "",
+                "pages": "",
+                "other_ids": {},
+                "num": null,
+                "urls": [],
+                "raw_text": "Zijie J. Wang, Evan Montoya, David Munechika, Haoyang Yang, Benjamin Hoover, and Duen Horng Chau. Diffusiondb: A large-scale prompt gallery dataset for text-to-image gener- ative models, 2023.",
+                "links": null
+            },
+            "BIBREF37": {
+                "ref_id": "b37",
+                "title": "Hierarchical grouping to optimize an objective function",
+                "authors": [
+                    {
+                        "first": "Joe",
+                        "middle": [
+                            "H"
+                        ],
+                        "last": "Ward",
+                        "suffix": ""
+                    }
+                ],
+                "year": 1963,
+                "venue": "Journal of the American Statistical Association",
+                "volume": "58",
+                "issue": "",
+                "pages": "",
+                "other_ids": {},
+                "num": null,
+                "urls": [],
+                "raw_text": "Joe H. Ward. Hierarchical grouping to optimize an objective function. Journal of the American Statistical Association, 58:236-244, 1963. URL https://api.semanticscholar.org/ CorpusID:32863022.",
+                "links": null
+            },
+            "BIBREF38": {
+                "ref_id": "b38",
+                "title": "Toward general design principles for generative ai applications",
+                "authors": [
+                    {
+                        "first": "Justin",
+                        "middle": [
+                            "D"
+                        ],
+                        "last": "Weisz",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "Michael",
+                        "middle": [],
+                        "last": "Muller",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "Jessica",
+                        "middle": [],
+                        "last": "He",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "Stephanie",
+                        "middle": [],
+                        "last": "Houde",
+                        "suffix": ""
+                    }
+                ],
+                "year": 2023,
+                "venue": "",
+                "volume": "",
+                "issue": "",
+                "pages": "",
+                "other_ids": {},
+                "num": null,
+                "urls": [],
+                "raw_text": "Justin D. Weisz, Michael Muller, Jessica He, and Stephanie Houde. Toward general design principles for generative ai applications, 2023.",
+                "links": null
+            },
+            "BIBREF39": {
+                "ref_id": "b39",
+                "title": "Human preference score v2: A solid benchmark for evaluating human preferences of text-toimage synthesis",
+                "authors": [
+                    {
+                        "first": "Xiaoshi",
+                        "middle": [],
+                        "last": "Wu",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "Yiming",
+                        "middle": [],
+                        "last": "Hao",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "Keqiang",
+                        "middle": [],
+                        "last": "Sun",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "Yixiong",
+                        "middle": [],
+                        "last": "Chen",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "Feng",
+                        "middle": [],
+                        "last": "Zhu",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "Rui",
+                        "middle": [],
+                        "last": "Zhao",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "Hongsheng",
+                        "middle": [],
+                        "last": "Li",
+                        "suffix": ""
+                    }
+                ],
+                "year": 2023,
+                "venue": "",
+                "volume": "",
+                "issue": "",
+                "pages": "",
+                "other_ids": {},
+                "num": null,
+                "urls": [],
+                "raw_text": "Xiaoshi Wu, Yiming Hao, Keqiang Sun, Yixiong Chen, Feng Zhu, Rui Zhao, and Hongsheng Li. Human preference score v2: A solid benchmark for evaluating human preferences of text-to- image synthesis, 2023a.",
+                "links": null
+            },
+            "BIBREF40": {
+                "ref_id": "b40",
+                "title": "Human preference score: Better aligning text-to-image models with human preference",
+                "authors": [
+                    {
+                        "first": "Xiaoshi",
+                        "middle": [],
+                        "last": "Wu",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "Keqiang",
+                        "middle": [],
+                        "last": "Sun",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "Feng",
+                        "middle": [],
+                        "last": "Zhu",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "Rui",
+                        "middle": [],
+                        "last": "Zhao",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "Hongsheng",
+                        "middle": [],
+                        "last": "Li",
+                        "suffix": ""
+                    }
+                ],
+                "year": 2023,
+                "venue": "",
+                "volume": "",
+                "issue": "",
+                "pages": "",
+                "other_ids": {},
+                "num": null,
+                "urls": [],
+                "raw_text": "Xiaoshi Wu, Keqiang Sun, Feng Zhu, Rui Zhao, and Hongsheng Li. Human preference score: Better aligning text-to-image models with human preference, 2023b.",
+                "links": null
+            },
+            "BIBREF41": {
+                "ref_id": "b41",
+                "title": "Imagereward: Learning and evaluating human preferences for text-to-image generation",
+                "authors": [
+                    {
+                        "first": "Jiazheng",
+                        "middle": [],
+                        "last": "Xu",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "Xiao",
+                        "middle": [],
+                        "last": "Liu",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "Yuchen",
+                        "middle": [],
+                        "last": "Wu",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "Yuxuan",
+                        "middle": [],
+                        "last": "Tong",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "Qinkai",
+                        "middle": [],
+                        "last": "Li",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "Ming",
+                        "middle": [],
+                        "last": "Ding",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "Jie",
+                        "middle": [],
+                        "last": "Tang",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "Yuxiao",
+                        "middle": [],
+                        "last": "Dong",
+                        "suffix": ""
+                    }
+                ],
+                "year": 2023,
+                "venue": "",
+                "volume": "",
+                "issue": "",
+                "pages": "",
+                "other_ids": {},
+                "num": null,
+                "urls": [],
+                "raw_text": "Jiazheng Xu, Xiao Liu, Yuchen Wu, Yuxuan Tong, Qinkai Li, Ming Ding, Jie Tang, and Yuxiao Dong. Imagereward: Learning and evaluating human preferences for text-to-image generation, 2023a.",
+                "links": null
+            },
+            "BIBREF42": {
+                "ref_id": "b42",
+                "title": "Attngan: Fine-grained text to image generation with attentional generative adversarial networks",
+                "authors": [
+                    {
+                        "first": "Tao",
+                        "middle": [],
+                        "last": "Xu",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "Pengchuan",
+                        "middle": [],
+                        "last": "Zhang",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "Qiuyuan",
+                        "middle": [],
+                        "last": "Huang",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "Han",
+                        "middle": [],
+                        "last": "Zhang",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "Zhe",
+                        "middle": [],
+                        "last": "Gan",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "Xiaolei",
+                        "middle": [],
+                        "last": "Huang",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "Xiaodong",
+                        "middle": [],
+                        "last": "He",
+                        "suffix": ""
+                    }
+                ],
+                "year": 2017,
+                "venue": "",
+                "volume": "",
+                "issue": "",
+                "pages": "",
+                "other_ids": {},
+                "num": null,
+                "urls": [],
+                "raw_text": "Tao Xu, Pengchuan Zhang, Qiuyuan Huang, Han Zhang, Zhe Gan, Xiaolei Huang, and Xiaodong He. Attngan: Fine-grained text to image generation with attentional generative adversarial net- works, 2017.",
+                "links": null
+            },
+            "BIBREF43": {
+                "ref_id": "b43",
+                "title": "Versatile diffusion: Text, images and variations all in one diffusion model",
+                "authors": [
+                    {
+                        "first": "Xingqian",
+                        "middle": [],
+                        "last": "Xu",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "Zhangyang",
+                        "middle": [],
+                        "last": "Wang",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "Gong",
+                        "middle": [],
+                        "last": "Zhang",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "Kai",
+                        "middle": [],
+                        "last": "Wang",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "Humphrey",
+                        "middle": [],
+                        "last": "Shi",
+                        "suffix": ""
+                    }
+                ],
+                "year": 2023,
+                "venue": "Proceedings of the IEEE/CVF International Conference on Computer Vision",
+                "volume": "",
+                "issue": "",
+                "pages": "7754--7765",
+                "other_ids": {},
+                "num": null,
+                "urls": [],
+                "raw_text": "Xingqian Xu, Zhangyang Wang, Gong Zhang, Kai Wang, and Humphrey Shi. Versatile diffusion: Text, images and variations all in one diffusion model. In Proceedings of the IEEE/CVF Interna- tional Conference on Computer Vision, pp. 7754-7765, 2023b.",
+                "links": null
+            },
+            "BIBREF44": {
+                "ref_id": "b44",
+                "title": "Stackgan: Text to photo-realistic image synthesis with stacked generative adversarial networks",
+                "authors": [
+                    {
+                        "first": "Han",
+                        "middle": [],
+                        "last": "Zhang",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "Tao",
+                        "middle": [],
+                        "last": "Xu",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "Hongsheng",
+                        "middle": [],
+                        "last": "Li",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "Shaoting",
+                        "middle": [],
+                        "last": "Zhang",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "Xiaogang",
+                        "middle": [],
+                        "last": "Wang",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "Xiaolei",
+                        "middle": [],
+                        "last": "Huang",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "Dimitris",
+                        "middle": [],
+                        "last": "Metaxas",
+                        "suffix": ""
+                    }
+                ],
+                "year": 2017,
+                "venue": "",
+                "volume": "",
+                "issue": "",
+                "pages": "",
+                "other_ids": {},
+                "num": null,
+                "urls": [],
+                "raw_text": "Han Zhang, Tao Xu, Hongsheng Li, Shaoting Zhang, Xiaogang Wang, Xiaolei Huang, and Dimitris Metaxas. Stackgan: Text to photo-realistic image synthesis with stacked generative adversarial networks, 2017.",
+                "links": null
+            },
+            "BIBREF45": {
+                "ref_id": "b45",
+                "title": "Dm-gan: Dynamic memory generative adversarial networks for text-to-image synthesis",
+                "authors": [
+                    {
+                        "first": "Minfeng",
+                        "middle": [],
+                        "last": "Zhu",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "Pingbo",
+                        "middle": [],
+                        "last": "Pan",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "Wei",
+                        "middle": [],
+                        "last": "Chen",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "Yi",
+                        "middle": [],
+                        "last": "Yang",
+                        "suffix": ""
+                    }
+                ],
+                "year": 2019,
+                "venue": "",
+                "volume": "",
+                "issue": "",
+                "pages": "",
+                "other_ids": {},
+                "num": null,
+                "urls": [],
+                "raw_text": "Minfeng Zhu, Pingbo Pan, Wei Chen, and Yi Yang. Dm-gan: Dynamic memory generative adver- sarial networks for text-to-image synthesis, 2019.",
+                "links": null
+            }
+        },
+        "ref_entries": {
+            "FIGREF0": {
+                "uris": null,
+                "fig_num": "1",
+                "text": "Figure 1: Best image out of 20 generations as chosen by different scoring models, including ours.",
+                "type_str": "figure",
+                "num": null
+            },
+            "FIGREF1": {
+                "uris": null,
+                "fig_num": null,
+                "text": "Figure 2: Picsart Image-Social training set, showing popular (left) and non-popular images (right) Leveraging our social network community has allowed us to amass a larger dataset than parallel text-to-image human preference modeling efforts. Despite the implicit nature of human preferences in our dataset (users edit images organically for creative purposes) the substantial feedback volume minimizes the risk of noisy signals. Each instance in the Picsart Image-Social dataset represents collective, independent, implicit voting by our user community, rather than the preference of a single member. Examples of our collected data are illustrated in Figure 2.",
+                "type_str": "figure",
+                "num": null
+            },
+            "FIGREF2": {
+                "uris": null,
+                "fig_num": "4",
+                "text": "Figure 3: Generated images from prompt clusters distinct for creative editing",
+                "type_str": "figure",
+                "num": null
+            },
+            "FIGREF3": {
+                "uris": null,
+                "fig_num": null,
+                "text": "suburbs (c) work from home (d) charlotte fortnite ... (e) eagle holding soccer ball logo (f) a boy ... with a lion ...",
+                "type_str": "figure",
+                "num": null
+            },
+            "FIGREF4": {
+                "uris": null,
+                "fig_num": "6",
+                "text": "Figure 6: Generated images ranked by Social Reward from best (left) to worst (right)",
+                "type_str": "figure",
+                "num": null
+            },
+            "FIGREF5": {
+                "uris": null,
+                "fig_num": "5",
+                "text": "Figure 5: Human evaluation results using prompts from PickScore's test set.",
+                "type_str": "figure",
+                "num": null
+            },
+            "FIGREF6": {
+                "uris": null,
+                "fig_num": "7",
+                "text": "Figure 7: Generated image comparison between Baseline and Fine-tuned models",
+                "type_str": "figure",
+                "num": null
+            },
+            "FIGREF7": {
+                "uris": null,
+                "fig_num": null,
+                "text": "(a) art by stephen bliss (b) if unicorns were real (c) Ninetales, Pokemon, detailed (d) salvador dali as andy warhol (e) distant dream, 4 k, digital art (f) the seas of cheese, award winning photo (g) cherry in a bottle, cubism, painted by dali (h) scooby doo ( 1 9 6 9 ) background paintings (i) sri lankan landscape, painting by david paynter, (j) hawk headed warlock, wind magic ..., full body character design, ...",
+                "type_str": "figure",
+                "num": null
+            },
+            "FIGREF8": {
+                "uris": null,
+                "fig_num": "10",
+                "text": "Figure 10: Generated image comparison between Baseline (left) and Fine-tuned (right) models using prompts from DiffusionDB",
+                "type_str": "figure",
+                "num": null
+            },
+            "TABREF0": {
+                "content": "<table><tr><td>Name</td><td>Annotator type</td><td>Annotator focus</td><td>Prompt source</td><td>Image source</td><td>Number of Images</td><td>Image Pairs</td><td>Distinct Prompts</td><td>Users/ Annotators</td></tr><tr><td>HPD v2</td><td>Professional annotators</td><td>Image Quality + Text Alignment</td><td>COCO captions + DiffusionDB</td><td>9 T2I models + COCO Captions</td><td>430K</td><td>798K</td><td>104K</td><td>57 *</td></tr><tr><td>ImageReward</td><td>Professional annotators</td><td>Image Quality+ Text Alignment</td><td>DiffusionDB</td><td>Stable Diffusion</td><td>55K</td><td>137K</td><td>8.9K</td><td>24 **</td></tr><tr><td>Pick-a-Pic</td><td>Real users</td><td>Individual Feedback</td><td>Pick-a-Pic Web app</td><td>Different models/configs</td><td>656K</td><td>615K</td><td>38.5K</td><td>6.4K</td></tr><tr><td>Picsart Image-Social</td><td>Real users</td><td>Social Feedback</td><td>Social platform user prompts</td><td>Several inhouse models</td><td>1.7M</td><td>3M</td><td>104K</td><td>1.5M</td></tr></table>",
+                "text": "Comparison of human preference datasets for text-to-image evaluation * After annotation quality inspectors double-checked each annotation, and those invalid ones were assigned to other annotators for relabeling. 1 HPD v2 by the time of this paper writing didn't share the training part of the dataset 3 SOCIAL PREFERENCE: NEW DATASET CURATION AND ANALYSIS 3.1 PICSART AS EDITING-CENTRIC CREATIVE COMMUNITY",
+                "type_str": "table",
+                "num": null,
+                "html": null
+            },
+            "TABREF1": {
+                "content": "<table/>",
+                "text": "User Follower Base Bias: Difference in the size and engagement of individual user follower bases does not affect the popularity of generated images, because all those images are posted under the same Picsart public profile.Our meticulously collected dataset 2 , known as the Picsart Image-Social dataset is represented by triplets: prompt, positive image, and negative image. Additionally, mature images were filtered out by in-house NSFW detection algorithms. For a more detailed description of the data collection procedure, please refer to Appendix A.2. With careful consideration given to avoiding prompt-",
+                "type_str": "table",
+                "num": null,
+                "html": null
+            },
+            "TABREF2": {
+                "content": "<table><tr><td colspan=\"3\">: KL divergence of training</td></tr><tr><td colspan=\"3\">prompts for different scoring models</td></tr><tr><td>Model 1</td><td>Model 2</td><td>KL</td></tr><tr><td>Picsart Image-Social</td><td>Pick-a-Pic</td><td>0.6</td></tr><tr><td>Picsart Image-Social</td><td>ImageReward</td><td>0.8</td></tr><tr><td>Pick-a-Pic</td><td colspan=\"2\">ImageReward 0.35</td></tr></table>",
+                "text": "",
+                "type_str": "table",
+                "num": null,
+                "html": null
+            },
+            "TABREF3": {
+                "content": "<table><tr><td>Dataset</td><td colspan=\"2\">LAION aesthetic score alignment score CLIP</td></tr><tr><td>Picsart Image-Social</td><td>55.3%</td><td>51.9%</td></tr><tr><td>Pick-a-Pic</td><td>56.8%</td><td>60.8%</td></tr><tr><td>ImageReward</td><td>57.35%</td><td>54.82%</td></tr><tr><td>HPD v2</td><td>72.6%</td><td>62.5%</td></tr></table>",
+                "text": "Pairwise accuracy of LAION aesthetic and CLIP image-text alignment scores on test sets.",
+                "type_str": "table",
+                "num": null,
+                "html": null
+            },
+            "TABREF4": {
+                "content": "<table><tr><td colspan=\"2\">Model Name Accuracy</td></tr><tr><td>Social Reward</td><td>69.7%</td></tr><tr><td>PickScore</td><td>62.6%</td></tr><tr><td>ImageReward</td><td>60.48%</td></tr><tr><td>HPS v2</td><td>59.4%</td></tr></table>",
+                "text": "Models Comparison",
+                "type_str": "table",
+                "num": null,
+                "html": null
+            },
+            "TABREF6": {
+                "content": "<table><tr><td>Model</td><td colspan=\"2\">Prompt</td><td colspan=\"5\">Social Reward alignment aesthetic CLIP LAION</td><td>HPS v2</td><td>Image Reward</td><td>PickScore</td></tr><tr><td>Baseline</td><td colspan=\"2\">general</td><td/><td>-0.095</td><td>0.280</td><td colspan=\"2\">5.902</td><td>0.259</td><td>0.117</td><td>0.199</td></tr><tr><td colspan=\"3\">Fine-tune general</td><td/><td>-0.062</td><td>0.278</td><td colspan=\"2\">6.011</td><td>0.261</td><td>0.288</td><td>0.201</td></tr><tr><td>Baseline</td><td colspan=\"2\">internal</td><td/><td>-0.130</td><td>0.260</td><td colspan=\"2\">5.746</td><td>0.258</td><td>-0.078</td><td>0.199</td></tr><tr><td colspan=\"3\">Fine-tune internal</td><td/><td>-0.093</td><td>0.256</td><td colspan=\"2\">5.892</td><td>0.261</td><td>0.110</td><td>0.200</td></tr><tr><td/><td/><td/><td colspan=\"6\">Table 6: Fine-tuned model win-rates vs Baseline</td></tr><tr><td colspan=\"2\">Prompt</td><td colspan=\"5\">Social Reward alignment aesthetic CLIP LAION</td><td colspan=\"2\">HPS v2</td><td>Image Reward</td><td>PickScore</td></tr><tr><td colspan=\"2\">internal</td><td colspan=\"2\">75.6%</td><td>43%</td><td>73.8%</td><td/><td colspan=\"2\">73.4%</td><td>70.6%</td><td>63.2%</td></tr><tr><td colspan=\"2\">general</td><td colspan=\"2\">75.6%</td><td>43.8%</td><td>71.2%</td><td/><td colspan=\"2\">71.4%</td><td>70.6%</td><td>67.8%</td></tr><tr><td>CLIP alignment is</td><td/><td/><td/><td/><td/><td/><td/></tr></table>",
+                "text": "Comparison between Baseline (SD-2.1-base) and fine-tuned models the only metric with a slight decrease which can be explained by the fact that Picsart Image-Social's training data reflects social feedback of the image; users might compromise text-image alignment for the sake of selecting an image more suitable for creative editing. On the other hand, all other metrics have increased even on general prompts which shows that Social Reward not only assesses the potential image popularity in the context of creative editing but also incorporates to high extent notions of general aesthetic present in other scores.5 CONCLUSIONIn this work, we introduced a new concept known as Social Reward in the realm of text-conditioned image synthesis. Leveraging implicit feedback from social network users engaged with AIgenerated images, we addressed the unique challenge of evaluating text-to-image models in the context of social network popularity and creative editing. Our comprehensive journey involved dataset curation from Picsart, resulting in the creation of the Picsart Image-Social dataset, a millionuser-scale repository of implicit human preferences for user-generated visual art. Through rigorous analysis and experimentation, we demonstrated that our Social Reward model outperforms existing metrics in capturing community-level creative preferences. Moreover, we demonstrate that employing Social Reward to fine-tune text-to-image models leads to improved alignment not only with Social Reward, but also with other established metrics. By introducing this novel approach, we aim to enhance the co-creative process, align AI-generated images with the majority of users' creative objectives, and ultimately facilitate the creation of more popular visual arts in the digital space.",
+                "type_str": "table",
+                "num": null,
+                "html": null
+            },
+            "TABREF7": {
+                "content": "<table><tr><td>Loss</td><td>Accuracy</td></tr><tr><td>Triplet</td><td>69.7%</td></tr><tr><td>InfoNCE</td><td>68.5%</td></tr><tr><td>Contrastive</td><td>67.1%</td></tr><tr><td>BCE</td><td>67%</td></tr><tr><td>Reweighted Cross-Entropy</td><td>65.9%</td></tr></table>",
+                "text": "Different Losses and their Accuracies",
+                "type_str": "table",
+                "num": null,
+                "html": null
+            }
+        }
+    }
+}

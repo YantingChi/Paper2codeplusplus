@@ -1,0 +1,40 @@
+🌟 Usage Summary 🌟
+[RunningInfo] Transformer
+🛠️ Model: o3-mini
+📥 Input tokens: 24071 (Cost: $0.02647810)
+📦 Cached input tokens: 0 (Cost: $0.00000000)
+📤 Output tokens: 5570 (Cost: $0.02450800)
+💵 Current total cost: $0.05098610
+🪙 Accumulated total cost so far: $0.05098610
+============================================
+
+🌟 Usage Summary 🌟
+[PaperOnlyEvalInfo] Transformer
+🛠️ Model: o3-mini
+📥 Input tokens: 10835 (Cost: $0.01191850)
+📦 Cached input tokens: 0 (Cost: $0.00000000)
+📤 Output tokens: 4299 (Cost: $0.01891560)
+💵 Current total cost: $0.03083410
+🪙 Accumulated total cost so far: $0.03083410
+============================================
+
+🌟 Usage Summary 🌟
+[PaperOnlyEvalInfo] Transformer
+🛠️ Model: o3-mini
+📥 Input tokens: 11182 (Cost: $0.01230020)
+📦 Cached input tokens: 0 (Cost: $0.00000000)
+📤 Output tokens: 5225 (Cost: $0.02299000)
+💵 Current total cost: $0.03529020
+🪙 Accumulated total cost so far: $0.03529020
+============================================
+
+🌟 Usage Summary 🌟
+[EvalPlan] Transformer
+🛠️ Model: o3-mini
+📥 Input tokens: 15211 (Cost: $0.01673210)
+📦 Cached input tokens: 0 (Cost: $0.00000000)
+📤 Output tokens: 5162 (Cost: $0.02271280)
+💵 Current total cost: $0.03944490
+🪙 Accumulated total cost so far: $0.03944490
+============================================
+

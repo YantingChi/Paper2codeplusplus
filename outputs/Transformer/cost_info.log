@@ -1,0 +1,140 @@
+🌟 Usage Summary 🌟
+[Planning] Overall plan
+🛠️ Model: o3-mini
+📥 Input tokens: 10872 (Cost: $0.01195920)
+📦 Cached input tokens: 0 (Cost: $0.00000000)
+📤 Output tokens: 5051 (Cost: $0.02222440)
+💵 Current total cost: $0.03418360
+🪙 Accumulated total cost so far: $0.03418360
+============================================
+
+🌟 Usage Summary 🌟
+[Planning] Architecture design
+🛠️ Model: o3-mini
+📥 Input tokens: 14181 (Cost: $0.01559910)
+📦 Cached input tokens: 0 (Cost: $0.00000000)
+📤 Output tokens: 2491 (Cost: $0.01096040)
+💵 Current total cost: $0.02655950
+🪙 Accumulated total cost so far: $0.06074310
+============================================
+
+🌟 Usage Summary 🌟
+[Planning] Logic design
+🛠️ Model: o3-mini
+📥 Input tokens: 2365 (Cost: $0.00260150)
+📦 Cached input tokens: 13312 (Cost: $0.00732160)
+📤 Output tokens: 1975 (Cost: $0.00869000)
+💵 Current total cost: $0.01861310
+🪙 Accumulated total cost so far: $0.07935620
+============================================
+
+🌟 Usage Summary 🌟
+[Planning] Configuration file generation
+🛠️ Model: o3-mini
+📥 Input tokens: 1365 (Cost: $0.00150150)
+📦 Cached input tokens: 15232 (Cost: $0.00837760)
+📤 Output tokens: 1953 (Cost: $0.00859320)
+💵 Current total cost: $0.01847230
+🪙 Accumulated total cost so far: $0.09782850
+============================================
+
+🌟 Usage Summary 🌟
+[ANALYSIS] dataset_loader.py
+🛠️ Model: o3-mini
+📥 Input tokens: 15593 (Cost: $0.01715230)
+📦 Cached input tokens: 0 (Cost: $0.00000000)
+📤 Output tokens: 3576 (Cost: $0.01573440)
+💵 Current total cost: $0.03288670
+🪙 Accumulated total cost so far: $0.13071520
+============================================
+
+🌟 Usage Summary 🌟
+[ANALYSIS] model.py
+🛠️ Model: o3-mini
+📥 Input tokens: 15601 (Cost: $0.01716110)
+📦 Cached input tokens: 0 (Cost: $0.00000000)
+📤 Output tokens: 4700 (Cost: $0.02068000)
+💵 Current total cost: $0.03784110
+🪙 Accumulated total cost so far: $0.16855630
+============================================
+
+🌟 Usage Summary 🌟
+[ANALYSIS] trainer.py
+🛠️ Model: o3-mini
+📥 Input tokens: 343 (Cost: $0.00037730)
+📦 Cached input tokens: 15232 (Cost: $0.00837760)
+📤 Output tokens: 3467 (Cost: $0.01525480)
+💵 Current total cost: $0.02400970
+🪙 Accumulated total cost so far: $0.19256600
+============================================
+
+🌟 Usage Summary 🌟
+[ANALYSIS] evaluation.py
+🛠️ Model: o3-mini
+📥 Input tokens: 352 (Cost: $0.00038720)
+📦 Cached input tokens: 15232 (Cost: $0.00837760)
+📤 Output tokens: 4619 (Cost: $0.02032360)
+💵 Current total cost: $0.02908840
+🪙 Accumulated total cost so far: $0.22165440
+============================================
+
+🌟 Usage Summary 🌟
+[ANALYSIS] main.py
+🛠️ Model: o3-mini
+📥 Input tokens: 352 (Cost: $0.00038720)
+📦 Cached input tokens: 15232 (Cost: $0.00837760)
+📤 Output tokens: 3416 (Cost: $0.01503040)
+💵 Current total cost: $0.02379520
+🪙 Accumulated total cost so far: $0.24544960
+============================================
+
+🌟 Usage Summary 🌟
+[CODING] dataset_loader.py
+🛠️ Model: o3-mini
+📥 Input tokens: 17343 (Cost: $0.01907730)
+📦 Cached input tokens: 0 (Cost: $0.00000000)
+📤 Output tokens: 10639 (Cost: $0.04681160)
+💵 Current total cost: $0.06588890
+🪙 Accumulated total cost so far: $0.31133850
+============================================
+
+🌟 Usage Summary 🌟
+[CODING] model.py
+🛠️ Model: o3-mini
+📥 Input tokens: 6119 (Cost: $0.00673090)
+📦 Cached input tokens: 15232 (Cost: $0.00837760)
+📤 Output tokens: 12672 (Cost: $0.05575680)
+💵 Current total cost: $0.07086530
+🪙 Accumulated total cost so far: $0.38220380
+============================================
+
+🌟 Usage Summary 🌟
+[CODING] trainer.py
+🛠️ Model: o3-mini
+📥 Input tokens: 6287 (Cost: $0.00691570)
+📦 Cached input tokens: 18304 (Cost: $0.01006720)
+📤 Output tokens: 5546 (Cost: $0.02440240)
+💵 Current total cost: $0.04138530
+🪙 Accumulated total cost so far: $0.42358910
+============================================
+
+🌟 Usage Summary 🌟
+[CODING] evaluation.py
+🛠️ Model: o3-mini
+📥 Input tokens: 4336 (Cost: $0.00476960)
+📦 Cached input tokens: 22528 (Cost: $0.01239040)
+📤 Output tokens: 9683 (Cost: $0.04260520)
+💵 Current total cost: $0.05976520
+🪙 Accumulated total cost so far: $0.48335430
+============================================
+
+🌟 Usage Summary 🌟
+[CODING] main.py
+🛠️ Model: o3-mini
+📥 Input tokens: 5000 (Cost: $0.00550000)
+📦 Cached input tokens: 24448 (Cost: $0.01344640)
+📤 Output tokens: 6484 (Cost: $0.02852960)
+💵 Current total cost: $0.04747600
+🪙 Accumulated total cost so far: $0.53083030
+============================================
+

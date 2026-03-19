@@ -1,0 +1,198 @@
+#!/usr/bin/env python3
+from __future__ import annotations
+
+import sys
+from dataclasses import dataclass, field
+from pathlib import Path
+
+
+@dataclass
+class Chunk:
+    lines: list[tuple[str, str]] = field(default_factory=list)
+
+
+@dataclass
+class AddOp:
+    path: str
+    lines: list[str] = field(default_factory=list)
+
+
+@dataclass
+class DeleteOp:
+    path: str
+
+
+@dataclass
+class UpdateOp:
+    old_path: str
+    new_path: str | None = None
+    chunks: list[Chunk] = field(default_factory=list)
+
+
+def fail(message: str) -> "NoReturn":
+    print(f"applypatch: {message}", file=sys.stderr)
+    raise SystemExit(1)
+
+
+def load_lines(path: Path) -> list[str]:
+    if not path.exists():
+        fail(f"file does not exist: {path}")
+    return path.read_text(encoding="utf-8").splitlines()
+
+
+def write_lines(path: Path, lines: list[str]) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    text = "\n".join(lines)
+    if lines:
+        text += "\n"
+    path.write_text(text, encoding="utf-8")
+
+
+def line_matches(expected: str, actual: str, fuzzy: bool) -> bool:
+    if expected == actual:
+        return True
+    if not fuzzy or not expected:
+        return False
+    return actual.startswith(expected) or expected in actual
+
+
+def find_sequence(lines: list[str], seq: list[str], start_at: int) -> int | None:
+    if not seq:
+        return start_at
+    max_start = len(lines) - len(seq) + 1
+    for fuzzy in (False, True):
+        for start in range(start_at, max_start):
+            if all(
+                line_matches(expected, actual, fuzzy)
+                for expected, actual in zip(seq, lines[start : start + len(seq)])
+            ):
+                return start
+    return None
+
+
+def apply_update(op: UpdateOp) -> None:
+    source = Path(op.old_path)
+    target = Path(op.new_path or op.old_path)
+    original = load_lines(source)
+
+    if not op.chunks:
+        updated = original
+    else:
+        updated: list[str] = []
+        cursor = 0
+        for chunk in op.chunks:
+            old_seq = [text for prefix, text in chunk.lines if prefix != "+"]
+            new_seq = [text for prefix, text in chunk.lines if prefix != "-"]
+            match_at = find_sequence(original, old_seq, cursor)
+            if match_at is None:
+                fail(f"could not apply chunk to {source}")
+            updated.extend(original[cursor:match_at])
+            updated.extend(new_seq)
+            cursor = match_at + len(old_seq)
+        updated.extend(original[cursor:])
+
+    write_lines(target, updated)
+    if op.new_path is not None and target != source:
+        source.unlink()
+
+
+def apply_add(op: AddOp) -> None:
+    path = Path(op.path)
+    if path.exists():
+        fail(f"cannot add existing file: {path}")
+    write_lines(path, op.lines)
+
+
+def apply_delete(op: DeleteOp) -> None:
+    path = Path(op.path)
+    if not path.exists():
+        fail(f"cannot delete missing file: {path}")
+    path.unlink()
+
+
+def parse_patch(text: str) -> list[AddOp | DeleteOp | UpdateOp]:
+    lines = text.splitlines()
+    if not lines or lines[0] != "*** Begin Patch":
+        fail("missing *** Begin Patch header")
+
+    ops: list[AddOp | DeleteOp | UpdateOp] = []
+    i = 1
+    while i < len(lines):
+        line = lines[i]
+        if line == "*** End Patch":
+            return ops
+
+        if line.startswith("*** Add File: "):
+            path = line[len("*** Add File: ") :]
+            i += 1
+            added: list[str] = []
+            while i < len(lines) and not lines[i].startswith("*** "):
+                if not lines[i].startswith("+"):
+                    fail(f"invalid add-file line for {path}: {lines[i]!r}")
+                added.append(lines[i][1:])
+                i += 1
+            ops.append(AddOp(path=path, lines=added))
+            continue
+
+        if line.startswith("*** Delete File: "):
+            path = line[len("*** Delete File: ") :]
+            ops.append(DeleteOp(path=path))
+            i += 1
+            continue
+
+        if line.startswith("*** Update File: "):
+            old_path = line[len("*** Update File: ") :]
+            i += 1
+            new_path: str | None = None
+            if i < len(lines) and lines[i].startswith("*** Move to: "):
+                new_path = lines[i][len("*** Move to: ") :]
+                i += 1
+
+            chunks: list[Chunk] = []
+            current: list[tuple[str, str]] = []
+            while i < len(lines):
+                line = lines[i]
+                if line == "*** End Patch" or line.startswith("*** Add File: ") or line.startswith("*** Delete File: ") or line.startswith("*** Update File: "):
+                    break
+                if line.startswith("@@"):
+                    if current:
+                        chunks.append(Chunk(lines=current))
+                        current = []
+                    i += 1
+                    continue
+                if line == "*** End of File":
+                    i += 1
+                    continue
+                if line and line[0] in (" ", "+", "-"):
+                    current.append((line[0], line[1:]))
+                    i += 1
+                    continue
+                fail(f"invalid update line for {old_path}: {line!r}")
+            if current:
+                chunks.append(Chunk(lines=current))
+            ops.append(UpdateOp(old_path=old_path, new_path=new_path, chunks=chunks))
+            continue
+
+        fail(f"unexpected line: {line!r}")
+
+    fail("missing *** End Patch footer")
+
+
+def main() -> int:
+    patch_text = sys.stdin.read()
+    if not patch_text.strip():
+        fail("empty patch")
+
+    for op in parse_patch(patch_text):
+        if isinstance(op, AddOp):
+            apply_add(op)
+        elif isinstance(op, DeleteOp):
+            apply_delete(op)
+        else:
+            apply_update(op)
+
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

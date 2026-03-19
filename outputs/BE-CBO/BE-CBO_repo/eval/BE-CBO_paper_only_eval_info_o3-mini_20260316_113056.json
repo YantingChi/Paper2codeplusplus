@@ -1,0 +1,84 @@
+{
+  "paper_name": "BE-CBO",
+  "model": "o3-mini",
+  "paper_meta": {
+    "source_path": "../data/lightweight/BE-CBO/BE-CBO.json",
+    "paper_format": "JSON",
+    "original_chars": 145651,
+    "used_chars": 145651,
+    "truncated": false
+  },
+  "prompt_token_estimate": 42836,
+  "extracted_info": {
+    "Evaluation Set-up": {
+      "hardware": [
+        "Intel Xeon Platinum 8260 CPU",
+        "4GB RAM per core"
+      ],
+      "machine": [
+        "Distributed server",
+        "Each experiment runs on a single CPU thread"
+      ],
+      "docker_requirements": [
+        "Not specified"
+      ],
+      "other_runtime_requirements": [
+        "Experiments executed in parallel",
+        "No GPU usage",
+        "Utilizes SciPy’s SLSQP optimizer"
+      ]
+    },
+    "Benchmark evaluated on": [
+      "2D Townsend function",
+      "2D Simionescu function",
+      "2D LSQ function",
+      "2D three-bar truss design",
+      "3D tension-compression string design",
+      "4D welded beam design",
+      "4D gas transmission compressor design",
+      "4D pressure vessel design",
+      "7D speed reducer design",
+      "9D planetary gear train design",
+      "10D rolling element bearing design",
+      "30D cantilever beam design"
+    ],
+    "Training": {
+      "is_training_required": "Yes",
+      "hyperparameters": [
+        "Deep Ensemble classifier with a simple architecture: 4 fully connected layers with 64*floor(log2(d)) neurons per hidden layer",
+        "ReLU activations between layers",
+        "Optimized using variational inference (ELBO) rather than maximum likelihood",
+        "Adam optimizer with a learning rate of 3e-4",
+        "1000 training iterations",
+        "No regularization or dropout applied"
+      ],
+      "random_seed": [
+        "Experiments run with 10 different random seeds using the same initial Sobol sequence"
+      ]
+    },
+    "Results": {
+      "metrics_used": [
+        "Current best objective value (f′) over evaluations",
+        "Feasibility ratio (ratio of feasible to total points)"
+      ],
+      "statistical_results": [
+        "Mean and standard deviation computed over 10 random seeds"
+      ],
+      "figure_results": [
+        "Figures 3, 4, and 5 display quantitative and qualitative performance comparisons"
+      ]
+    },
+    "Expected Results": [
+      "BE-CBO consistently exhibits top performance with low variance across both synthetic and real-world benchmarks",
+      "It effectively explores the boundary between feasible and infeasible regions to accurately identify the global optimum",
+      "Deep Ensembles yield more robust constraint modeling than Gaussian Processes, especially in high-dimensional problems",
+      "Although very robust overall, BE-CBO is slightly outperformed by SCBO in the 30D cantilever beam design case"
+    ],
+    "Notes": [
+      "Experiments use 10 initial random samples and 200 total evaluations per run",
+      "The dynamic bound strategy adapts based on classifier uncertainty",
+      "All experiments are conducted in parallel on a distributed server with single-threaded CPU jobs"
+    ]
+  },
+  "raw_model_output": "{\n  \"Evaluation Set-up\": {\n    \"hardware\": [\n      \"Intel Xeon Platinum 8260 CPU\",\n      \"4GB RAM per core\"\n    ],\n    \"machine\": [\n      \"Distributed server\",\n      \"Each experiment runs on a single CPU thread\"\n    ],\n    \"docker_requirements\": [\n      \"Not specified\"\n    ],\n    \"other_runtime_requirements\": [\n      \"Experiments executed in parallel\",\n      \"No GPU usage\",\n      \"Utilizes SciPy’s SLSQP optimizer\"\n    ]\n  },\n  \"Benchmark evaluated on\": [\n    \"2D Townsend function\",\n    \"2D Simionescu function\",\n    \"2D LSQ function\",\n    \"2D three-bar truss design\",\n    \"3D tension-compression string design\",\n    \"4D welded beam design\",\n    \"4D gas transmission compressor design\",\n    \"4D pressure vessel design\",\n    \"7D speed reducer design\",\n    \"9D planetary gear train design\",\n    \"10D rolling element bearing design\",\n    \"30D cantilever beam design\"\n  ],\n  \"Training\": {\n    \"is_training_required\": \"Yes\",\n    \"hyperparameters\": [\n      \"Deep Ensemble classifier with a simple architecture: 4 fully connected layers with 64*floor(log2(d)) neurons per hidden layer\",\n      \"ReLU activations between layers\",\n      \"Optimized using variational inference (ELBO) rather than maximum likelihood\",\n      \"Adam optimizer with a learning rate of 3e-4\",\n      \"1000 training iterations\",\n      \"No regularization or dropout applied\"\n    ],\n    \"random_seed\": [\n      \"Experiments run with 10 different random seeds using the same initial Sobol sequence\"\n    ]\n  },\n  \"Results\": {\n    \"metrics_used\": [\n      \"Current best objective value (f′) over evaluations\",\n      \"Feasibility ratio (ratio of feasible to total points)\"\n    ],\n    \"statistical_results\": [\n      \"Mean and standard deviation computed over 10 random seeds\"\n    ],\n    \"figure_results\": [\n      \"Figures 3, 4, and 5 display quantitative and qualitative performance comparisons\"\n    ]\n  },\n  \"Expected Results\": [\n    \"BE-CBO consistently exhibits top performance with low variance across both synthetic and real-world benchmarks\",\n    \"It effectively explores the boundary between feasible and infeasible regions to accurately identify the global optimum\",\n    \"Deep Ensembles yield more robust constraint modeling than Gaussian Processes, especially in high-dimensional problems\",\n    \"Although very robust overall, BE-CBO is slightly outperformed by SCBO in the 30D cantilever beam design case\"\n  ],\n  \"Notes\": [\n    \"Experiments use 10 initial random samples and 200 total evaluations per run\",\n    \"The dynamic bound strategy adapts based on classifier uncertainty\",\n    \"All experiments are conducted in parallel on a distributed server with single-threaded CPU jobs\"\n  ]\n}"
+}

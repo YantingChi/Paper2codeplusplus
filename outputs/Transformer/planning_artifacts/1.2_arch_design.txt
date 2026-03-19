@@ -1,0 +1,80 @@
+----------------------------------------
+[Implementation approach]
+We will implement the Transformer system using a modular design in Python, leveraging open-source libraries such as PyTorch for deep learning, TorchText (or similar) for dataset handling, and sacreBLEU for evaluation metrics. The system will be divided into clear, functional components: a dataset loader to handle preprocessing (tokenization, BPE/word-piece encoding), a model module that builds the Transformer architecture (including encoder, decoder, scaled dot-product and multi-head attention, positional encodings, feed-forward sub-layers, residual connections, and layer normalization), a trainer module for the training loop (with the Adam optimizer and learning rate scheduling as specified in the paper), and an evaluation module to compute BLEU (for translation) and F1 scores (for parsing). This design keeps the overall architecture simple, reusable, and extensible to both the machine translation and constituency parsing tasks.
+
+----------------------------------------
+[File list]
+- main.py
+- dataset_loader.py
+- model.py
+- trainer.py
+- evaluation.py
+
+----------------------------------------
+[Data structures and interfaces]
+classDiagram
+    class Main {
+        + __init__()
+        + run_experiment() -> None
+    }
+    class DatasetLoader {
+        + __init__(config: dict)
+        + load_data() -> Tuple[Any, Any] // Returns (train_data, validation_data)
+    }
+    class TransformerModel {
+        + __init__(params: dict)
+        + forward(x: Tensor, target: Optional[Tensor]=None) -> Tensor
+        + generate(x: Tensor, max_length: int, beam_size: int, length_penalty: float) -> Tensor
+    }
+    class Trainer {
+        + __init__(model: TransformerModel, train_data: Any, config: dict)
+        + train() -> None
+        + save_checkpoint(path: str) -> None
+        + load_checkpoint(path: str) -> None
+    }
+    class Evaluation {
+        + __init__(model: TransformerModel, eval_data: Any, config: dict)
+        + evaluate() -> dict
+    }
+    Main --> DatasetLoader
+    Main --> TransformerModel
+    Main --> Trainer
+    Main --> Evaluation
+    Trainer --> TransformerModel
+    Evaluation --> TransformerModel
+
+
+----------------------------------------
+[Program call flow]
+sequenceDiagram
+    participant M as Main
+    participant DL as DatasetLoader
+    participant TM as TransformerModel
+    participant TR as Trainer
+    participant EV as Evaluation
+
+    M->>DL: Create DatasetLoader(config)
+    DL->>DL: load_data()
+    DL-->>M: return (train_data, val_data)
+    
+    M->>TM: Instantiate TransformerModel(params)
+    M->>TR: Create Trainer(model=TM, train_data, config)
+    
+    loop Training Loop
+        TR->>TM: forward(batch_input, batch_target)
+        TM-->>TR: return predictions
+        TR->>TR: Compute loss, backpropagate, update parameters
+    end
+    TR->>M: Training complete; checkpoint saved
+    
+    M->>EV: Instantiate Evaluation(model=TM, eval_data=val_data, config)
+    EV->>TM: forward(batch_input)
+    TM-->>EV: return predictions
+    EV->>EV: Compute metrics (BLEU, F1, etc.)
+    EV-->>M: Return evaluation metrics
+
+
+----------------------------------------
+[Anything UNCLEAR]
+The exact details of dataset formatting (e.g., file formats for WMT 2014 and Penn Treebank, preprocessing steps for BPE/word-piece tokenization) and the linearization strategy for constituency trees remain unclear. Additionally, clarification on checkpoint averaging (e.g., how many checkpoints to average, file naming conventions) would be helpful.
+

@@ -1,0 +1,229 @@
+New Terminal Output:
+root@5799a721cb5d:/workspace# ls -la
+total 20
+drwxr-xr-x 1 root root 4096 Mar 19 03:55 .
+drwxr-xr-x 1 root root 4096 Mar 19 03:56 ..
+drwxr-xr-x 1 root root 4096 Mar 19 03:47 environment
+root@5799a721cb5d:/workspace# ls -la environment
+total 64
+drwxr-xr-x 1 root root 4096 Mar 19 03:47 .
+drwxr-xr-x 1 root root 4096 Mar 19 03:55 ..
+-rw-rw-r-- 1 root root  583 Mar 19 03:47 Dockerfile
+-rw-rw-r-- 1 root root 1623 Mar 19 03:19 README.md
+-rw-rw-r-- 1 root root 1470 Mar 19 03:19 alg.md
+drwxrwxr-x 1 root root 4096 Mar 19 03:19 benchmark
+drwxrwxr-x 1 root root 4096 Mar 19 03:47 bin
+drwxrwxr-x 1 root root 4096 Mar 19 03:55 codebase
+drwxrwxr-x 1 root root 4096 Mar 19 03:19 expected_results
+-rw-rw-r-- 1 root root 3943 Mar 19 03:19 paper.json
+root@5799a721cb5d:/workspace# ls -la environment/codebase
+total 192
+drwxrwxr-x 1 root root  4096 Mar 19 03:55 .
+drwxr-xr-x 1 root root  4096 Mar 19 03:47 ..
+-rw-rw-r-- 1 root root   668 Mar 19 03:55 README.md
+drwxrwxr-x 1 root root  4096 Mar 19 03:55 __pycache__
+-rw-rw-r-- 1 root root  8747 Mar 19 03:14 acquisition.py
+-rw-rw-r-- 1 root root  4353 Mar 19 03:55 benchmark.py
+-rwxrwxr-x 1 root root 62626 Mar 19 03:15 benchmark_materialize.sh
+-rw-rw-r-- 1 root root 12796 Mar 19 03:14 botrainer.py
+-rw-rw-r-- 1 root root  3818 Mar 19 03:14 config.py
+-rw-rw-r-- 1 root root  1042 Mar 19 03:14 config.yaml
+-rw-rw-r-- 1 root root 12764 Mar 19 03:14 deep_ensemble.py
+-rw-rw-r-- 1 root root  8313 Mar 19 03:14 evaluation.py
+-rw-rw-r-- 1 root root  8215 Mar 19 03:14 gp_surrogate.py
+-rw-rw-r-- 1 root root  6004 Mar 19 03:14 main.py
+-rw-rw-r-- 1 root root  5517 Mar 19 03:14 utils.py
+root@5799a721cb5d:/workspace# sed -n '1,200p' environment/alg.md
+# BE-CBO Algorithm Summary
+
+BE-CBO solves constrained black-box optimization problems where feasibility is unknown in advance and infeasible evaluations do not produce objective values.
+
+## Core Loop
+
+1. Start from an initial Sobol sample set.
+2. Fit a GP surrogate on feasible objective observations only.
+3. Fit a deep-ensemble binary classifier on all evaluated points to predict feasibility.
+4. Estimate classifier uncertainty `sigma_E(x)` and define the dynamic lower bound:
+   `l(x) = 0.5 - sigma_E(x)`.
+5. Choose the next point by maximizing Expected Improvement under:
+   `l(x) <= C(x) <= 1`.
+6. Evaluate the point, add feasible objective values to the GP dataset, and add every point to the classifier dataset.
+
+## Benchmark Facts Used In This Task
+
+The verifier only checks the three synthetic Appendix B.1.1 problems:
+- Townsend
+- Simionescu
+- LSQ
+
+The important paper-grounded requirements for this task are:
+- `benchmark.py` must encode the Appendix B.1.1 synthetic objectives and constraints correctly.
+- `config.py` must be importable on Python 3.11 so the repo can run at all.
+- `evaluation.py` must produce the expected benchmark summary from the deterministic case list.
+
+## Expected File Roles
+
+- `config.py`: central defaults for training, BO budget, and benchmark list
+- `utils.py`: logger, seeds, Sobol sampling, device helpers
+- `benchmark.py`: problem definitions and feasibility checks
+- `evaluation.py`: final metrics from recorded evaluations
+root@5799a721cb5d:/workspace# sed -n '1,200p' environment/paper.json
+{
+  "title": "Boundary Exploration for Bayesian Optimization With Unknown Physical Constraints",
+  "short_name": "BE-CBO",
+  "problem": "Optimize an expensive black-box objective under unknown binary feasibility constraints where infeasible evaluations do not return objective values
+.",
+  "method": {
+    "objective_surrogate": "Gaussian Process over feasible objective observations only",
+    "constraint_surrogate": "Deep ensemble classifier trained with variational inference / ELBO",
+    "acquisition": "Expected Improvement",
+    "boundary_exploration": "Optimize the acquisition subject to 0.5 - sigma_E(x) <= C(x) <= 1, where sigma_E is the ensemble uncertainty."
+  },
+  "training": {
+    "ensemble_size": 5,
+    "hidden_layers": 4,
+    "hidden_width_rule": "64 * floor(log2(d))",
+    "optimizer": "Adam",
+    "learning_rate": 0.0003,
+    "iterations": 1000,
+    "dropout": false
+  },
+  "benchmark_protocol": {
+    "initial_samples": 10,
+    "total_evaluations": 200,
+    "random_seeds": 10,
+    "paper_benchmark_list": [
+      "Townsend",
+      "Simionescu",
+      "LSQ",
+      "Three-bar Truss",
+      "Tension-Compression String",
+      "Welded Beam",
+      "Gas Transmission Compressor",
+      "Pressure Vessel",
+      "Speed Reducer",
+      "Planetary Gear Train",
+      "Rolling Element Bearing",
+      "Cantilever Beam"
+    ],
+    "metrics": [
+      "best feasible objective",
+      "feasibility ratio",
+      "balanced accuracy for the classifier"
+    ]
+  },
+  "synthetic_benchmarks": {
+    "Townsend": {
+      "objective": "f(x) = -[cos((x1 - 0.1) x2)]^2 - x1 sin(3 x1 + x2)",
+      "constraints": [
+        "c(x) = (2 cos(t) - 0.5 cos(2 t) - 0.25 cos(3 t) - 0.125 cos(4 t))^2 + (2 sin(t))^2 - x1^2 - x2^2 >= 0",
+        "t = arctan2(x1, x2)"
+      ],
+      "bounds": [
+        [-2.25, -2.5],
+        [2.25, 1.75]
+      ]
+    },
+    "Simionescu": {
+      "objective": "f(x) = 0.1 x1 x2",
+      "constraints": [
+        "c(x) = (r_T + r_S cos(n theta))^2 - x1^2 - x2^2 >= 0",
+        "r_T = 1, r_S = 0.2, n = 8, theta = atan2(x1, x2)"
+      ],
+      "bounds": [
+        [-1.25, -1.25],
+        [1.25, 1.25]
+      ]
+    },
+    "LSQ": {
+      "objective": "f(x) = x1 + x2",
+      "constraints": [
+        "c1(x) = x1 + 2 x2 + 0.5 sin(2 pi (x1^2 - 2 x2)) - 1.5 >= 0",
+        "c2(x) = 1.5 - x1^2 - x2^2 >= 0"
+      ],
+      "bounds": [
+        [0.0, 0.0],
+        [1.0, 1.0]
+      ]
+    }
+  },
+  "implementation_modules": [
+    {
+      "file": "config.py",
+      "description": "Central experiment defaults and hyperparameters shared by all modules."
+    },
+    {
+      "file": "utils.py",
+      "description": "Seed setup, logging, Sobol sampling, and tensor helpers."
+    },
+    {
+      "file": "benchmark.py",
+      "description": "Analytic benchmark definitions, feasibility checks, and initial sample generation."
+    },
+    {
+      "file": "gp_surrogate.py",
+      "description": "GP-based surrogate for the objective using feasible observations only."
+    },
+    {
+      "file": "deep_ensemble.py",
+      "description": "Deep ensemble classifier that predicts feasibility probability and uncertainty."
+    },
+    {
+      "file": "acquisition.py",
+      "description": "Acquisition optimizer with Adam pre-optimization and SLSQP refinement."
+    },
+    {
+      "file": "botrainer.py",
+      "description": "Main Bayesian optimization loop wiring together benchmark, GP, classifier, and acquisition optimization."
+    },
+    {
+      "file": "evaluation.py",
+      "description": "Computes best feasible objective, feasibility ratio, and balanced accuracy."
+    },
+    {
+      "file": "main.py",
+      "description": "Repository entry point that initializes modules and runs the optimization loop."
+    }
+  ],
+  "task_focus": "This Harbor task verifies that the synthetic benchmark definitions and benchmark output contract match the paper appendix. It does not require
+completing the full 12-problem experimental pipeline."
+}
+root@5799a721cb5d:/workspace# find environment/codebase -maxdepth 2 -type f -name "*.py" -print
+environment/codebase/config.py
+environment/codebase/evaluation.py
+environment/codebase/main.py
+environment/codebase/utils.py
+environment/codebase/botrainer.py
+environment/codebase/gp_surrogate.py
+environment/codebase/deep_ensemble.py
+environment/codebase/benchmark.py
+environment/codebase/acquisition.py
+root@5799a721cb5d:/workspace# sed -n '1,200p' environment/codebase/setup.py
+sed: can't read environment/codebase/setup.py: No such file or directory
+root@5799a721cb5d:/workspace# sed -n '1,200p' environment/codebase/README.md
+# BE-CBO Codebase Notes
+
+This bundled repo is intentionally incomplete and slightly wrong.
+
+For the Harbor task, only these modules matter:
+- `config.py`
+- `benchmark.py`
+- `evaluation.py`
+
+The verifier uses:
+
+```bash
+python environment/benchmark/run_benchmark.py \
+  --repo-dir environment/codebase \
+  --cases environment/benchmark/synthetic_cases.json \
+  --expected environment/expected_results/reference_results.json \
+  --output environment/codebase/reproduction_result.json
+```
+
+Important contract:
+- `Benchmark.evaluate(x)` must return `(objective, feasible)`
+- infeasible points must return `(None, False)`
+- feasible points must return `(float_value, True)`
+root@5799a721cb5d:/workspace# python environment/benchmark/run_benchmark.py --repo-dir environment/codebase --cases environment/benchmark/synthetic_cases.json -
+-expected environment/expected_results/reference_results.json --output environment/codebase/reproduction_result.json
+root@5799a721cb5d:/workspace#

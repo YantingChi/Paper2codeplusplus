@@ -1,0 +1,140 @@
+{
+  "comparison_tolerance": 1e-06,
+  "problems": {
+    "Townsend": {
+      "cases": [
+        {
+          "iteration": 1,
+          "candidate": [-1.0, 0.25],
+          "feasible": true,
+          "objective": -1.3079232530820846
+        },
+        {
+          "iteration": 2,
+          "candidate": [1.5, 1.5],
+          "feasible": true,
+          "objective": 0.16425365796873892
+        },
+        {
+          "iteration": 3,
+          "candidate": [-2.0, -2.0],
+          "feasible": false,
+          "objective": null
+        },
+        {
+          "iteration": 4,
+          "candidate": [-2.0, 1.5],
+          "feasible": false,
+          "objective": null
+        },
+        {
+          "iteration": 5,
+          "candidate": [0.0, 1.7],
+          "feasible": false,
+          "objective": null
+        },
+        {
+          "iteration": 6,
+          "candidate": [2.2, 1.6],
+          "feasible": false,
+          "objective": null
+        }
+      ],
+      "metrics": {
+        "best_objective": -1.3079232530820846,
+        "feasibility_ratio": 0.3333333333333333,
+        "total_evaluations": 6
+      }
+    },
+    "Simionescu": {
+      "cases": [
+        {
+          "iteration": 1,
+          "candidate": [0.0, 0.0],
+          "feasible": true,
+          "objective": 0.0
+        },
+        {
+          "iteration": 2,
+          "candidate": [0.9, 0.0],
+          "feasible": true,
+          "objective": 0.0
+        },
+        {
+          "iteration": 3,
+          "candidate": [1.1, 0.0],
+          "feasible": true,
+          "objective": 0.0
+        },
+        {
+          "iteration": 4,
+          "candidate": [0.5, 0.5],
+          "feasible": true,
+          "objective": 0.025
+        },
+        {
+          "iteration": 5,
+          "candidate": [1.0, 0.5],
+          "feasible": false,
+          "objective": null
+        },
+        {
+          "iteration": 6,
+          "candidate": [-0.8, 0.4],
+          "feasible": false,
+          "objective": null
+        }
+      ],
+      "metrics": {
+        "best_objective": 0.0,
+        "feasibility_ratio": 0.6666666666666666,
+        "total_evaluations": 6
+      }
+    },
+    "LSQ": {
+      "cases": [
+        {
+          "iteration": 1,
+          "candidate": [0.1, 0.1],
+          "feasible": false,
+          "objective": null
+        },
+        {
+          "iteration": 2,
+          "candidate": [0.6, 0.1],
+          "feasible": false,
+          "objective": null
+        },
+        {
+          "iteration": 3,
+          "candidate": [0.2, 0.6],
+          "feasible": false,
+          "objective": null
+        },
+        {
+          "iteration": 4,
+          "candidate": [0.8, 0.7],
+          "feasible": true,
+          "objective": 1.5
+        },
+        {
+          "iteration": 5,
+          "candidate": [0.5, 0.5],
+          "feasible": true,
+          "objective": 1.0
+        },
+        {
+          "iteration": 6,
+          "candidate": [0.9, 0.2],
+          "feasible": true,
+          "objective": 1.1
+        }
+      ],
+      "metrics": {
+        "best_objective": 1.0,
+        "feasibility_ratio": 0.5,
+        "total_evaluations": 6
+      }
+    }
+  }
+}

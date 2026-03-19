@@ -1,0 +1,322 @@
+"""
+fact_optimizer.py
+
+This module implements the FactOptimizer class which takes a list of Fact objects
+(defined in utils.py) and applies several optimizations such as merging equivalent 
+TypeContextPair facts, collapsing chains of Cast facts, removing duplicate facts, 
+and pruning unused facts. The resulting optimized fact set is then used as input 
+for the Soufflé Datalog solver in the TyPro pipeline.
+
+The optimization process follows the guidelines in the TyPro paper and the provided design:
+  1. Merging equivalent TypeContextPair facts via reciprocal Cast facts.
+  2. Collapsing chains of Cast facts via transitive reduction.
+  3. Removing duplicate facts (exact copies).
+  4. Pruning facts that are not referenced by any other fact, except for root facts
+     (e.g., FunctionPointer, ICall, TypeCall) or those marked for external use.
+  5. Skipping primitive C types (smaller than pointer size) from TypeContextPair.
+
+All configuration settings are read from the config.yaml file using parse_config in utils.py.
+All logging is handled via the shared logging utility in utils.py, with strong type annotations everywhere.
+"""
+
+from typing import Any, Dict, List, Set, Tuple
+import copy
+import logging
+
+from utils import Fact, parse_config, get_logger
+
+# -----------------------------------------------------------------------------
+# Disjoint Set Union (Union-Find) implementation for merging TypeContextPair facts.
+# -----------------------------------------------------------------------------
+class DSU:
+    def __init__(self, elements: Set[int]) -> None:
+        # Parent mapping for each element.
+        self.parent: Dict[int, int] = {x: x for x in elements}
+
+    def find(self, x: int) -> int:
+        # Path compression.
+        if self.parent[x] != x:
+            self.parent[x] = self.find(self.parent[x])
+        return self.parent[x]
+
+    def union(self, x: int, y: int) -> None:
+        # Union by choosing the smaller id as canonical
+        root_x = self.find(x)
+        root_y = self.find(y)
+        if root_x == root_y:
+            return
+        if root_x < root_y:
+            self.parent[root_y] = root_x
+        else:
+            self.parent[root_x] = root_y
+
+# -----------------------------------------------------------------------------
+# FactOptimizer Class
+# -----------------------------------------------------------------------------
+class FactOptimizer:
+    """
+    FactOptimizer performs optimization on a list of Fact objects.
+    
+    Methods:
+        optimize(facts: List[Fact]) -> List[Fact]
+            Performs merging of equivalent TypeContextPair facts (via reciprocal Cast facts),
+            collapses cast chains, removes duplicate facts, and prunes unused facts.
+    """
+    def __init__(self) -> None:
+        self.logger = get_logger("FactOptimizer")
+        # Load configuration settings from config.yaml.
+        self.config: Dict[str, Any] = parse_config("config.yaml")
+        self.logger.debug("FactOptimizer initialized with configuration: %s", self.config)
+
+    def optimize(self, facts: List[Fact]) -> List[Fact]:
+        """
+        Optimize the given list of Fact objects by applying merging, cast chain collapsing,
+        duplicate removal, and unused fact pruning.
+        
+        Args:
+            facts (List[Fact]): The list of Fact objects to optimize.
+        
+        Returns:
+            List[Fact]: The optimized list of Fact objects.
+        """
+        initial_count = len(facts)
+        self.logger.info("Starting optimization on %d facts.", initial_count)
+
+        # Build an index of facts (id -> Fact)
+        id_to_fact: Dict[int, Fact] = {fact.id: fact for fact in facts}
+
+        # Step 1: Merge equivalent TypeContextPair facts using reciprocal Cast relationships.
+        merge_map = self._merge_type_context_pairs(facts)
+        self.logger.info("TypeContextPair merging: %d merges identified.", len(merge_map))
+        self._update_references(facts, merge_map)
+        # Remove non-canonical TypeContextPair facts.
+        facts = [fact for fact in facts if not (fact.fact_type == "TypeContextPair" and merge_map.get(fact.id, fact.id) != fact.id)]
+        self.logger.info("After merging TypeContextPair, %d facts remain.", len(facts))
+
+        # Step 2: Collapse chains of Cast facts.
+        self._collapse_cast_chains(facts)
+        self.logger.info("Cast chains collapsed.")
+
+        # Step 3: Remove duplicate facts (identical fact_type and same data).
+        duplicate_map = self._remove_duplicates(facts)
+        self.logger.info("Duplicate removal completed. %d duplicate mappings found.", len(duplicate_map))
+        self._update_references(facts, duplicate_map)
+        facts = [fact for fact in facts if not (fact.fact_type in {"Cast", "TypeContextPair", "PointsTo", "StructMember", "UnionMember", "ICall", "FunctionPointer", "TypeCall"} 
+                                                  and duplicate_map.get(fact.id, fact.id) != fact.id)]
+        self.logger.info("After duplicate removal, %d facts remain.", len(facts))
+
+        # Step 4: Prune unused facts (unless marked as external or are roots).
+        facts = self._prune_unused_facts(facts)
+        self.logger.info("After pruning unused facts, %d facts remain.", len(facts))
+
+        final_count = len(facts)
+        self.logger.info("Optimization complete: reduced from %d to %d facts.", initial_count, final_count)
+        return facts
+
+    # -------------------------------------------------------------------------
+    # Internal Methods
+    # -------------------------------------------------------------------------
+
+    def _merge_type_context_pairs(self, facts: List[Fact]) -> Dict[int, int]:
+        """
+        Merge TypeContextPair facts that are reciprocally castable.
+        
+        Returns a mapping from each TypeContextPair fact id to its canonical representative id.
+        """
+        # Collect ids for TypeContextPair facts.
+        tcp_ids: Set[int] = {fact.id for fact in facts if fact.fact_type == "TypeContextPair"}
+        dsu = DSU(tcp_ids)
+
+        # Build a set of cast edges where both src and dst are TypeContextPair.
+        cast_edges: Set[Tuple[int, int]] = set()
+        for fact in facts:
+            if fact.fact_type == "Cast":
+                src = fact.data.get("src")
+                dst = fact.data.get("dst")
+                if isinstance(src, int) and isinstance(dst, int) and src in tcp_ids and dst in tcp_ids:
+                    cast_edges.add((src, dst))
+        
+        # For each cast edge, if the reciprocal cast exists, union the two.
+        for (src, dst) in cast_edges:
+            if (dst, src) in cast_edges:
+                dsu.union(src, dst)
+
+        # Build the merge map: each TypeContextPair id is mapped to its representative.
+        merge_map: Dict[int, int] = {}
+        for x in tcp_ids:
+            rep = dsu.find(x)
+            merge_map[x] = rep
+
+        self.logger.debug("Merge map for TypeContextPair: %s", merge_map)
+        return merge_map
+
+    def _update_references(self, facts: List[Fact], mapping: Dict[int, int]) -> None:
+        """
+        Update all fact data entries that reference fact ids using the provided mapping.
+        
+        Args:
+            facts (List[Fact]): The list of Fact objects.
+            mapping (Dict[int, int]): Mapping from old fact ids to canonical ids.
+        """
+        reference_keys = {"src", "dst", "ptr", "pointee", "parent", "member", "callType"}
+        for fact in facts:
+            for key, value in fact.data.items():
+                if isinstance(value, int) and value in mapping:
+                    new_value = mapping[value]
+                    if new_value != value:
+                        self.logger.debug("Updating fact id %d: key '%s' from %d to %d.", 
+                                          fact.id, key, value, new_value)
+                        fact.data[key] = new_value
+                # If the value is a list of ints, update each element.
+                if isinstance(value, list):
+                    new_list = []
+                    for item in value:
+                        if isinstance(item, int) and item in mapping:
+                            new_list.append(mapping[item])
+                        else:
+                            new_list.append(item)
+                    fact.data[key] = new_list
+
+    def _collapse_cast_chains(self, facts: List[Fact]) -> None:
+        """
+        Collapse chains of Cast facts via transitive reduction.
+        For each Cast fact, if the same destination can be reached from the source
+        via an alternative path (excluding that direct edge), mark it as redundant.
+        Redundant Cast facts are removed from the list 'facts'.
+        """
+        # Build a cast graph: mapping src -> set of dst values (from Cast facts)
+        cast_facts = [fact for fact in facts if fact.fact_type == "Cast"]
+        graph: Dict[int, Set[int]] = {}
+        fact_id_to_cast_fact: Dict[Tuple[int, int], Fact] = {}
+        for fact in cast_facts:
+            src = fact.data.get("src")
+            dst = fact.data.get("dst")
+            if isinstance(src, int) and isinstance(dst, int):
+                graph.setdefault(src, set()).add(dst)
+                fact_id_to_cast_fact[(src, dst)] = fact
+
+        # Helper function: DFS from 'current' to find 'target', skipping a specific edge.
+        def dfs(current: int, target: int, skip_edge: Tuple[int, int], visited: Set[int]) -> bool:
+            if current == target:
+                return True
+            visited.add(current)
+            for neighbor in graph.get(current, set()):
+                # Skip the specific edge if encountered
+                if (current, neighbor) == skip_edge:
+                    continue
+                if neighbor not in visited:
+                    if dfs(neighbor, target, skip_edge, visited):
+                        return True
+            return False
+
+        redundant_ids: Set[int] = set()
+        # Evaluate each Cast fact edge for redundancy.
+        for fact in cast_facts:
+            src = fact.data.get("src")
+            dst = fact.data.get("dst")
+            if not (isinstance(src, int) and isinstance(dst, int)):
+                continue
+            # If there exists an alternate path from src to dst (excluding this edge), mark as redundant.
+            if dfs(src, dst, (src, dst), set()):
+                redundant_ids.add(fact.id)
+
+        # Remove redundant Cast facts from the facts list.
+        before = len(facts)
+        facts[:] = [fact for fact in facts if not (fact.fact_type == "Cast" and fact.id in redundant_ids)]
+        after = len(facts)
+        self.logger.debug("Collapsed cast chains: Removed %d redundant Cast facts.", (before - after))
+
+    def _remove_duplicates(self, facts: List[Fact]) -> Dict[int, int]:
+        """
+        Remove duplicate facts that have identical fact_type and identical data.
+        Returns a mapping from duplicate fact ids to the canonical fact id.
+        """
+        seen: Dict[Tuple[str, Tuple[Tuple[str, Any], ...]], int] = {}
+        duplicate_map: Dict[int, int] = {}  # Maps duplicate fact id to canonical fact id.
+        for fact in facts:
+            # Create a canonical representation: fact_type and sorted items from data.
+            # Note: We ignore the 'id' field in the representation.
+            data_items = tuple(sorted(fact.data.items()))
+            key = (fact.fact_type, data_items)
+            if key in seen:
+                canonical_id = seen[key]
+                duplicate_map[fact.id] = canonical_id
+                self.logger.debug("Found duplicate fact: id %d is duplicate of id %d.", fact.id, canonical_id)
+            else:
+                seen[key] = fact.id
+                duplicate_map[fact.id] = fact.id
+        return duplicate_map
+
+    def _prune_unused_facts(self, facts: List[Fact]) -> List[Fact]:
+        """
+        Prune facts that are not referenced by any other fact except for root facts or those
+        marked for external use (via data 'external': True).
+        Additionally, omit primitive C types from TypeContextPair facts.
+        
+        Returns:
+            List[Fact]: The pruned list of facts.
+        """
+        reference_keys = {"src", "dst", "ptr", "pointee", "parent", "member", "callType"}
+        used_ids: Set[int] = set()
+
+        # Collect all referenced ids from fact data
+        for fact in facts:
+            for key, value in fact.data.items():
+                if key in reference_keys:
+                    if isinstance(value, int):
+                        used_ids.add(value)
+                    elif isinstance(value, list):
+                        for item in value:
+                            if isinstance(item, int):
+                                used_ids.add(item)
+
+        # Define root fact types that must always be kept.
+        root_fact_types = {"FunctionPointer", "ICall", "TypeCall"}
+        for fact in facts:
+            if fact.fact_type in root_fact_types:
+                used_ids.add(fact.id)
+
+        pruned_facts: List[Fact] = []
+        for fact in facts:
+            # Always preserve external facts, if marked.
+            if fact.data.get("external", False):
+                pruned_facts.append(fact)
+                continue
+            # For TypeContextPair facts, also check if the type is a primitive that should be omitted.
+            if fact.fact_type == "TypeContextPair" and self._is_primitive_to_prune(fact):
+                self.logger.debug("Pruning TypeContextPair fact id %d with primitive type '%s'.", 
+                                  fact.id, fact.data.get("type", ""))
+                continue
+            # Keep the fact if its id is used or if it is not a candidate for removal.
+            if fact.id in used_ids or fact.fact_type in root_fact_types:
+                pruned_facts.append(fact)
+            else:
+                self.logger.debug("Pruning unused fact id %d of type '%s'.", fact.id, fact.fact_type)
+        return pruned_facts
+
+    def _is_primitive_to_prune(self, fact: Fact) -> bool:
+        """
+        Determine whether a TypeContextPair fact represents a primitive C type that should be pruned.
+        The method prunes types that do not contain pointer indicators ("*"), struct/union declarations,
+        or function pointer markers ("fptr").
+        
+        Args:
+            fact (Fact): A Fact object expected to be of type "TypeContextPair".
+        
+        Returns:
+            bool: True if the fact represents a primitive type to be pruned; False otherwise.
+        """
+        if fact.fact_type != "TypeContextPair":
+            return False
+        type_str: str = str(fact.data.get("type", "")).lower().strip()
+        # Allow if it is a pointer type, or a struct/union/function pointer.
+        if "*" in type_str or "struct" in type_str or "union" in type_str or "fptr" in type_str:
+            return False
+        # Otherwise, if the type is a primitive type.
+        primitive_types = {"void", "char", "short", "int", "long", "float", "double"}
+        # Split the type string into words and check if all are in primitive_types.
+        words = set(type_str.split())
+        # If any word is in primitive_types, we choose to prune.
+        if any(word in primitive_types for word in words):
+            return True
+        return False

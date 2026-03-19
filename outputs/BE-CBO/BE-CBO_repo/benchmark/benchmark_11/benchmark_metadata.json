@@ -1,0 +1,32 @@
+{
+  "paper_benchmark_name": "10D rolling element bearing design",
+  "paper_research_field": "Constrained Bayesian Optimization",
+  "matched_benchmark_name": "10D rolling element bearing design",
+  "matched_research_field": "Engineering Design Optimization",
+  "name_match_type": "exact",
+  "field_match_status": "same_field",
+  "match_reason": "Direct exact name match with a standard design optimization problem involving rolling element bearings.",
+  "status": "well_established_formula",
+  "materialization_strategy": "generate_definition",
+  "source_type": "literature_formula",
+  "source_url": "",
+  "download_subdir": "benchmark_11",
+  "materialization_commands": [],
+  "definition_summary": "A ten-dimensional design optimization benchmark for rolling element bearings, targeting cost and performance optimization under operational constraints.",
+  "equations_or_components": [
+    "Objective and constraint equations based on bearing mechanics and material properties."
+  ],
+  "variables_or_inputs": [
+    "Bearing dimensions and related design parameters (10 in total)"
+  ],
+  "constraints_or_bounds": [
+    "Constraints on load capacity, material strength, and performance criteria."
+  ],
+  "expected_artifacts": [
+    "benchmark_definition.txt"
+  ],
+  "license_or_access_notes": [
+    "Open for academic research with no licensing restrictions."
+  ],
+  "failure_reason": ""
+}

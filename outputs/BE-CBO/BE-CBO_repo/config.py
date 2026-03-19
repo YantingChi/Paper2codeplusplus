@@ -1,0 +1,110 @@
+"""
+config.py
+
+This file defines the centralized configuration for the BE-CBO project.
+It consolidates all hyperparameters and settings for training, ensemble (deep ensemble classifier),
+GP surrogate, Bayesian optimization (BO), benchmark problems, logging, and general settings.
+These settings are used across multiple modules to ensure consistency.
+
+Configuration Sections:
+1. TrainingConfig - Settings for optimizer, learning rate, and number of training iterations.
+2. EnsembleConfig - Parameters for the deep ensemble classifier (number of members, network architecture, activation, ELBO loss, dropout usage).
+3. GPConfig - Settings for the GP surrogate (kernel type and hyperparameters).
+4. BOConfig - Bayesian optimization settings including initial samples, total evaluations, random seed count,
+             acquisition function (Expected Improvement), dynamic bound constraint and optimizer.
+5. BenchmarkConfig - List of benchmark problems to be evaluated.
+6. LoggingConfig - Logging parameters such as verbosity and whether results are saved.
+7. GeneralConfig - Global settings like device type and seed for reproducibility.
+
+All modules should import this config.py to access consistent configuration values.
+"""
+
+from dataclasses import dataclass, field, asdict
+from typing import List
+from math import floor, log2
+
+# 1. Training Parameters
+@dataclass
+class TrainingConfig:
+    optimizer: str = "Adam"
+    learning_rate: float = 3e-4
+    iterations: int = 1000
+
+# 2. Ensemble (Deep Ensemble Classifier) Parameters
+@dataclass
+class EnsembleConfig:
+    size: int = 5
+    layers: int = 4
+    # The neurons_formula is a string which will be interpreted by the deep ensemble module.
+    # It uses the problem dimension d: "64 * floor(log2(d))"
+    neurons_formula: str = "64 * floor(log2(d))"
+    activation: str = "ReLU"
+    loss: str = "Variational Inference (ELBO)"
+    use_dropout: bool = False
+
+# 3. GP Surrogate Settings
+@dataclass
+class GPConfig:
+    kernel: str = "Matern5/2"
+    hyperparameters: str = "default (using BoTorch defaults)"
+
+# 4. Bayesian Optimization (BO) Settings
+@dataclass
+class BOConfig:
+    initial_samples: int = 10
+    total_evaluations: int = 200
+    random_seeds: int = 10
+    acquisition_function: str = "Expected Improvement (EI)"
+    dynamic_bound: str = "l(x) = 0.5 - sigma_E(x)"
+    optimizer: str = "SLSQP (with pre-optimization using Adam)"
+
+# 5. Benchmark Settings
+@dataclass
+class BenchmarkConfig:
+    problems: List[str] = field(default_factory=lambda: [
+        "Townsend",
+        "Simionescu",
+        "LSQ",
+        "Three-bar Truss",
+        "Tension-Compression String",
+        "Welded Beam",
+        "Gas Transmission Compressor",
+        "Pressure Vessel",
+        "Speed Reducer",
+        "Planetary Gear Train",
+        "Rolling Element Bearing",
+        "Cantilever Beam"
+    ])
+
+# 6. Logging Configuration
+@dataclass
+class LoggingConfig:
+    verbosity: str = "INFO"
+    save_results: bool = True
+
+# 7. General Settings
+@dataclass
+class GeneralConfig:
+    device: str = "cpu"  # Set to "cuda" if GPU is available
+    seed: int = 42
+
+# Master Config that ties all the individual configurations together.
+@dataclass
+class Config:
+    training: TrainingConfig = TrainingConfig()
+    ensemble: EnsembleConfig = EnsembleConfig()
+    gp: GPConfig = GPConfig()
+    bo: BOConfig = BOConfig()
+    benchmark: BenchmarkConfig = BenchmarkConfig()
+    logging: LoggingConfig = LoggingConfig()
+    general: GeneralConfig = GeneralConfig()
+
+# Instantiate the global configuration object.
+config = Config()
+
+# For ease of debugging and to verify configuration values
+if __name__ == "__main__":
+    import json
+    # Convert the configuration dataclass to a dictionary and print in JSON format.
+    config_dict = asdict(config)
+    print(json.dumps(config_dict, indent=4))

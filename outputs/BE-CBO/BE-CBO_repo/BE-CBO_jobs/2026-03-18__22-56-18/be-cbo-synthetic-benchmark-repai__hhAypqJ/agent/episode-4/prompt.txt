@@ -1,0 +1,250 @@
+New Terminal Output:
+
+root@5799a721cb5d:/workspace# applypatch << 'PATCH'
+> *** Begin Patch
+> *** Update File: environment/codebase/config.py
+> @@
+> -@dataclass
+> -class Config:
+> -    training: TrainingConfig = TrainingConfig()
+> -    ensemble: EnsembleConfig = EnsembleConfig()
+> -    gp: GPConfig = GPConfig()
+> -    bo: BOConfig = BOConfig()
+> -    benchmark: BenchmarkConfig = BenchmarkConfig()
+> -    logging: LoggingConfig = LoggingConfig()
+> -    general: GeneralConfig = GeneralConfig()
+> +@dataclass
+> +class Config:
+> +    # Use default_factory to avoid mutable default dataclass instances
+> +    training: TrainingConfig = field(default_factory=TrainingConfig)
+> +    ensemble: EnsembleConfig = field(default_factory=EnsembleConfig)
+> +    gp: GPConfig = field(default_factory=GPConfig)
+> +    bo: BOConfig = field(default_factory=BOConfig)
+> +    benchmark: BenchmarkConfig = field(default_factory=BenchmarkConfig)
+> +    logging: LoggingConfig = field(default_factory=LoggingConfig)
+> +    general: GeneralConfig = field(default_factory=GeneralConfig)
+> *** End Patch
+> PATCH
+root@5799a721cb5d:/workspace# python environment/benchmark/run_benchmark.py --repo-dir environment/codebase --cases environment/benchmark/synthetic_cases.json -
+-expected environment/expected_results/reference_results.json --output environment/codebase/reproduction_result.json
+2026-03-19 03:58:30,831 [INFO] Benchmark-Townsend: Candidate [-2.0, -2.0] is infeasible as per constraint evaluation.
+2026-03-19 03:58:30,832 [INFO] Benchmark-Townsend: Candidate [-2.0, 1.5] is infeasible as per constraint evaluation.
+2026-03-19 03:58:30,832 [INFO] Benchmark-Townsend: Candidate [0.0, 1.7000000476837158] is infeasible as per constraint evaluation.
+2026-03-19 03:58:30,832 [INFO] Benchmark-Townsend: Candidate [2.200000047683716, 1.600000023841858] is infeasible as per constraint evaluation.
+2026-03-19 03:58:30,832 [WARNING] Evaluation: Classifier performance data ('classifier_true_labels' and/or 'classifier_pred_probs') missing. Skipping balanced a
+ccuracy computation.
+2026-03-19 03:58:30,832 [INFO] Evaluation: Evaluation Metrics Computed: Best Objective = -1.3079232530820846, Feasibility Ratio = 0.3333, Balanced Accuracy = No
+ne, Total Evaluations = 6
+2026-03-19 03:58:30,832 [INFO] Benchmark-Simionescu: Candidate [1.0, 0.5] is infeasible as per constraint evaluation.
+2026-03-19 03:58:30,832 [INFO] Benchmark-Simionescu: Candidate [-0.800000011920929, 0.4000000059604645] is infeasible as per constraint evaluation.
+2026-03-19 03:58:30,832 [WARNING] Evaluation: Classifier performance data ('classifier_true_labels' and/or 'classifier_pred_probs') missing. Skipping balanced a
+ccuracy computation.
+2026-03-19 03:58:30,832 [INFO] Evaluation: Evaluation Metrics Computed: Best Objective = 0.0, Feasibility Ratio = 0.6667, Balanced Accuracy = None, Total Evalua
+tions = 6
+2026-03-19 03:58:30,832 [INFO] Benchmark-LSQ: Candidate [0.10000000149011612, 0.10000000149011612] is infeasible as per constraint evaluation.
+2026-03-19 03:58:30,832 [INFO] Benchmark-LSQ: Candidate [0.6000000238418579, 0.10000000149011612] is infeasible as per constraint evaluation.
+2026-03-19 03:58:30,832 [INFO] Benchmark-LSQ: Candidate [0.20000000298023224, 0.6000000238418579] is infeasible as per constraint evaluation.
+2026-03-19 03:58:30,832 [WARNING] Evaluation: Classifier performance data ('classifier_true_labels' and/or 'classifier_pred_probs') missing. Skipping balanced a
+ccuracy computation.
+2026-03-19 03:58:30,832 [INFO] Evaluation: Evaluation Metrics Computed: Best Objective = 1.0, Feasibility Ratio = 0.5000, Balanced Accuracy = None, Total Evalua
+tions = 6
+root@5799a721cb5d:/workspace# sed -n '1,200p' environment/codebase/reproduction_result.json
+{
+  "runnable": true,
+  "result_same": true,
+  "comparison_tolerance": 1e-06,
+  "problems": {
+    "Townsend": {
+      "cases": [
+        {
+          "iteration": 1,
+          "candidate": [
+            -1.0,
+            0.25
+          ],
+          "feasible": true,
+          "objective": -1.3079232530820846
+        },
+        {
+          "iteration": 2,
+          "candidate": [
+            1.5,
+            1.5
+          ],
+          "feasible": true,
+          "objective": 0.16425365796873892
+        },
+        {
+          "iteration": 3,
+          "candidate": [
+            -2.0,
+            -2.0
+          ],
+          "feasible": false,
+          "objective": null
+        },
+        {
+          "iteration": 4,
+          "candidate": [
+            -2.0,
+            1.5
+          ],
+          "feasible": false,
+          "objective": null
+        },
+        {
+          "iteration": 5,
+          "candidate": [
+            0.0,
+            1.7
+          ],
+          "feasible": false,
+          "objective": null
+        },
+        {
+          "iteration": 6,
+          "candidate": [
+            2.2,
+            1.6
+          ],
+          "feasible": false,
+          "objective": null
+        }
+      ],
+      "metrics": {
+        "best_objective": -1.3079232530820846,
+        "feasibility_ratio": 0.3333333333333333,
+        "total_evaluations": 6
+      }
+    },
+    "Simionescu": {
+      "cases": [
+        {
+          "iteration": 1,
+          "candidate": [
+            0.0,
+            0.0
+          ],
+          "feasible": true,
+          "objective": 0.0
+        },
+        {
+          "iteration": 2,
+          "candidate": [
+            0.9,
+            0.0
+          ],
+          "feasible": true,
+          "objective": 0.0
+        },
+        {
+          "iteration": 3,
+          "candidate": [
+            1.1,
+            0.0
+          ],
+          "feasible": true,
+          "objective": 0.0
+        },
+        {
+          "iteration": 4,
+          "candidate": [
+            0.5,
+            0.5
+          ],
+          "feasible": true,
+          "objective": 0.025
+        },
+        {
+          "iteration": 5,
+          "candidate": [
+            1.0,
+            0.5
+          ],
+          "feasible": false,
+          "objective": null
+        },
+        {
+          "iteration": 6,
+          "candidate": [
+            -0.8,
+            0.4
+          ],
+          "feasible": false,
+          "objective": null
+        }
+      ],
+      "metrics": {
+        "best_objective": 0.0,
+        "feasibility_ratio": 0.6666666666666666,
+        "total_evaluations": 6
+      }
+    },
+    "LSQ": {
+      "cases": [
+        {
+          "iteration": 1,
+          "candidate": [
+            0.1,
+            0.1
+          ],
+          "feasible": false,
+          "objective": null
+        },
+        {
+          "iteration": 2,
+          "candidate": [
+            0.6,
+            0.1
+          ],
+          "feasible": false,
+          "objective": null
+        },
+        {
+          "iteration": 3,
+          "candidate": [
+            0.2,
+            0.6
+          ],
+          "feasible": false,
+          "objective": null
+        },
+        {
+          "iteration": 4,
+          "candidate": [
+            0.8,
+            0.7
+          ],
+          "feasible": true,
+          "objective": 1.5
+        },
+        {
+          "iteration": 5,
+          "candidate": [
+            0.5,
+            0.5
+          ],
+          "feasible": true,
+          "objective": 1.0
+        },
+        {
+          "iteration": 6,
+          "candidate": [
+            0.9,
+            0.2
+          ],
+          "feasible": true,
+          "objective": 1.0999999791383743
+        }
+      ],
+      "metrics": {
+        "best_objective": 1.0,
+        "feasibility_ratio": 0.5,
+        "total_evaluations": 6
+      }
+    }
+  },
+  "error": null,
+  "mismatches": []
+}
+root@5799a721cb5d:/workspace#

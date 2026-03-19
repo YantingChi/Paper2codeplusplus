@@ -1,0 +1,29 @@
+[2026-03-18 22:30:35] Benchmark root: /home/yantingchi/Desktop/DK/Paper2Code/outputs/BE-CBO_repo/benchmark
+[2026-03-18 22:30:35] Benchmark mapping CSV: /home/yantingchi/Desktop/DK/Paper2Code/outputs/BE-CBO_repo/benchmark/benchmark_materialization_mapping.csv
+[2026-03-18 22:30:35] Generating local benchmark definition for: 2D Townsend function
+[2026-03-18 22:30:35] Generated local benchmark definition for: 2D Townsend function
+[2026-03-18 22:30:35] Generating local benchmark definition for: 2D Simionescu function
+[2026-03-18 22:30:35] Generated local benchmark definition for: 2D Simionescu function
+[2026-03-18 22:30:35] Generating local benchmark definition for: 2D LSQ function
+[2026-03-18 22:30:35] Generated local benchmark definition for: 2D LSQ function
+[2026-03-18 22:30:35] Generating local benchmark definition for: 2D three-bar truss design
+[2026-03-18 22:30:35] Generated local benchmark definition for: 2D three-bar truss design
+[2026-03-18 22:30:35] Generating local benchmark definition for: 3D tension-compression string design
+[2026-03-18 22:30:35] Generated local benchmark definition for: 3D tension-compression string design
+[2026-03-18 22:30:35] Generating local benchmark definition for: 4D welded beam design
+[2026-03-18 22:30:35] Generated local benchmark definition for: 4D welded beam design
+[2026-03-18 22:30:35] Generating local benchmark definition for: 4D gas transmission compressor design
+[2026-03-18 22:30:35] Generated local benchmark definition for: 4D gas transmission compressor design
+[2026-03-18 22:30:35] Generating local benchmark definition for: 4D pressure vessel design
+[2026-03-18 22:30:35] Generated local benchmark definition for: 4D pressure vessel design
+[2026-03-18 22:30:35] Generating local benchmark definition for: 7D speed reducer design
+[2026-03-18 22:30:35] Generated local benchmark definition for: 7D speed reducer design
+[2026-03-18 22:30:35] Generating local benchmark definition for: 9D planetary gear train design
+[2026-03-18 22:30:35] Generated local benchmark definition for: 9D planetary gear train design
+[2026-03-18 22:30:35] Generating local benchmark definition for: 10D rolling element bearing design
+[2026-03-18 22:30:35] Generated local benchmark definition for: 10D rolling element bearing design
+[2026-03-18 22:30:35] Generating local benchmark definition for: 30D cantilever beam design
+[2026-03-18 22:30:35] Generated local benchmark definition for: 30D cantilever beam design
+[2026-03-18 22:30:35] Generated local benchmark definitions: 12
+[2026-03-18 22:30:35] All benchmarks were downloaded or generated without shell-level failures.
+[2026-03-18 22:30:35] Benchmark materialization script completed.

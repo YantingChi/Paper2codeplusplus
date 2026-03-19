@@ -1,0 +1,27 @@
+{
+  "paper_benchmark_name": "4D pressure vessel design",
+  "matched_benchmark_name": "4D pressure vessel design",
+  "status": "well_established_formula",
+  "materialization_strategy": "generate_definition",
+  "paper_research_field": "Constrained Bayesian Optimization",
+  "matched_research_field": "Engineering Design Optimization",
+  "definition_summary": "A four-dimensional pressure vessel design optimization problem where the objective is cost minimization under multiple engineering constraints.",
+  "equations_or_components": [
+    "Cost function and standard constraint equations based on thickness, stress, and geometric requirements."
+  ],
+  "variables_or_inputs": [
+    "Shell thickness, head thickness, inner radius, and length"
+  ],
+  "constraints_or_bounds": [
+    "Stress, thickness, and volume constraints according to engineering standards."
+  ],
+  "expected_artifacts": [
+    "benchmark_definition.txt"
+  ],
+  "license_or_access_notes": [
+    "No licensing restrictions for academic research."
+  ],
+  "match_reason": "This is a classical engineering design benchmark, and the name exactly matches the one used in the paper.",
+  "source_type": "literature_formula",
+  "source_url": ""
+}

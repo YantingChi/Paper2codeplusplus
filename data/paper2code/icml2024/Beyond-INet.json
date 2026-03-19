@@ -1,0 +1,4546 @@
+{
+    "paper_id": "Beyond-INet",
+    "header": {
+        "generated_with": "S2ORC 1.0.0",
+        "date_generated": "2025-02-25T21:42:42.690080Z"
+    },
+    "title": "ConvNet vs Transformer, Supervised vs CLIP: Beyond ImageNet Accuracy",
+    "authors": [
+        {
+            "first": "Kirill",
+            "middle": [],
+            "last": "Vishniakov",
+            "suffix": "",
+            "affiliation": {},
+            "email": ""
+        },
+        {
+            "first": "Zhiqiang",
+            "middle": [],
+            "last": "Shen",
+            "suffix": "",
+            "affiliation": {},
+            "email": ""
+        },
+        {
+            "first": "Zhuang",
+            "middle": [],
+            "last": "Liu",
+            "suffix": "",
+            "affiliation": {},
+            "email": ""
+        }
+    ],
+    "year": "",
+    "venue": null,
+    "identifiers": {},
+    "abstract": "Modern computer vision offers a great variety of models to practitioners, and selecting a model from multiple options for specific applications can be challenging. Conventionally, competing model architectures and training protocols are compared by their classification accuracy on Ima-geNet. However, this single metric does not fully capture performance nuances critical for specialized tasks. In this work, we conduct an in-depth comparative analysis of model behaviors beyond ImageNet accuracy, for both ConvNet and Vision Transformer architectures, each across supervised and CLIP training paradigms. Although our selected models have similar ImageNet accuracies and compute requirements, we find that they differ in many other aspects: types of mistakes, output calibration, transferability, and feature invariance, among others. This diversity in model characteristics, not captured by traditional metrics, highlights the need for more nuanced analysis when choosing among different models. Code is available at github.com/kirill-vish/Beyond-INet.",
+    "pdf_parse": {
+        "paper_id": "Beyond-INet",
+        "_pdf_hash": "",
+        "abstract": [
+            {
+                "text": "Modern computer vision offers a great variety of models to practitioners, and selecting a model from multiple options for specific applications can be challenging. Conventionally, competing model architectures and training protocols are compared by their classification accuracy on Ima-geNet. However, this single metric does not fully capture performance nuances critical for specialized tasks. In this work, we conduct an in-depth comparative analysis of model behaviors beyond ImageNet accuracy, for both ConvNet and Vision Transformer architectures, each across supervised and CLIP training paradigms. Although our selected models have similar ImageNet accuracies and compute requirements, we find that they differ in many other aspects: types of mistakes, output calibration, transferability, and feature invariance, among others. This diversity in model characteristics, not captured by traditional metrics, highlights the need for more nuanced analysis when choosing among different models. Code is available at github.com/kirill-vish/Beyond-INet.",
+                "cite_spans": [],
+                "ref_spans": [],
+                "eq_spans": [],
+                "section": "Abstract",
+                "sec_num": null
+            }
+        ],
+        "body_text": [
+            {
+                "text": "mary metric for evaluating model performance. It has driven remarkable progress since it ignited the deep learning revolution (Krizhevsky et al., 2012) . However, this metric is becoming increasingly insufficient. While ImageNet is useful to measure a model's general capability, it does not capture the nuanced differences arising from varying architectures, training paradigms, and data -models with different properties may appear similar if judged solely based on ImageNet accuracy (Fig. 1 ). This limitation becomes more pronounced as models start to overfit the idiosyncrasies of ImageNet with saturated accuracies (Beyer et al., 2020) .",
+                "cite_spans": [
+                    {
+                        "start": 126,
+                        "end": 151,
+                        "text": "(Krizhevsky et al., 2012)",
+                        "ref_id": "BIBREF29"
+                    },
+                    {
+                        "start": 621,
+                        "end": 641,
+                        "text": "(Beyer et al., 2020)",
+                        "ref_id": "BIBREF3"
+                    }
+                ],
+                "ref_spans": [
+                    {
+                        "start": 492,
+                        "end": 493,
+                        "text": "1",
+                        "ref_id": "FIGREF0"
+                    }
+                ],
+                "eq_spans": [],
+                "section": "Introduction",
+                "sec_num": "1."
+            },
+            {
+                "text": "A particularly noteworthy example is CLIP. Despite having a similar ImageNet accuracy as a ResNet (He et al., 2016 ), CLIP's vision encoder exhibits much better robustness and transferability. This has sparked research that explores and builds upon the unique strengths of CLIP (Ramesh et al., 2022; Luo et al., 2022; Wortsman et al., 2022; Vinker et al., 2023) , which were not evident from the ImageNet metric alone. This demonstrates that analyzing alternative properties could help discover useful models.",
+                "cite_spans": [
+                    {
+                        "start": 98,
+                        "end": 114,
+                        "text": "(He et al., 2016",
+                        "ref_id": "BIBREF19"
+                    },
+                    {
+                        "start": 278,
+                        "end": 299,
+                        "text": "(Ramesh et al., 2022;",
+                        "ref_id": "BIBREF43"
+                    },
+                    {
+                        "start": 300,
+                        "end": 317,
+                        "text": "Luo et al., 2022;",
+                        "ref_id": "BIBREF32"
+                    },
+                    {
+                        "start": 318,
+                        "end": 340,
+                        "text": "Wortsman et al., 2022;",
+                        "ref_id": "BIBREF59"
+                    },
+                    {
+                        "start": 341,
+                        "end": 361,
+                        "text": "Vinker et al., 2023)",
+                        "ref_id": "BIBREF54"
+                    }
+                ],
+                "ref_spans": [],
+                "eq_spans": [],
+                "section": "Introduction",
+                "sec_num": "1."
+            },
+            {
+                "text": "In addition to fundamental research, the growing integration of vision models into production systems also calls for a deep understanding of their behaviors. Conventional metrics do not fully capture models' ability to handle real-world vision challenges like varying camera poses, lighting condi- tions, or occlusions. For instance, models trained on datasets such as ImageNet often struggle (Yamada & Otani, 2022) to transfer their performance to real-world applications where conditions and scenarios are more diverse.",
+                "cite_spans": [
+                    {
+                        "start": 393,
+                        "end": 415,
+                        "text": "(Yamada & Otani, 2022)",
+                        "ref_id": "BIBREF60"
+                    }
+                ],
+                "ref_spans": [],
+                "eq_spans": [],
+                "section": "Introduction",
+                "sec_num": "1."
+            },
+            {
+                "text": "To bridge this gap, we conduct an in-depth exploration focusing on model behaviors beyond ImageNet accuracy. We analyze four leading models in the computer vision: Con-vNeXt (Liu et al., 2022) , as a representative ConvNet, and Vision Transformer (ViT) (Dosovitskiy et al., 2020) , each under supervised and CLIP training. The selected models are similar in parameter counts and show nearly identical accuracy on ImageNet-1K within each training paradigm, ensuring a fair comparison. Our study delves into a wide array of model characteristics, such as types of prediction errors, generalization capabilities, invariances of the learned representations, calibration, and many others. Importantly, our focus is on properties exhibited by the model without additional training or finetuning, providing insights for practitioners interested in using pretrained models directly.",
+                "cite_spans": [
+                    {
+                        "start": 174,
+                        "end": 192,
+                        "text": "(Liu et al., 2022)",
+                        "ref_id": "BIBREF31"
+                    },
+                    {
+                        "start": 253,
+                        "end": 279,
+                        "text": "(Dosovitskiy et al., 2020)",
+                        "ref_id": "BIBREF9"
+                    }
+                ],
+                "ref_spans": [],
+                "eq_spans": [],
+                "section": "Introduction",
+                "sec_num": "1."
+            },
+            {
+                "text": "In our analysis, we discover substantial variations in model behaviors among different architectures and training paradigms. For example, CLIP models make fewer classification errors relative to their ImageNet performance. However, supervised models are better calibrated and superior on ImageNet robustness benchmarks. ConvNeXt has an advantage on synthetic data but is more texture-biased than ViT. We also find that supervised ConvNeXt excels on many benchmarks and achieves transferability comparable to that of CLIP models. Based on these findings, it becomes evident that various models demonstrate their strengths in unique ways that are not captured by a single metric. Our research emphasizes the need for more detailed evaluation metrics for accurate, context-specific model selection and the creation of new benchmarks unrelated to ImageNet.",
+                "cite_spans": [],
+                "ref_spans": [],
+                "eq_spans": [],
+                "section": "Introduction",
+                "sec_num": "1."
+            },
+            {
+                "text": "For analyzing ConvNets and Transformers, many previous works (Naseer et al., 2021; Minderer et al., 2021; Zhou et al., 2021; Bai et al., 2021) compare ResNet and ViT. This comparison is often disadvantageous for ConvNet since ViTs are typically trained with more advanced recipes, achieving higher ImageNet accuracy. ViT also has architecture design elements, e.g., LayerNorm (Ba et al., 2016) , that were not incorporated in ResNet when it was invented years ago. For a more balanced evaluation, we compare ViT with Con-vNeXt (Liu et al., 2022) , a modern of ConvNet that matches Transformers' performance.",
+                "cite_spans": [
+                    {
+                        "start": 61,
+                        "end": 82,
+                        "text": "(Naseer et al., 2021;",
+                        "ref_id": "BIBREF36"
+                    },
+                    {
+                        "start": 83,
+                        "end": 105,
+                        "text": "Minderer et al., 2021;",
+                        "ref_id": "BIBREF35"
+                    },
+                    {
+                        "start": 106,
+                        "end": 124,
+                        "text": "Zhou et al., 2021;",
+                        "ref_id": "BIBREF64"
+                    },
+                    {
+                        "start": 125,
+                        "end": 142,
+                        "text": "Bai et al., 2021)",
+                        "ref_id": "BIBREF2"
+                    },
+                    {
+                        "start": 376,
+                        "end": 393,
+                        "text": "(Ba et al., 2016)",
+                        "ref_id": "BIBREF1"
+                    },
+                    {
+                        "start": 527,
+                        "end": 545,
+                        "text": "(Liu et al., 2022)",
+                        "ref_id": "BIBREF31"
+                    }
+                ],
+                "ref_spans": [],
+                "eq_spans": [],
+                "section": "Models",
+                "sec_num": "2."
+            },
+            {
+                "text": "As for the training paradigms, we compare supervised and CLIP. Supervised models continue to show state-of-the-art performance in computer vision (Dehghani et al., 2023) . CLIP models, on the other hand, excel in generalization and transferability, and offer intriguing representational properties that connect vision and language. Self-supervised models (He et al., 2022; Woo et al., 2023) are not included in the results as they showed behaviors similar to supervised models in our preliminary tests. This could be due to their final ImageNet-1K supervised finetuning, which is necessary for studying many properties.",
+                "cite_spans": [
+                    {
+                        "start": 146,
+                        "end": 169,
+                        "text": "(Dehghani et al., 2023)",
+                        "ref_id": "BIBREF6"
+                    },
+                    {
+                        "start": 355,
+                        "end": 372,
+                        "text": "(He et al., 2022;",
+                        "ref_id": "BIBREF21"
+                    },
+                    {
+                        "start": 373,
+                        "end": 390,
+                        "text": "Woo et al., 2023)",
+                        "ref_id": "BIBREF58"
+                    }
+                ],
+                "ref_spans": [],
+                "eq_spans": [],
+                "section": "Models",
+                "sec_num": "2."
+            },
+            {
+                "text": "The selected models have similar ImageNet-1K validation accuracies within their respective training paradigms, ensuring a fair comparison. For CLIP models, these indicate their zero-shot accuracies. The models also have similar sizes and computational requirements, and are publicly available. Since we are using pretrained models, we cannot control for the number and quality of data samples seen during training.",
+                "cite_spans": [],
+                "ref_spans": [],
+                "eq_spans": [],
+                "section": "Models",
+                "sec_num": "2."
+            },
+            {
+                "text": "For supervised models, we use a pretrained DeiT3-Base/16 (Touvron et al., 2022) for ViT, which shares the same architecture as ViT-Base/16 with an improved training recipe, and ConvNeXt-Base (Liu et al., 2022) . For CLIP models, we use vision encoders of ViT-Base/16 and ConvNeXt-Base from OpenCLIP (Ilharco et al., 2021) . Note that these models have a slightly different performance from the original OpenAI models (Radford et al., 2021) . A detailed model comparison is given in Table 1 .",
+                "cite_spans": [
+                    {
+                        "start": 57,
+                        "end": 79,
+                        "text": "(Touvron et al., 2022)",
+                        "ref_id": "BIBREF51"
+                    },
+                    {
+                        "start": 191,
+                        "end": 209,
+                        "text": "(Liu et al., 2022)",
+                        "ref_id": "BIBREF31"
+                    },
+                    {
+                        "start": 299,
+                        "end": 321,
+                        "text": "(Ilharco et al., 2021)",
+                        "ref_id": null
+                    },
+                    {
+                        "start": 417,
+                        "end": 439,
+                        "text": "(Radford et al., 2021)",
+                        "ref_id": "BIBREF40"
+                    }
+                ],
+                "ref_spans": [
+                    {
+                        "start": 488,
+                        "end": 489,
+                        "text": "1",
+                        "ref_id": "TABREF0"
+                    }
+                ],
+                "eq_spans": [],
+                "section": "Models",
+                "sec_num": "2."
+            },
+            {
+                "text": "We recognize there are other ViT CLIP models pretrained on larger datasets such as LAION-2B, DataComp (Gadre et al., 2023) , DFN (Fang et al., 2023a) , which show a better performance. However, OpenCLIP offers only a few pretrained ConvNeXt models and for most of them there is no matching ViT counterpart in terms of ImageNet accuracy, pretraining dataset and parameter count. Therefore, we chose CLIP models pretrained on LAION-400M, offering the most fair comparison between ConvNet and ViT.",
+                "cite_spans": [
+                    {
+                        "start": 102,
+                        "end": 122,
+                        "text": "(Gadre et al., 2023)",
+                        "ref_id": "BIBREF12"
+                    },
+                    {
+                        "start": 129,
+                        "end": 149,
+                        "text": "(Fang et al., 2023a)",
+                        "ref_id": null
+                    }
+                ],
+                "ref_spans": [],
+                "eq_spans": [],
+                "section": "Models",
+                "sec_num": "2."
+            },
+            {
+                "text": "Additional models of different sizes. In the Appendix A, we present the performance results for models of different sizes to evaluate the impact of model size on performance. These models are assessed across several benchmarks, including ImageNet-X, PUG-ImageNet, calibration, invariance, and shape/texture bias. ",
+                "cite_spans": [],
+                "ref_spans": [],
+                "eq_spans": [],
+                "section": "Models",
+                "sec_num": "2."
+            },
+            {
+                "text": "Our analysis is designed to investigate model behaviors that can be evaluated without the need for further training or finetuning. This approach is particularly relevant for practitioners with limited compute resources, who often rely on pretrained models. While we recognize the value of downstream tasks like object detection, our focus is on properties that offer insights with minimal computational demands and reflect behaviors important for real-world applications.",
+                "cite_spans": [],
+                "ref_spans": [],
+                "eq_spans": [],
+                "section": "Property Analysis",
+                "sec_num": "3."
+            },
+            {
+                "text": "In image classification, a model mistake is an incorrect label assignment, such as misclassifying a cat as a dog. Simply identifying mistaken object classes might not offer actionable insights for model improvement. The key aspect, therefore, is finding the specific reasons for these mistakes. For instance, some models may be particularly sensitive to certain aspects of the data distribution, like texture variations. In this case, a model might consistently make mistakes when the texture of the object differs from what it has been trained on. Identifying mistake types allows for targeted data collection and retraining, improving over a black-box approach.",
+                "cite_spans": [],
+                "ref_spans": [],
+                "eq_spans": [],
+                "section": "Model Mistakes",
+                "sec_num": "3.1."
+            },
+            {
+                "text": "The ImageNet-X dataset (Idrissi et al., 2022) offers detailed human annotations for 16 factors of variation, such as pose, style, and others. This allows a focused analysis of models' mistake types. The annotations enable measuring model error ratios for each factor independently: error ratio(factor) = 1-accuracy(factor) 1-accuracy(overall) , where accuracy(overall) is the overall ImageNet-1K validation accuracy, and accuracy(factor) is the accuracy on all the images where the factor was highlighted. This metric measures the model performance on a given factor relative to its overall performance. Lower error ratios indicate better performance, implying higher accuracy for the specific factor. Our results on ImageNet-X are presented in Fig. 2 .",
+                "cite_spans": [
+                    {
+                        "start": 23,
+                        "end": 45,
+                        "text": "(Idrissi et al., 2022)",
+                        "ref_id": "BIBREF25"
+                    }
+                ],
+                "ref_spans": [
+                    {
+                        "start": 750,
+                        "end": 751,
+                        "text": "2",
+                        "ref_id": "FIGREF1"
+                    }
+                ],
+                "eq_spans": [],
+                "section": "Model Mistakes",
+                "sec_num": "3.1."
+            },
+            {
+                "text": "CLIP models make fewer mistakes relative to their Im-ageNet accuracy than supervised. The diagram in Fig. 2 shows that CLIP models have a smaller error ratio, indicating a significant advantage over supervised models. However, it is important to note that the error ratio is relative to overall ImageNet accuracy, where a significant 18% gap exists between supervised and CLIP zero-shot models. In particular, CLIP models are much more robust towards shape, subcategory, texture, object blocking, and darker factors.",
+                "cite_spans": [],
+                "ref_spans": [
+                    {
+                        "start": 106,
+                        "end": 107,
+                        "text": "2",
+                        "ref_id": "FIGREF1"
+                    }
+                ],
+                "eq_spans": [],
+                "section": "Model Mistakes",
+                "sec_num": "3.1."
+            },
+            {
+                "text": "The key reason for the success of CLIP models is likely the more diverse data used for training.",
+                "cite_spans": [],
+                "ref_spans": [],
+                "eq_spans": [],
+                "section": "Model Mistakes",
+                "sec_num": "3.1."
+            },
+            {
+                "text": "All models suffer mostly from complex factors like occlusion. For CLIP models, there are three factors with dissimilar performance between ConvNeXt and ViT: multiple objects, style, and darker. For the first two, the ConvNeXt has a higher error ratio, while for the latter, it has an advantage over ViT. For supervised models, the performance only diverges for style and person blocking. Except for these factors, models largely have similar error ratios. The six factors for which all the models have a high error ratio are smaller, object blocking, person blocking, shape, subcategory, and texture. High error ratio factors usually involve complex visual scenarios, which helps to explain why models often make mistakes in these situations. For example, in occlusion, the model often misclassifies due to focusing on the visible, obscuring object. Texture is the most challenging factor for all models.",
+                "cite_spans": [],
+                "ref_spans": [],
+                "eq_spans": [],
+                "section": "Model Mistakes",
+                "sec_num": "3.1."
+            },
+            {
+                "text": "Interestingly, all models in our analysis have the largest error ratio on the texture factor. It refers to images where the texture of the object differs from its standard appearance. This suggests that models of the current generation largely suffer because of texture bias.",
+                "cite_spans": [],
+                "ref_spans": [],
+                "eq_spans": [],
+                "section": "Model Mistakes",
+                "sec_num": "3.1."
+            },
+            {
+                "text": "In contrast to humans, who generally use high-level visual cues for recognition, neural networks often rely on more brittle shortcut features (Geirhos et al., 2020) . The study of shape-texture bias (Geirhos et al., 2018) serves to highlight this phenomenon by examining model behavior on cue-conflict images, which contain a shape from one class superimposed with the texture from another (Fig. 4 ). Two key metrics are introduced to quantify this bias: the shape and the texture fractions. The shape fraction calculates the proportion of decisions leaning towards the class represented by the shape, while the texture fraction measures those for the texture class. These metrics reveal whether the classifier favors shape or texture when they conflict.",
+                "cite_spans": [
+                    {
+                        "start": 142,
+                        "end": 164,
+                        "text": "(Geirhos et al., 2020)",
+                        "ref_id": "BIBREF14"
+                    },
+                    {
+                        "start": 199,
+                        "end": 221,
+                        "text": "(Geirhos et al., 2018)",
+                        "ref_id": "BIBREF13"
+                    }
+                ],
+                "ref_spans": [
+                    {
+                        "start": 396,
+                        "end": 397,
+                        "text": "4",
+                        "ref_id": "FIGREF3"
+                    }
+                ],
+                "eq_spans": [],
+                "section": "Shape / Texture Bias",
+                "sec_num": "3.2."
+            },
+            {
+                "text": "The study in (Geirhos et al., 2018) showed that ConvNets have a strong bias towards texture, as opposed to shape, which differs from humans. Subsequent work (Naseer et al., 2021) concluded that ViT is less biased towards the texture than ConvNet by comparing the first generation of DeiT-S (Touvron et al., 2021) and ResNet-50. Remarkably, scaling large Transformer models has led to shape biases comparable to human level (Dehghani et al., 2023) .",
+                "cite_spans": [
+                    {
+                        "start": 13,
+                        "end": 35,
+                        "text": "(Geirhos et al., 2018)",
+                        "ref_id": "BIBREF13"
+                    },
+                    {
+                        "start": 157,
+                        "end": 178,
+                        "text": "(Naseer et al., 2021)",
+                        "ref_id": "BIBREF36"
+                    },
+                    {
+                        "start": 290,
+                        "end": 312,
+                        "text": "(Touvron et al., 2021)",
+                        "ref_id": "BIBREF50"
+                    },
+                    {
+                        "start": 423,
+                        "end": 446,
+                        "text": "(Dehghani et al., 2023)",
+                        "ref_id": "BIBREF6"
+                    }
+                ],
+                "ref_spans": [],
+                "eq_spans": [],
+                "section": "Shape / Texture Bias",
+                "sec_num": "3.2."
+            },
+            {
+                "text": "We evaluate shape-texture bias in our models using cueconflict images and display the findings in Fig. 3 . Dashed lines represent average shape bias aggregated over all the categories. Individual markers on horizontal lines depict shape bias for the particular class, which is identified by a corresponding logo on the y-axis. The shape fraction is represented on the top x-axis of the diagrams, while the bottom x-axis indicates the texture fraction.",
+                "cite_spans": [],
+                "ref_spans": [
+                    {
+                        "start": 103,
+                        "end": 104,
+                        "text": "3",
+                        "ref_id": "FIGREF2"
+                    }
+                ],
+                "eq_spans": [],
+                "section": "Shape / Texture Bias",
+                "sec_num": "3.2."
+            },
+            {
+                "text": "CLIP models have smaller texture bias than supervised.",
+                "cite_spans": [],
+                "ref_spans": [],
+                "eq_spans": [],
+                "section": "Shape / Texture Bias",
+                "sec_num": "3.2."
+            },
+            {
+                "text": "In Fig. 3 , we can observe that ViTs exhibit stronger shape bias than ConvNeXts for both supervised and CLIP models. This is possibly because ConvNeXt is more inclined to learn local features related to textures due to the local nature of convolution operation. However, the gap between ViT and ConvNeXt is much smaller for CLIP-based models. Notably, the shape bias in CLIP models improved by 7% and 12% for both architectures, prompting questions about the benefits of further scaling the training data. ConvNets typically exhibit lower shape bias compared to ViT, however, the gap for CLIP models is marginal. In (Dehghani et al., 2023) , it has been shown that a 22B parameter ViT model can achieve 87% shape bias. In our analysis, the ViT CLIP model achieved a maximum shape bias of 46.4%, suggesting that the model size might also play an important role.",
+                "cite_spans": [
+                    {
+                        "start": 616,
+                        "end": 639,
+                        "text": "(Dehghani et al., 2023)",
+                        "ref_id": "BIBREF6"
+                    }
+                ],
+                "ref_spans": [
+                    {
+                        "start": 8,
+                        "end": 9,
+                        "text": "3",
+                        "ref_id": "FIGREF2"
+                    }
+                ],
+                "eq_spans": [],
+                "section": "Shape / Texture Bias",
+                "sec_num": "3.2."
+            },
+            {
+                "text": "Besides vulnerability to shortcut features, poor model performance can often be attributed to miscalibration, where a model's confidence in its predictions does not align with actual accuracy. Model calibration is a metric that quantifies the reliability of a model's predicted confidence levels (Guo et al., 2017) . A model's confidence for a prediction is defined as the max probability among all classes in its output distribution. We are interested in determining whether the model is overly confident or too uncertain in its predictions.",
+                "cite_spans": [
+                    {
+                        "start": 296,
+                        "end": 314,
+                        "text": "(Guo et al., 2017)",
+                        "ref_id": null
+                    }
+                ],
+                "ref_spans": [],
+                "eq_spans": [],
+                "section": "Model Calibration",
+                "sec_num": "3.3."
+            },
+            {
+                "text": "For instance, if the network deems a set of predictions to be 80% confident, does the actual accuracy hover around 80%?",
+                "cite_spans": [],
+                "ref_spans": [],
+                "eq_spans": [],
+                "section": "Model Calibration",
+                "sec_num": "3.3."
+            },
+            {
+                "text": "The calibration rate can be quantified by Expected Calibration Error (ECE). To calculate ECE, predictions first need to be separated into the M bins B 1 , . . . , B M based on their confidence. For instance, one bin can include all the predictions with confidence between 50% and 60% and so on. Each bin's confidence and accuracy are calculated as the average confidence and accuracy of predictions in B i , represented as conf(B i ) and acc(B i ). Then, ECE can be defined as: ECE",
+                "cite_spans": [],
+                "ref_spans": [],
+                "eq_spans": [],
+                "section": "Model Calibration",
+                "sec_num": "3.3."
+            },
+            {
+                "text": "= M i |Bi| n |acc(B i ) -conf(B i )| , where |B i | is the size of the i-th bin.",
+                "cite_spans": [],
+                "ref_spans": [],
+                "eq_spans": [],
+                "section": "Model Calibration",
+                "sec_num": "3.3."
+            },
+            {
+                "text": "Model calibration is also often assessed through visualizations, including reliability diagrams and confidence histograms. Reliability diagrams plot the predicted confidence against accuracy; a well-calibrated model would show a graph where points closely align with the diagonal. Confidence histograms display how often different confidence levels occur in the model's predictions.",
+                "cite_spans": [],
+                "ref_spans": [],
+                "eq_spans": [],
+                "section": "Model Calibration",
+                "sec_num": "3.3."
+            },
+            {
+                "text": "For a balanced evaluation, we present calibration metrics on two different datasets: ImageNet-1K for in-distribution data and ImageNet-R (Hendrycks et al., 2021a) for outof-distribution data. We select ImageNet-R as the out-ofdistribution because CLIP models show higher accuracy on it than supervised. In all experiments, we use M = 15 bins. We plot confidence histograms (1 and 3 rows), reliability diagrams (2 and 4 rows), and ECE in Fig. 5 .",
+                "cite_spans": [
+                    {
+                        "start": 137,
+                        "end": 162,
+                        "text": "(Hendrycks et al., 2021a)",
+                        "ref_id": null
+                    }
+                ],
+                "ref_spans": [
+                    {
+                        "start": 442,
+                        "end": 443,
+                        "text": "5",
+                        "ref_id": "FIGREF4"
+                    }
+                ],
+                "eq_spans": [],
+                "section": "Model Calibration",
+                "sec_num": "3.3."
+            },
+            {
+                "text": "CLIP models are overconfident and supervised models are slightly underconfident. In Fig. 5 , we observe that CLIP models have bars consistently below the diagonal in reliability diagrams and a notably high last bar in the confidence histogram, signaling overconfidence in both in-distribution and out-of-distribution data. Although (Minderer et al., 2021) attributes calibration performance mainly to architecture, our results suggest otherwise: higher ECE scores in CLIP models, despite superior accuracy on ImageNet-R, indicate that training data and objectives could be more influential factors. We also highlight that our results are different from (Minderer et al., 2021) for CLIP models presumably because they use checkpoints from Ope-nAI (Radford et al., 2021) and we use from OpenCLIP (Ilharco et al., 2021) . In the lower part of Fig. 5 related to ImageNet-R, we note that supervised models exhibit a higher density in the lower confidence intervals of the confidence histograms (3 row). Additionally, these models show elevated accuracy levels in the initial bins of the reliability diagrams (4 row). These findings suggest that supervised models tend to be slightly underconfident on ImageNet-R. This discrepancy is because (Minderer et al., 2021) focused on older ConvNet architectures, such as ResNet, while we use a more modern one. For CLIP models, we find that ViT is only slightly better than ConvNeXt.",
+                "cite_spans": [
+                    {
+                        "start": 332,
+                        "end": 355,
+                        "text": "(Minderer et al., 2021)",
+                        "ref_id": "BIBREF35"
+                    },
+                    {
+                        "start": 653,
+                        "end": 676,
+                        "text": "(Minderer et al., 2021)",
+                        "ref_id": "BIBREF35"
+                    },
+                    {
+                        "start": 746,
+                        "end": 768,
+                        "text": "(Radford et al., 2021)",
+                        "ref_id": "BIBREF40"
+                    },
+                    {
+                        "start": 794,
+                        "end": 816,
+                        "text": "(Ilharco et al., 2021)",
+                        "ref_id": null
+                    },
+                    {
+                        "start": 1236,
+                        "end": 1259,
+                        "text": "(Minderer et al., 2021)",
+                        "ref_id": "BIBREF35"
+                    }
+                ],
+                "ref_spans": [
+                    {
+                        "start": 89,
+                        "end": 90,
+                        "text": "5",
+                        "ref_id": "FIGREF4"
+                    },
+                    {
+                        "start": 845,
+                        "end": 846,
+                        "text": "5",
+                        "ref_id": "FIGREF4"
+                    }
+                ],
+                "eq_spans": [],
+                "section": "Model Calibration",
+                "sec_num": "3.3."
+            },
+            {
+                "text": "A model may excel on data from its training distribution but struggle to generalize to a distribution shift (Recht et al., 2019) . These shifts can arise from natural perturbations such as atmospheric conditions (e.g., fog, rain), camera noise, or variations in object location and orientation. Model robustness quantifies a model's capability to adapt to changes in data distributions. A robust model should maintain high accuracy with these perturbations. This is particularly important for applications where reliability is a primary concern.",
+                "cite_spans": [
+                    {
+                        "start": 108,
+                        "end": 128,
+                        "text": "(Recht et al., 2019)",
+                        "ref_id": "BIBREF44"
+                    }
+                ],
+                "ref_spans": [],
+                "eq_spans": [],
+                "section": "Robustness",
+                "sec_num": "3.4."
+            },
+            {
+                "text": "We evaluate the robustness on several ImageNet variants that feature many types of natural variations and corruptions: V2 (Recht et al., 2019) , A (Hendrycks et al., 2021b) , C (Hendrycks & Dietterich, 2019) , R (Hendrycks et al., 2021a) , Sketch (Wang et al., 2019) , Real (Beyer et al., 2020) , and Hard (Taesiri et al.) . We also provide ImageNet-1K validation accuracy for reference (INet-Val) . The results are shown in Fig. 6 (top).",
+                "cite_spans": [
+                    {
+                        "start": 122,
+                        "end": 142,
+                        "text": "(Recht et al., 2019)",
+                        "ref_id": "BIBREF44"
+                    },
+                    {
+                        "start": 147,
+                        "end": 172,
+                        "text": "(Hendrycks et al., 2021b)",
+                        "ref_id": null
+                    },
+                    {
+                        "start": 177,
+                        "end": 207,
+                        "text": "(Hendrycks & Dietterich, 2019)",
+                        "ref_id": "BIBREF22"
+                    },
+                    {
+                        "start": 212,
+                        "end": 237,
+                        "text": "(Hendrycks et al., 2021a)",
+                        "ref_id": null
+                    },
+                    {
+                        "start": 247,
+                        "end": 266,
+                        "text": "(Wang et al., 2019)",
+                        "ref_id": "BIBREF56"
+                    },
+                    {
+                        "start": 274,
+                        "end": 294,
+                        "text": "(Beyer et al., 2020)",
+                        "ref_id": "BIBREF3"
+                    },
+                    {
+                        "start": 306,
+                        "end": 322,
+                        "text": "(Taesiri et al.)",
+                        "ref_id": null
+                    },
+                    {
+                        "start": 387,
+                        "end": 397,
+                        "text": "(INet-Val)",
+                        "ref_id": null
+                    }
+                ],
+                "ref_spans": [
+                    {
+                        "start": 430,
+                        "end": 431,
+                        "text": "6",
+                        "ref_id": null
+                    }
+                ],
+                "eq_spans": [],
+                "section": "Robustness",
+                "sec_num": "3.4."
+            },
+            {
+                "text": "Supervised models are better than CLIP on most of the robustness benchmarks. In Fig. 6 , we can see that supervised models perform better than CLIP on most datasets except ImageNet-R and ImageNet-Sketch. CLIP models' success on ImageNet-R and ImageNet-Sketch suggests they handle abstract or creative visuals better than supervised models. The advantage of supervised models is likely related to the fact that all robustness datasets share the same set of classes as the original ImageNet-1K, on which they were finetuned. This underscores the need for the development of new robustness benchmarks that are not directly related to ImageNet. Additionally, CLIP models may achieve higher performance when pretrained on larger datasets (Fang et al., 2023a; Gadre et al., 2023) . ViT and ConvNeXt, on average, have similar performance across both supervised and CLIP.",
+                "cite_spans": [
+                    {
+                        "start": 733,
+                        "end": 753,
+                        "text": "(Fang et al., 2023a;",
+                        "ref_id": null
+                    },
+                    {
+                        "start": 754,
+                        "end": 773,
+                        "text": "Gadre et al., 2023)",
+                        "ref_id": "BIBREF12"
+                    }
+                ],
+                "ref_spans": [
+                    {
+                        "start": 85,
+                        "end": 86,
+                        "text": "6",
+                        "ref_id": null
+                    }
+                ],
+                "eq_spans": [],
+                "section": "Robustness",
+                "sec_num": "3.4."
+            },
+            {
+                "text": "The transfer learning performance of a model indicates its ability to adapt to new tasks and datasets beyond its original training domain (Kolesnikov et al., 2020) . Good transferability allows for rapid finetuning with minimal additional effort, making it easier to scale the model to a wide range of real-world applications. The ability of a model to adapt to these shifts without significant degradation in performance serves as a valuable metric for its utility and generalization capabilities. For instance, consider a model that has been originally trained on ImageNet, which primarily consists of natural images. A test of its transferability would be to evaluate how well this model performs when applied to a vastly different domain, such as medical imaging.",
+                "cite_spans": [
+                    {
+                        "start": 138,
+                        "end": 163,
+                        "text": "(Kolesnikov et al., 2020)",
+                        "ref_id": "BIBREF27"
+                    }
+                ],
+                "ref_spans": [],
+                "eq_spans": [],
+                "section": "Transferability",
+                "sec_num": "3.5."
+            },
+            {
+                "text": "To assess the transferability, we adopted a VTAB benchmark (Zhai et al., 2019) . It comprises 19 diverse datasets grouped into three subcategories: natural, specialized, and structured. We conduct a linear probing evaluation on frozen features, following the protocol from (Ilharco et al., 2021) . The results are shown in Fig. 6 (bottom) and Table 2 Supervised ConvNeXt has great transferability, almost matching the performance of CLIP models. We find that ConvNeXt strongly outperforms ViT for supervised. Interestingly the performance of supervised ConvNeXt is not very far from CLIP models, both of which have the same average accuracy. For CLIP, ViT and ConvNeXt demonstrate similar average accuracy, with many datasets showing a performance gap of less than 1%. CLIP models generally show better transferability on all three subgroups of VTAB (Table 2 ), which is different from the robustness experiments. The superiority of CLIP can be attributed to the larger and more diverse volume of pretraining data (Ramanujan et al., 2023) .",
+                "cite_spans": [
+                    {
+                        "start": 59,
+                        "end": 78,
+                        "text": "(Zhai et al., 2019)",
+                        "ref_id": "BIBREF62"
+                    },
+                    {
+                        "start": 273,
+                        "end": 295,
+                        "text": "(Ilharco et al., 2021)",
+                        "ref_id": null
+                    },
+                    {
+                        "start": 1014,
+                        "end": 1038,
+                        "text": "(Ramanujan et al., 2023)",
+                        "ref_id": "BIBREF42"
+                    }
+                ],
+                "ref_spans": [
+                    {
+                        "start": 328,
+                        "end": 329,
+                        "text": "6",
+                        "ref_id": null
+                    },
+                    {
+                        "start": 349,
+                        "end": 350,
+                        "text": "2",
+                        "ref_id": "TABREF3"
+                    },
+                    {
+                        "start": 857,
+                        "end": 858,
+                        "text": "2",
+                        "ref_id": "TABREF3"
+                    }
+                ],
+                "eq_spans": [],
+                "section": "Transferability",
+                "sec_num": "3.5."
+            },
+            {
+                "text": "While two previous sections focused on robustness and transferability, they did not cover the new and promising area of training models with synthetic data (Tian et al., 2023) . Unlike human-annotated data, synthetic datasets allow precise control over the content and quality of data.",
+                "cite_spans": [
+                    {
+                        "start": 156,
+                        "end": 175,
+                        "text": "(Tian et al., 2023)",
+                        "ref_id": "BIBREF49"
+                    }
+                ],
+                "ref_spans": [],
+                "eq_spans": [],
+                "section": "Synthetic Data",
+                "sec_num": "3.6."
+            },
+            {
+                "text": "PUG-ImageNet (Bordes et al., 2023) is a synthetic dataset of photorealistic images of ImageNet classes that provides labels for a set of factors. The images are generated using a software that allows systematically varying factors like pose, size, texture, and others for each object. In our experiments, we provide top-1 accuracy results for ten different factors in PUG-ImageNet and their average in Fig. 7 .",
+                "cite_spans": [
+                    {
+                        "start": 13,
+                        "end": 34,
+                        "text": "(Bordes et al., 2023)",
+                        "ref_id": "BIBREF4"
+                    }
+                ],
+                "ref_spans": [
+                    {
+                        "start": 407,
+                        "end": 408,
+                        "text": "7",
+                        "ref_id": "FIGREF5"
+                    }
+                ],
+                "eq_spans": [],
+                "section": "Synthetic Data",
+                "sec_num": "3.6."
+            },
+            {
+                "text": "ConvNeXt is better than ViT on synthetic data. Intriguingly, ConvNeXt outperforms ViT on PUG-ImageNet for nearly all factors. This suggests: ConvNeXt is better than ViT on synthetic data. CLIP models have lower accuracy compared to supervised, which is likely related to their inferior performance on the original ImageNet.",
+                "cite_spans": [],
+                "ref_spans": [],
+                "eq_spans": [],
+                "section": "Synthetic Data",
+                "sec_num": "3.6."
+            },
+            {
+                "text": "In real-world scenarios, data often undergo transformations that preserve its semantic meaning or class. We aim to ensure that the model's representations are invariant to these transformations. Achieving various types of invariance is desirable because it enables the network to generalize well across different but semantically similar inputs, thereby enhancing its robustness and predictive power. In previous literature (Azulay & Weiss, 2018; Zhang, 2019) , it has been shown that the performance of neural networks can be highly unstable even under simple input data transformations, such as shifting an input image by a few pixels.",
+                "cite_spans": [
+                    {
+                        "start": 424,
+                        "end": 446,
+                        "text": "(Azulay & Weiss, 2018;",
+                        "ref_id": "BIBREF0"
+                    },
+                    {
+                        "start": 447,
+                        "end": 459,
+                        "text": "Zhang, 2019)",
+                        "ref_id": "BIBREF63"
+                    }
+                ],
+                "ref_spans": [],
+                "eq_spans": [],
+                "section": "Transformation Invariance",
+                "sec_num": "3.7."
+            },
+            {
+                "text": "We conduct experiments to assess three types of invariance: scale, shift, and resolution. We analyze the model's accuracy trends on the ImageNet-1K validation set as a function of varying scale / shift magnitude and image resolution. In scale invariance analysis, the image is first resized according to a given scale factor, and then a central crop is taken.",
+                "cite_spans": [],
+                "ref_spans": [],
+                "eq_spans": [],
+                "section": "Transformation Invariance",
+                "sec_num": "3.7."
+            },
+            {
+                "text": "In shift experiments, we adjust the crop location in the original image space and then take a crop, shifting along the longer side of the image. In resolution experiments with ViT model, we interpolate positional embeddings to match the new applied resolution.",
+                "cite_spans": [],
+                "ref_spans": [],
+                "eq_spans": [],
+                "section": "Transformation Invariance",
+                "sec_num": "3.7."
+            },
+            {
+                "text": "Architecture analysis. Several works compared ViTs and ConvNeXt from the perspective of internal representations (Raghu et al., 2021) , synthetic data (Ruiz et al., 2022) , transferability (Zhou et al., 2021) , and robustness (Wang et al., 2022; Bai et al., 2021; Pinto et al., 2022; Djolonga et al., 2021) . Other studies included analysis of Transformer properties (Naseer et al., 2021) and impact of neural network width and depth on learned representations (Nguyen et al., 2020) . ViTs and ConvNets were also evaluated on Im-ageNet, showing that Transformers are more aligned with human error patterns (Tuli et al., 2021) . A large variety of backbones, trained with various methods, were benchmarked in (Goldblum et al., 2024) across a diverse set of computer vision tasks, including classification, detection, and retrieval. In contrast to studies that analyze a single property, our work extensively compares models across many, maintaining a fair comparison by evaluating models with similar ImageNet accuracies.",
+                "cite_spans": [
+                    {
+                        "start": 113,
+                        "end": 133,
+                        "text": "(Raghu et al., 2021)",
+                        "ref_id": "BIBREF41"
+                    },
+                    {
+                        "start": 151,
+                        "end": 170,
+                        "text": "(Ruiz et al., 2022)",
+                        "ref_id": "BIBREF46"
+                    },
+                    {
+                        "start": 189,
+                        "end": 208,
+                        "text": "(Zhou et al., 2021)",
+                        "ref_id": "BIBREF64"
+                    },
+                    {
+                        "start": 226,
+                        "end": 245,
+                        "text": "(Wang et al., 2022;",
+                        "ref_id": "BIBREF57"
+                    },
+                    {
+                        "start": 246,
+                        "end": 263,
+                        "text": "Bai et al., 2021;",
+                        "ref_id": "BIBREF2"
+                    },
+                    {
+                        "start": 264,
+                        "end": 283,
+                        "text": "Pinto et al., 2022;",
+                        "ref_id": "BIBREF39"
+                    },
+                    {
+                        "start": 284,
+                        "end": 306,
+                        "text": "Djolonga et al., 2021)",
+                        "ref_id": "BIBREF8"
+                    },
+                    {
+                        "start": 367,
+                        "end": 388,
+                        "text": "(Naseer et al., 2021)",
+                        "ref_id": "BIBREF36"
+                    },
+                    {
+                        "start": 461,
+                        "end": 482,
+                        "text": "(Nguyen et al., 2020)",
+                        "ref_id": "BIBREF37"
+                    },
+                    {
+                        "start": 606,
+                        "end": 625,
+                        "text": "(Tuli et al., 2021)",
+                        "ref_id": "BIBREF53"
+                    },
+                    {
+                        "start": 708,
+                        "end": 731,
+                        "text": "(Goldblum et al., 2024)",
+                        "ref_id": "BIBREF15"
+                    }
+                ],
+                "ref_spans": [],
+                "eq_spans": [],
+                "section": "Related Work",
+                "sec_num": "4."
+            },
+            {
+                "text": "Training objective analysis. A comprehensive analysis was conducted in (Walmer et al., 2023) , comparing ViTs trained with supervised, self-supervised, and CLIP objectives. Anal-ysis of the representations of models trained with supervised and self-supervised objectives was presented in (Grigg et al., 2021; Gwilliam & Shrivastava, 2022) . Two works (Park et al., 2023; Shekhar et al., 2023) focused on investigating the effect of training objective in self-supervised learning.",
+                "cite_spans": [
+                    {
+                        "start": 71,
+                        "end": 92,
+                        "text": "(Walmer et al., 2023)",
+                        "ref_id": "BIBREF55"
+                    },
+                    {
+                        "start": 288,
+                        "end": 308,
+                        "text": "(Grigg et al., 2021;",
+                        "ref_id": "BIBREF16"
+                    },
+                    {
+                        "start": 309,
+                        "end": 338,
+                        "text": "Gwilliam & Shrivastava, 2022)",
+                        "ref_id": "BIBREF18"
+                    },
+                    {
+                        "start": 351,
+                        "end": 370,
+                        "text": "(Park et al., 2023;",
+                        "ref_id": "BIBREF38"
+                    },
+                    {
+                        "start": 371,
+                        "end": 392,
+                        "text": "Shekhar et al., 2023)",
+                        "ref_id": "BIBREF47"
+                    }
+                ],
+                "ref_spans": [],
+                "eq_spans": [],
+                "section": "Related Work",
+                "sec_num": "4."
+            },
+            {
+                "text": "Unlike studies emphasizing self-supervised models, our work compares supervised and CLIP models.",
+                "cite_spans": [],
+                "ref_spans": [],
+                "eq_spans": [],
+                "section": "Related Work",
+                "sec_num": "4."
+            },
+            {
+                "text": "Limitations of ImageNet. Recent research (Beyer et al., 2020; Recht et al., 2019; Tsipras et al., 2020; Yun et al., 2021) highlighted issues with the reliability and quality of ImageNet labels. Two studies (Kornblith et al., 2019; Miller et al., 2021) showed a strong relationship between performance on ImageNet and other datasets, although this can depend on the model's architecture and training methods.",
+                "cite_spans": [
+                    {
+                        "start": 41,
+                        "end": 61,
+                        "text": "(Beyer et al., 2020;",
+                        "ref_id": "BIBREF3"
+                    },
+                    {
+                        "start": 62,
+                        "end": 81,
+                        "text": "Recht et al., 2019;",
+                        "ref_id": "BIBREF44"
+                    },
+                    {
+                        "start": 82,
+                        "end": 103,
+                        "text": "Tsipras et al., 2020;",
+                        "ref_id": "BIBREF52"
+                    },
+                    {
+                        "start": 104,
+                        "end": 121,
+                        "text": "Yun et al., 2021)",
+                        "ref_id": "BIBREF61"
+                    },
+                    {
+                        "start": 206,
+                        "end": 230,
+                        "text": "(Kornblith et al., 2019;",
+                        "ref_id": "BIBREF28"
+                    },
+                    {
+                        "start": 231,
+                        "end": 251,
+                        "text": "Miller et al., 2021)",
+                        "ref_id": "BIBREF34"
+                    }
+                ],
+                "ref_spans": [],
+                "eq_spans": [],
+                "section": "Related Work",
+                "sec_num": "4."
+            },
+            {
+                "text": "Other studies (Richards et al., 2023; Fang et al., 2023b) showed that high ImageNet accuracy does not ensure good performance on diverse datasets. Current robustification training techniques were found to overfit (Yamada & Otani, 2022) to ImageNet evaluations. In addition, ImageNet suffers from dichotomous data difficulty (Meding et al., 2021) , obscuring differences between models. Our analysis does not directly address data-related problems of ImageNet but instead studies alternative properties.",
+                "cite_spans": [
+                    {
+                        "start": 14,
+                        "end": 37,
+                        "text": "(Richards et al., 2023;",
+                        "ref_id": "BIBREF45"
+                    },
+                    {
+                        "start": 38,
+                        "end": 57,
+                        "text": "Fang et al., 2023b)",
+                        "ref_id": null
+                    },
+                    {
+                        "start": 213,
+                        "end": 235,
+                        "text": "(Yamada & Otani, 2022)",
+                        "ref_id": "BIBREF60"
+                    },
+                    {
+                        "start": 324,
+                        "end": 345,
+                        "text": "(Meding et al., 2021)",
+                        "ref_id": "BIBREF33"
+                    }
+                ],
+                "ref_spans": [],
+                "eq_spans": [],
+                "section": "Related Work",
+                "sec_num": "4."
+            },
+            {
+                "text": "Our study examined ConvNets and Transformers with supervised and CLIP training from multiple perspectives beyond the standard ImageNet accuracy. We found that models with similar ImageNet accuracies have vastly different properties. This suggests that model selection should depend on the target use cases, as standard metrics may overlook key nuances. In addition, it is crucial to develop new benchmarks with data distributions that closely mirror real-world scenarios. This will help both in training models for better (2) Supervised models are better at robustness benchmarks, likely because these are ImageNet variants. (3) CLIP models have a higher shape bias and make less classification errors relative to their ImageNet accuracy.",
+                "cite_spans": [],
+                "ref_spans": [],
+                "eq_spans": [],
+                "section": "Conclusion",
+                "sec_num": "5."
+            },
+            {
+                "text": "As a result of our analysis, we suggest using supervised ConvNeXt when the target task distribution is not very different from ImageNet as this model provides competitive performance among many benchmarks. In case of a serious domain shift, we recommend using CLIP models.",
+                "cite_spans": [],
+                "ref_spans": [],
+                "eq_spans": [],
+                "section": "Conclusion",
+                "sec_num": "5."
+            }
+        ],
+        "back_matter": [
+            {
+                "text": "Acknowledgments. We would like to thank Sheng Zhang, Kudaibergen Abutalip, Guangyi Chen, Nurdaulet Mukhituly, Boyang Sun, Zhiqiu Xu, and Nurbek Tastan for their valuable feedback and suggestions. Use of all datasets and all experiments conducted by MBZUAI.",
+                "cite_spans": [],
+                "ref_spans": [],
+                "eq_spans": [],
+                "section": "acknowledgement",
+                "sec_num": null
+            },
+            {
+                "text": "This paper presents work whose goal is to advance the fields of Machine Learning, Deep Learning and Computer Vision. There are many potential societal consequences of our work, none which we feel must be specifically highlighted here.",
+                "cite_spans": [],
+                "ref_spans": [],
+                "eq_spans": [],
+                "section": "Impact Statement",
+                "sec_num": null
+            },
+            {
+                "text": "Supervised ConvNeXt is the most invariant model to the data transformations. We display our results in Fig. 8 , observing a consistent trend of ConvNeXt outperforming ViT under supervised training. Interestingly, supervised ConvNeXt has better performance on 336 pixel resolution than on the original resolution of 224 pixels. Overall, all models are robust to shifting and less robust to scaling and resolution transforms. For practical use cases requiring high transform invariance, our results indicate that supervised ConvNeXt will be the best choice among analyzed models.",
+                "cite_spans": [],
+                "ref_spans": [
+                    {
+                        "start": 108,
+                        "end": 109,
+                        "text": "8",
+                        "ref_id": null
+                    }
+                ],
+                "eq_spans": [],
+                "section": "annex",
+                "sec_num": null
+            },
+            {
+                "text": "Besides having the base sized models in the main part of our analysis, we additionally include the following models to see the effect of the model size on the performance:\u2022 Supervised ConvNeXt: Tiny, Small, Large, Huge (XLarge).\u2022 Supervised ViT (DeiT 3): Small, Large, Huge (XLarge). Note that no Tiny version is provided for DeiT 3 by the original authors (Touvron et al., 2022) .\u2022 CLIP ConvNeXt: Large, Huge (XLarge).\u2022 CLIP ViT: Large, Huge.All new additional CLIP models are pretrained on the LAION-2B dataset, while the CLIP models from the main part of the manuscript (Table 1 ) are pretrained on LAION-400M. All CLIP models are taken from OpenCLIP, and supervised models are taken from the respective original works (Liu et al., 2022; Touvron et al., 2022) . Additional models are evaluated on PUG-ImageNet (Table 4 ), ImageNet-X (Table 5 ), calibration (Table 6 and 7 ), transformation invariance (Table 8 ), and shape / texture bias (Table 9 ). Based on the results from new models we make the following observations:\u2022 On PUG-ImageNet (Table 4 ) ConvNeXt is better than ViT in 6 out of 7 comparison, suggesting its clear advantage over ViT on synthetic data.\u2022 ImageNet-X performance is largely determined by the training method (Table 5 ). CLIP models are clearly better than supervised.\u2022 On calibration (Table 6 and 7 ) ConvNeXt has lower ECE value compared to its ViT counterpart in most cases. This solidifies our initial conclusion in the main part that ConvNeXt is better calibrated than ViT.\u2022 Shape bias greatly improves with scale (Table 9 ). Interestingly, the ConvNeXt is better than ViT on large-scale CLIP models (Large and Huge). For Huge CLIP models ConvNeXt has an advantage of almost 10% over ViT. This suggests that training method and model size has a noticeable influence on the shape bias of the model. Moreover, this result also highlights that ConvNeXt has the potential to exceed a ViT on this benchmark.\u2022 Even small supervised models are robust to shift transformation (Table 8 middle part). For example, the smallest supervised model ConvNeXt-Tiny has a tiny degradation of < 3% which is comparable to the huge CLIP models.\u2022 Huge supervised models are quite reliable to the resolution change (Table 8 right part).\u2022 In general, large models provide a decent improvement over the base models. However, huge models provide only marginal improvement over the large models. ",
+                "cite_spans": [
+                    {
+                        "start": 357,
+                        "end": 379,
+                        "text": "(Touvron et al., 2022)",
+                        "ref_id": "BIBREF51"
+                    },
+                    {
+                        "start": 722,
+                        "end": 740,
+                        "text": "(Liu et al., 2022;",
+                        "ref_id": "BIBREF31"
+                    },
+                    {
+                        "start": 741,
+                        "end": 762,
+                        "text": "Touvron et al., 2022)",
+                        "ref_id": "BIBREF51"
+                    }
+                ],
+                "ref_spans": [
+                    {
+                        "start": 580,
+                        "end": 581,
+                        "text": "1",
+                        "ref_id": null
+                    },
+                    {
+                        "start": 820,
+                        "end": 821,
+                        "text": "4",
+                        "ref_id": null
+                    },
+                    {
+                        "start": 843,
+                        "end": 844,
+                        "text": "5",
+                        "ref_id": null
+                    },
+                    {
+                        "start": 867,
+                        "end": 868,
+                        "text": "6",
+                        "ref_id": null
+                    },
+                    {
+                        "start": 873,
+                        "end": 874,
+                        "text": "7",
+                        "ref_id": null
+                    },
+                    {
+                        "start": 911,
+                        "end": 912,
+                        "text": "8",
+                        "ref_id": null
+                    },
+                    {
+                        "start": 948,
+                        "end": 949,
+                        "text": "9",
+                        "ref_id": null
+                    },
+                    {
+                        "start": 1050,
+                        "end": 1051,
+                        "text": "4",
+                        "ref_id": null
+                    },
+                    {
+                        "start": 1243,
+                        "end": 1244,
+                        "text": "5",
+                        "ref_id": null
+                    },
+                    {
+                        "start": 1319,
+                        "end": 1320,
+                        "text": "6",
+                        "ref_id": null
+                    },
+                    {
+                        "start": 1325,
+                        "end": 1326,
+                        "text": "7",
+                        "ref_id": null
+                    },
+                    {
+                        "start": 1553,
+                        "end": 1554,
+                        "text": "9",
+                        "ref_id": null
+                    },
+                    {
+                        "start": 2007,
+                        "end": 2008,
+                        "text": "8",
+                        "ref_id": null
+                    },
+                    {
+                        "start": 2231,
+                        "end": 2232,
+                        "text": "8",
+                        "ref_id": null
+                    }
+                ],
+                "eq_spans": [],
+                "section": "Appendix A. Results for Models of Different Sizes",
+                "sec_num": null
+            }
+        ],
+        "bib_entries": {
+            "BIBREF0": {
+                "ref_id": "b0",
+                "title": "Why do deep convolutional networks generalize so poorly to small image transforma",
+                "authors": [
+                    {
+                        "first": "A",
+                        "middle": [],
+                        "last": "Azulay",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "Y",
+                        "middle": [],
+                        "last": "Weiss",
+                        "suffix": ""
+                    }
+                ],
+                "year": 2018,
+                "venue": "",
+                "volume": "",
+                "issue": "",
+                "pages": "",
+                "other_ids": {
+                    "arXiv": [
+                        "arXiv:1805.12177"
+                    ]
+                },
+                "num": null,
+                "urls": [],
+                "raw_text": "Azulay, A. and Weiss, Y. Why do deep convolutional net- works generalize so poorly to small image transforma- tions? arXiv preprint arXiv:1805.12177, 2018.",
+                "links": null
+            },
+            "BIBREF1": {
+                "ref_id": "b1",
+                "title": "Layer normalization",
+                "authors": [
+                    {
+                        "first": "J",
+                        "middle": [
+                            "L"
+                        ],
+                        "last": "Ba",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "J",
+                        "middle": [
+                            "R"
+                        ],
+                        "last": "Kiros",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "G",
+                        "middle": [
+                            "E"
+                        ],
+                        "last": "Hinton",
+                        "suffix": ""
+                    }
+                ],
+                "year": 2016,
+                "venue": "",
+                "volume": "",
+                "issue": "",
+                "pages": "",
+                "other_ids": {
+                    "arXiv": [
+                        "arXiv:1607.06450"
+                    ]
+                },
+                "num": null,
+                "urls": [],
+                "raw_text": "Ba, J. L., Kiros, J. R., and Hinton, G. E. Layer normalization. arXiv preprint arXiv:1607.06450, 2016.",
+                "links": null
+            },
+            "BIBREF2": {
+                "ref_id": "b2",
+                "title": "Are transformers more robust than cnns?",
+                "authors": [
+                    {
+                        "first": "Y",
+                        "middle": [],
+                        "last": "Bai",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "J",
+                        "middle": [],
+                        "last": "Mei",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "A",
+                        "middle": [
+                            "L"
+                        ],
+                        "last": "Yuille",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "C",
+                        "middle": [],
+                        "last": "Xie",
+                        "suffix": ""
+                    }
+                ],
+                "year": 2021,
+                "venue": "NeurIPS",
+                "volume": "",
+                "issue": "",
+                "pages": "",
+                "other_ids": {},
+                "num": null,
+                "urls": [],
+                "raw_text": "Bai, Y., Mei, J., Yuille, A. L., and Xie, C. Are transformers more robust than cnns? In NeurIPS, 2021.",
+                "links": null
+            },
+            "BIBREF3": {
+                "ref_id": "b3",
+                "title": "Are we done with imagenet? arXiv preprint",
+                "authors": [
+                    {
+                        "first": "L",
+                        "middle": [],
+                        "last": "Beyer",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "O",
+                        "middle": [
+                            "J"
+                        ],
+                        "last": "H\u00e9naff",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "A",
+                        "middle": [],
+                        "last": "Kolesnikov",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "X",
+                        "middle": [],
+                        "last": "Zhai",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "Oord",
+                        "middle": [],
+                        "last": "",
+                        "suffix": ""
+                    }
+                ],
+                "year": 2020,
+                "venue": "",
+                "volume": "",
+                "issue": "",
+                "pages": "",
+                "other_ids": {
+                    "arXiv": [
+                        "arXiv:2006.07159"
+                    ]
+                },
+                "num": null,
+                "urls": [],
+                "raw_text": "Beyer, L., H\u00e9naff, O. J., Kolesnikov, A., Zhai, X., and Oord, A. v. d. Are we done with imagenet? arXiv preprint arXiv:2006.07159, 2020.",
+                "links": null
+            },
+            "BIBREF4": {
+                "ref_id": "b4",
+                "title": "Photorealistic and semantically controllable synthetic data for representation learning",
+                "authors": [
+                    {
+                        "first": "F",
+                        "middle": [],
+                        "last": "Bordes",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "S",
+                        "middle": [],
+                        "last": "Shekhar",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "M",
+                        "middle": [],
+                        "last": "Ibrahim",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "D",
+                        "middle": [],
+                        "last": "Bouchacourt",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "P",
+                        "middle": [],
+                        "last": "Vincent",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "A",
+                        "middle": [
+                            "S"
+                        ],
+                        "last": "Morcos",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "",
+                        "middle": [],
+                        "last": "Pug",
+                        "suffix": ""
+                    }
+                ],
+                "year": 2023,
+                "venue": "",
+                "volume": "",
+                "issue": "",
+                "pages": "",
+                "other_ids": {
+                    "arXiv": [
+                        "arXiv:2308.03977"
+                    ]
+                },
+                "num": null,
+                "urls": [],
+                "raw_text": "Bordes, F., Shekhar, S., Ibrahim, M., Bouchacourt, D., Vin- cent, P., and Morcos, A. S. Pug: Photorealistic and se- mantically controllable synthetic data for representation learning. arXiv preprint arXiv:2308.03977, 2023.",
+                "links": null
+            },
+            "BIBREF5": {
+                "ref_id": "b5",
+                "title": "A simple framework for contrastive learning of visual representations",
+                "authors": [
+                    {
+                        "first": "T",
+                        "middle": [],
+                        "last": "Chen",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "S",
+                        "middle": [],
+                        "last": "Kornblith",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "M",
+                        "middle": [],
+                        "last": "Norouzi",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "G",
+                        "middle": [],
+                        "last": "Hinton",
+                        "suffix": ""
+                    }
+                ],
+                "year": 2020,
+                "venue": "ICML",
+                "volume": "",
+                "issue": "",
+                "pages": "",
+                "other_ids": {},
+                "num": null,
+                "urls": [],
+                "raw_text": "Chen, T., Kornblith, S., Norouzi, M., and Hinton, G. A simple framework for contrastive learning of visual rep- resentations. In ICML, 2020.",
+                "links": null
+            },
+            "BIBREF6": {
+                "ref_id": "b6",
+                "title": "Scaling vision transformers to 22 billion parameters",
+                "authors": [
+                    {
+                        "first": "M",
+                        "middle": [],
+                        "last": "Dehghani",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "J",
+                        "middle": [],
+                        "last": "Djolonga",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "B",
+                        "middle": [],
+                        "last": "Mustafa",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "P",
+                        "middle": [],
+                        "last": "Padlewski",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "J",
+                        "middle": [],
+                        "last": "Heek",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "J",
+                        "middle": [],
+                        "last": "Gilmer",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "A",
+                        "middle": [
+                            "P"
+                        ],
+                        "last": "Steiner",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "M",
+                        "middle": [],
+                        "last": "Caron",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "R",
+                        "middle": [],
+                        "last": "Geirhos",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "I",
+                        "middle": [],
+                        "last": "Alabdulmohsin",
+                        "suffix": ""
+                    }
+                ],
+                "year": 2023,
+                "venue": "ICML",
+                "volume": "",
+                "issue": "",
+                "pages": "",
+                "other_ids": {},
+                "num": null,
+                "urls": [],
+                "raw_text": "Dehghani, M., Djolonga, J., Mustafa, B., Padlewski, P., Heek, J., Gilmer, J., Steiner, A. P., Caron, M., Geirhos, R., Alabdulmohsin, I., et al. Scaling vision transformers to 22 billion parameters. In ICML, 2023.",
+                "links": null
+            },
+            "BIBREF7": {
+                "ref_id": "b7",
+                "title": "Imagenet: A large-scale hierarchical image database",
+                "authors": [
+                    {
+                        "first": "J",
+                        "middle": [],
+                        "last": "Deng",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "W",
+                        "middle": [],
+                        "last": "Dong",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "R",
+                        "middle": [],
+                        "last": "Socher",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "L.-J",
+                        "middle": [],
+                        "last": "Li",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "K",
+                        "middle": [],
+                        "last": "Li",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "L",
+                        "middle": [],
+                        "last": "Fei-Fei",
+                        "suffix": ""
+                    }
+                ],
+                "year": 2009,
+                "venue": "CVPR",
+                "volume": "",
+                "issue": "",
+                "pages": "",
+                "other_ids": {},
+                "num": null,
+                "urls": [],
+                "raw_text": "Deng, J., Dong, W., Socher, R., Li, L.-J., Li, K., and Fei-Fei, L. Imagenet: A large-scale hierarchical image database. In CVPR, 2009.",
+                "links": null
+            },
+            "BIBREF8": {
+                "ref_id": "b8",
+                "title": "On robustness and transferability of convolutional neural networks",
+                "authors": [
+                    {
+                        "first": "J",
+                        "middle": [],
+                        "last": "Djolonga",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "J",
+                        "middle": [],
+                        "last": "Yung",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "M",
+                        "middle": [],
+                        "last": "Tschannen",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "R",
+                        "middle": [],
+                        "last": "Romijnders",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "L",
+                        "middle": [],
+                        "last": "Beyer",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "A",
+                        "middle": [],
+                        "last": "Kolesnikov",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "J",
+                        "middle": [],
+                        "last": "Puigcerver",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "M",
+                        "middle": [],
+                        "last": "Minderer",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "A",
+                        "middle": [],
+                        "last": "D'amour",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "D",
+                        "middle": [],
+                        "last": "Moldovan",
+                        "suffix": ""
+                    }
+                ],
+                "year": 2021,
+                "venue": "CVPR",
+                "volume": "",
+                "issue": "",
+                "pages": "",
+                "other_ids": {},
+                "num": null,
+                "urls": [],
+                "raw_text": "Djolonga, J., Yung, J., Tschannen, M., Romijnders, R., Beyer, L., Kolesnikov, A., Puigcerver, J., Minderer, M., D'Amour, A., Moldovan, D., et al. On robustness and transferability of convolutional neural networks. In CVPR, 2021.",
+                "links": null
+            },
+            "BIBREF9": {
+                "ref_id": "b9",
+                "title": "An image is worth 16x16 words: Transformers for image recognition at scale",
+                "authors": [
+                    {
+                        "first": "A",
+                        "middle": [],
+                        "last": "Dosovitskiy",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "L",
+                        "middle": [],
+                        "last": "Beyer",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "A",
+                        "middle": [],
+                        "last": "Kolesnikov",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "D",
+                        "middle": [],
+                        "last": "Weissenborn",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "X",
+                        "middle": [],
+                        "last": "Zhai",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "T",
+                        "middle": [],
+                        "last": "Unterthiner",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "M",
+                        "middle": [],
+                        "last": "Dehghani",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "M",
+                        "middle": [],
+                        "last": "Minderer",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "G",
+                        "middle": [],
+                        "last": "Heigold",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "S",
+                        "middle": [],
+                        "last": "Gelly",
+                        "suffix": ""
+                    }
+                ],
+                "year": 2020,
+                "venue": "",
+                "volume": "",
+                "issue": "",
+                "pages": "",
+                "other_ids": {
+                    "arXiv": [
+                        "arXiv:2010.11929"
+                    ]
+                },
+                "num": null,
+                "urls": [],
+                "raw_text": "Dosovitskiy, A., Beyer, L., Kolesnikov, A., Weissenborn, D., Zhai, X., Unterthiner, T., Dehghani, M., Minderer, M., Heigold, G., Gelly, S., et al. An image is worth 16x16 words: Transformers for image recognition at scale. arXiv preprint arXiv:2010.11929, 2020.",
+                "links": null
+            },
+            "BIBREF11": {
+                "ref_id": "b11",
+                "title": "Does progress on imagenet transfer to real",
+                "authors": [
+                    {
+                        "first": "A",
+                        "middle": [],
+                        "last": "Fang",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "S",
+                        "middle": [],
+                        "last": "Kornblith",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "L",
+                        "middle": [],
+                        "last": "Schmidt",
+                        "suffix": ""
+                    }
+                ],
+                "year": 2023,
+                "venue": "",
+                "volume": "",
+                "issue": "",
+                "pages": "",
+                "other_ids": {
+                    "arXiv": [
+                        "arXiv:2301.04644"
+                    ]
+                },
+                "num": null,
+                "urls": [],
+                "raw_text": "Fang, A., Kornblith, S., and Schmidt, L. Does progress on imagenet transfer to real-world datasets? arXiv preprint arXiv:2301.04644, 2023b.",
+                "links": null
+            },
+            "BIBREF12": {
+                "ref_id": "b12",
+                "title": "search of the next generation of multimodal datasets",
+                "authors": [
+                    {
+                        "first": "S",
+                        "middle": [
+                            "Y"
+                        ],
+                        "last": "Gadre",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "G",
+                        "middle": [],
+                        "last": "Ilharco",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "A",
+                        "middle": [],
+                        "last": "Fang",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "J",
+                        "middle": [],
+                        "last": "Hayase",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "G",
+                        "middle": [],
+                        "last": "Smyrnis",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "T",
+                        "middle": [],
+                        "last": "Nguyen",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "R",
+                        "middle": [],
+                        "last": "Marten",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "M",
+                        "middle": [],
+                        "last": "Wortsman",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "D",
+                        "middle": [],
+                        "last": "Ghosh",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "J",
+                        "middle": [],
+                        "last": "Zhang",
+                        "suffix": ""
+                    }
+                ],
+                "year": 2023,
+                "venue": "",
+                "volume": "",
+                "issue": "",
+                "pages": "",
+                "other_ids": {
+                    "arXiv": [
+                        "arXiv:2304.14108"
+                    ]
+                },
+                "num": null,
+                "urls": [],
+                "raw_text": "Gadre, S. Y., Ilharco, G., Fang, A., Hayase, J., Smyrnis, G., Nguyen, T., Marten, R., Wortsman, M., Ghosh, D., Zhang, J., et al. Datacomp: In search of the next generation of multimodal datasets. arXiv preprint arXiv:2304.14108, 2023.",
+                "links": null
+            },
+            "BIBREF13": {
+                "ref_id": "b13",
+                "title": "Imagenet-trained cnns are biased towards texture; increasing shape bias improves accuracy and robustness",
+                "authors": [
+                    {
+                        "first": "R",
+                        "middle": [],
+                        "last": "Geirhos",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "P",
+                        "middle": [],
+                        "last": "Rubisch",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "C",
+                        "middle": [],
+                        "last": "Michaelis",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "M",
+                        "middle": [],
+                        "last": "Bethge",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "F",
+                        "middle": [
+                            "A"
+                        ],
+                        "last": "Wichmann",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "W",
+                        "middle": [],
+                        "last": "Brendel",
+                        "suffix": ""
+                    }
+                ],
+                "year": 2018,
+                "venue": "",
+                "volume": "",
+                "issue": "",
+                "pages": "",
+                "other_ids": {
+                    "arXiv": [
+                        "arXiv:1811.12231"
+                    ]
+                },
+                "num": null,
+                "urls": [],
+                "raw_text": "Geirhos, R., Rubisch, P., Michaelis, C., Bethge, M., Wich- mann, F. A., and Brendel, W. Imagenet-trained cnns are biased towards texture; increasing shape bias improves ac- curacy and robustness. arXiv preprint arXiv:1811.12231, 2018.",
+                "links": null
+            },
+            "BIBREF14": {
+                "ref_id": "b14",
+                "title": "Shortcut learning in deep neural networks",
+                "authors": [
+                    {
+                        "first": "R",
+                        "middle": [],
+                        "last": "Geirhos",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "J.-H",
+                        "middle": [],
+                        "last": "Jacobsen",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "C",
+                        "middle": [],
+                        "last": "Michaelis",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "R",
+                        "middle": [],
+                        "last": "Zemel",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "W",
+                        "middle": [],
+                        "last": "Brendel",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "M",
+                        "middle": [],
+                        "last": "Bethge",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "F",
+                        "middle": [
+                            "A"
+                        ],
+                        "last": "Wichmann",
+                        "suffix": ""
+                    }
+                ],
+                "year": 2020,
+                "venue": "Nature Machine Intelligence",
+                "volume": "",
+                "issue": "",
+                "pages": "",
+                "other_ids": {},
+                "num": null,
+                "urls": [],
+                "raw_text": "Geirhos, R., Jacobsen, J.-H., Michaelis, C., Zemel, R., Bren- del, W., Bethge, M., and Wichmann, F. A. Shortcut learn- ing in deep neural networks. Nature Machine Intelligence, 2020.",
+                "links": null
+            },
+            "BIBREF15": {
+                "ref_id": "b15",
+                "title": "Battle of the backbones: A largescale comparison of pretrained models across computer vision tasks",
+                "authors": [
+                    {
+                        "first": "M",
+                        "middle": [],
+                        "last": "Goldblum",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "H",
+                        "middle": [],
+                        "last": "Souri",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "R",
+                        "middle": [],
+                        "last": "Ni",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "M",
+                        "middle": [],
+                        "last": "Shu",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "V",
+                        "middle": [],
+                        "last": "Prabhu",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "G",
+                        "middle": [],
+                        "last": "Somepalli",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "P",
+                        "middle": [],
+                        "last": "Chattopadhyay",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "M",
+                        "middle": [],
+                        "last": "Ibrahim",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "A",
+                        "middle": [],
+                        "last": "Bardes",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "J",
+                        "middle": [],
+                        "last": "Hoffman",
+                        "suffix": ""
+                    }
+                ],
+                "year": 2024,
+                "venue": "",
+                "volume": "",
+                "issue": "",
+                "pages": "",
+                "other_ids": {},
+                "num": null,
+                "urls": [],
+                "raw_text": "Goldblum, M., Souri, H., Ni, R., Shu, M., Prabhu, V., Somepalli, G., Chattopadhyay, P., Ibrahim, M., Bardes, A., Hoffman, J., et al. Battle of the backbones: A large- scale comparison of pretrained models across computer vision tasks. NeurIPS, 2024.",
+                "links": null
+            },
+            "BIBREF16": {
+                "ref_id": "b16",
+                "title": "Do self-supervised and supervised methods learn similar visual representations",
+                "authors": [
+                    {
+                        "first": "T",
+                        "middle": [
+                            "G"
+                        ],
+                        "last": "Grigg",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "D",
+                        "middle": [],
+                        "last": "Busbridge",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "J",
+                        "middle": [],
+                        "last": "Ramapuram",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "R",
+                        "middle": [],
+                        "last": "Webb",
+                        "suffix": ""
+                    }
+                ],
+                "year": 2021,
+                "venue": "",
+                "volume": "",
+                "issue": "",
+                "pages": "",
+                "other_ids": {
+                    "arXiv": [
+                        "arXiv:2110.00528"
+                    ]
+                },
+                "num": null,
+                "urls": [],
+                "raw_text": "Grigg, T. G., Busbridge, D., Ramapuram, J., and Webb, R. Do self-supervised and supervised methods learn similar visual representations? arXiv preprint arXiv:2110.00528, 2021.",
+                "links": null
+            },
+            "BIBREF17": {
+                "ref_id": "b17",
+                "title": "ConvNet vs Transformer, Supervised vs CLIP: Beyond ImageNet Accuracy Guo",
+                "authors": [
+                    {
+                        "first": "C",
+                        "middle": [],
+                        "last": "Pleiss",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "G",
+                        "middle": [],
+                        "last": "Sun",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "Y",
+                        "middle": [],
+                        "last": "Weinberger",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "K",
+                        "middle": [
+                            "Q"
+                        ],
+                        "last": "",
+                        "suffix": ""
+                    }
+                ],
+                "year": 2017,
+                "venue": "ICML",
+                "volume": "",
+                "issue": "",
+                "pages": "",
+                "other_ids": {},
+                "num": null,
+                "urls": [],
+                "raw_text": "ConvNet vs Transformer, Supervised vs CLIP: Beyond ImageNet Accuracy Guo, C., Pleiss, G., Sun, Y., and Weinberger, K. Q. On calibration of modern neural networks. In ICML, 2017.",
+                "links": null
+            },
+            "BIBREF18": {
+                "ref_id": "b18",
+                "title": "Beyond supervised vs. unsupervised: Representative benchmarking and analysis of image representation learning",
+                "authors": [
+                    {
+                        "first": "M",
+                        "middle": [],
+                        "last": "Gwilliam",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "A",
+                        "middle": [],
+                        "last": "Shrivastava",
+                        "suffix": ""
+                    }
+                ],
+                "year": 2022,
+                "venue": "CVPR",
+                "volume": "",
+                "issue": "",
+                "pages": "",
+                "other_ids": {},
+                "num": null,
+                "urls": [],
+                "raw_text": "Gwilliam, M. and Shrivastava, A. Beyond supervised vs. unsupervised: Representative benchmarking and analysis of image representation learning. In CVPR, 2022.",
+                "links": null
+            },
+            "BIBREF19": {
+                "ref_id": "b19",
+                "title": "Deep residual learning for image recognition",
+                "authors": [
+                    {
+                        "first": "K",
+                        "middle": [],
+                        "last": "He",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "X",
+                        "middle": [],
+                        "last": "Zhang",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "S",
+                        "middle": [],
+                        "last": "Ren",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "J",
+                        "middle": [],
+                        "last": "Sun",
+                        "suffix": ""
+                    }
+                ],
+                "year": 2016,
+                "venue": "CVPR",
+                "volume": "",
+                "issue": "",
+                "pages": "",
+                "other_ids": {},
+                "num": null,
+                "urls": [],
+                "raw_text": "He, K., Zhang, X., Ren, S., and Sun, J. Deep residual learning for image recognition. In CVPR, 2016.",
+                "links": null
+            },
+            "BIBREF20": {
+                "ref_id": "b20",
+                "title": "Momentum contrast for unsupervised visual representation learning",
+                "authors": [
+                    {
+                        "first": "K",
+                        "middle": [],
+                        "last": "He",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "H",
+                        "middle": [],
+                        "last": "Fan",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "Y",
+                        "middle": [],
+                        "last": "Wu",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "S",
+                        "middle": [],
+                        "last": "Xie",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "R",
+                        "middle": [],
+                        "last": "Girshick",
+                        "suffix": ""
+                    }
+                ],
+                "year": 2020,
+                "venue": "CVPR",
+                "volume": "",
+                "issue": "",
+                "pages": "",
+                "other_ids": {},
+                "num": null,
+                "urls": [],
+                "raw_text": "He, K., Fan, H., Wu, Y., Xie, S., and Girshick, R. Mo- mentum contrast for unsupervised visual representation learning. In CVPR, 2020.",
+                "links": null
+            },
+            "BIBREF21": {
+                "ref_id": "b21",
+                "title": "Masked autoencoders are scalable vision learners",
+                "authors": [
+                    {
+                        "first": "K",
+                        "middle": [],
+                        "last": "He",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "X",
+                        "middle": [],
+                        "last": "Chen",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "S",
+                        "middle": [],
+                        "last": "Xie",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "Y",
+                        "middle": [],
+                        "last": "Li",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "P",
+                        "middle": [],
+                        "last": "Doll\u00e1r",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "R",
+                        "middle": [],
+                        "last": "Girshick",
+                        "suffix": ""
+                    }
+                ],
+                "year": 2022,
+                "venue": "CVPR",
+                "volume": "",
+                "issue": "",
+                "pages": "",
+                "other_ids": {},
+                "num": null,
+                "urls": [],
+                "raw_text": "He, K., Chen, X., Xie, S., Li, Y., Doll\u00e1r, P., and Girshick, R. Masked autoencoders are scalable vision learners. In CVPR, 2022.",
+                "links": null
+            },
+            "BIBREF22": {
+                "ref_id": "b22",
+                "title": "Benchmarking neural network robustness to common corruptions and perturbations",
+                "authors": [
+                    {
+                        "first": "D",
+                        "middle": [],
+                        "last": "Hendrycks",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "T",
+                        "middle": [],
+                        "last": "Dietterich",
+                        "suffix": ""
+                    }
+                ],
+                "year": 2019,
+                "venue": "",
+                "volume": "",
+                "issue": "",
+                "pages": "",
+                "other_ids": {
+                    "arXiv": [
+                        "arXiv:1903.12261"
+                    ]
+                },
+                "num": null,
+                "urls": [],
+                "raw_text": "Hendrycks, D. and Dietterich, T. Benchmarking neural network robustness to common corruptions and perturba- tions. arXiv preprint arXiv:1903.12261, 2019.",
+                "links": null
+            },
+            "BIBREF23": {
+                "ref_id": "b23",
+                "title": "The many faces of robustness: A critical analysis of out-of-distribution generalization",
+                "authors": [
+                    {
+                        "first": "D",
+                        "middle": [],
+                        "last": "Hendrycks",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "S",
+                        "middle": [],
+                        "last": "Basart",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "N",
+                        "middle": [],
+                        "last": "Mu",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "S",
+                        "middle": [],
+                        "last": "Kadavath",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "F",
+                        "middle": [],
+                        "last": "Wang",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "E",
+                        "middle": [],
+                        "last": "Dorundo",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "R",
+                        "middle": [],
+                        "last": "Desai",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "T",
+                        "middle": [],
+                        "last": "Zhu",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "S",
+                        "middle": [],
+                        "last": "Parajuli",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "M",
+                        "middle": [],
+                        "last": "Guo",
+                        "suffix": ""
+                    }
+                ],
+                "year": 2021,
+                "venue": "CVPR",
+                "volume": "",
+                "issue": "",
+                "pages": "",
+                "other_ids": {},
+                "num": null,
+                "urls": [],
+                "raw_text": "Hendrycks, D., Basart, S., Mu, N., Kadavath, S., Wang, F., Dorundo, E., Desai, R., Zhu, T., Parajuli, S., Guo, M., et al. The many faces of robustness: A critical analysis of out-of-distribution generalization. In CVPR, 2021a.",
+                "links": null
+            },
+            "BIBREF24": {
+                "ref_id": "b24",
+                "title": "Natural adversarial examples",
+                "authors": [
+                    {
+                        "first": "D",
+                        "middle": [],
+                        "last": "Hendrycks",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "K",
+                        "middle": [],
+                        "last": "Zhao",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "S",
+                        "middle": [],
+                        "last": "Basart",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "J",
+                        "middle": [],
+                        "last": "Steinhardt",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "D",
+                        "middle": [],
+                        "last": "Song",
+                        "suffix": ""
+                    }
+                ],
+                "year": 2021,
+                "venue": "CVPR",
+                "volume": "",
+                "issue": "",
+                "pages": "",
+                "other_ids": {},
+                "num": null,
+                "urls": [],
+                "raw_text": "Hendrycks, D., Zhao, K., Basart, S., Steinhardt, J., and Song, D. Natural adversarial examples. In CVPR, 2021b.",
+                "links": null
+            },
+            "BIBREF25": {
+                "ref_id": "b25",
+                "title": "Understanding model mistakes with factor of variation annotations",
+                "authors": [
+                    {
+                        "first": "B",
+                        "middle": [
+                            "Y"
+                        ],
+                        "last": "Idrissi",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "D",
+                        "middle": [],
+                        "last": "Bouchacourt",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "R",
+                        "middle": [],
+                        "last": "Balestriero",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "I",
+                        "middle": [],
+                        "last": "Evtimov",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "C",
+                        "middle": [],
+                        "last": "Hazirbas",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "N",
+                        "middle": [],
+                        "last": "Ballas",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "P",
+                        "middle": [],
+                        "last": "Vincent",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "M",
+                        "middle": [],
+                        "last": "Drozdzal",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "D",
+                        "middle": [],
+                        "last": "Lopez-Paz",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "M",
+                        "middle": [],
+                        "last": "Ibrahim",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "",
+                        "middle": [],
+                        "last": "Imagenet-X",
+                        "suffix": ""
+                    }
+                ],
+                "year": 2022,
+                "venue": "",
+                "volume": "",
+                "issue": "",
+                "pages": "",
+                "other_ids": {
+                    "arXiv": [
+                        "arXiv:2211.01866"
+                    ]
+                },
+                "num": null,
+                "urls": [],
+                "raw_text": "Idrissi, B. Y., Bouchacourt, D., Balestriero, R., Evtimov, I., Hazirbas, C., Ballas, N., Vincent, P., Drozdzal, M., Lopez- Paz, D., and Ibrahim, M. Imagenet-x: Understanding model mistakes with factor of variation annotations. arXiv preprint arXiv:2211.01866, 2022.",
+                "links": null
+            },
+            "BIBREF27": {
+                "ref_id": "b27",
+                "title": "Big transfer (bit): General visual representation learning",
+                "authors": [
+                    {
+                        "first": "A",
+                        "middle": [],
+                        "last": "Kolesnikov",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "L",
+                        "middle": [],
+                        "last": "Beyer",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "X",
+                        "middle": [],
+                        "last": "Zhai",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "J",
+                        "middle": [],
+                        "last": "Puigcerver",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "J",
+                        "middle": [],
+                        "last": "Yung",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "S",
+                        "middle": [],
+                        "last": "Gelly",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "N",
+                        "middle": [],
+                        "last": "Houlsby",
+                        "suffix": ""
+                    }
+                ],
+                "year": 2020,
+                "venue": "ECCV",
+                "volume": "",
+                "issue": "",
+                "pages": "",
+                "other_ids": {},
+                "num": null,
+                "urls": [],
+                "raw_text": "Kolesnikov, A., Beyer, L., Zhai, X., Puigcerver, J., Yung, J., Gelly, S., and Houlsby, N. Big transfer (bit): General visual representation learning. In ECCV, 2020.",
+                "links": null
+            },
+            "BIBREF28": {
+                "ref_id": "b28",
+                "title": "Do better imagenet models transfer better",
+                "authors": [
+                    {
+                        "first": "S",
+                        "middle": [],
+                        "last": "Kornblith",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "J",
+                        "middle": [],
+                        "last": "Shlens",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "Q",
+                        "middle": [
+                            "V"
+                        ],
+                        "last": "Le",
+                        "suffix": ""
+                    }
+                ],
+                "year": 2019,
+                "venue": "CVPR",
+                "volume": "",
+                "issue": "",
+                "pages": "",
+                "other_ids": {},
+                "num": null,
+                "urls": [],
+                "raw_text": "Kornblith, S., Shlens, J., and Le, Q. V. Do better imagenet models transfer better? In CVPR, 2019.",
+                "links": null
+            },
+            "BIBREF29": {
+                "ref_id": "b29",
+                "title": "Imagenet classification with deep convolutional neural networks",
+                "authors": [
+                    {
+                        "first": "A",
+                        "middle": [],
+                        "last": "Krizhevsky",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "I",
+                        "middle": [],
+                        "last": "Sutskever",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "G",
+                        "middle": [
+                            "E"
+                        ],
+                        "last": "Hinton",
+                        "suffix": ""
+                    }
+                ],
+                "year": 2012,
+                "venue": "",
+                "volume": "",
+                "issue": "",
+                "pages": "",
+                "other_ids": {},
+                "num": null,
+                "urls": [],
+                "raw_text": "Krizhevsky, A., Sutskever, I., and Hinton, G. E. Imagenet classification with deep convolutional neural networks. 2012.",
+                "links": null
+            },
+            "BIBREF30": {
+                "ref_id": "b30",
+                "title": "Gradientbased learning applied to document recognition",
+                "authors": [
+                    {
+                        "first": "Y",
+                        "middle": [],
+                        "last": "Lecun",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "L",
+                        "middle": [],
+                        "last": "Bottou",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "Y",
+                        "middle": [],
+                        "last": "Bengio",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "P",
+                        "middle": [],
+                        "last": "Haffner",
+                        "suffix": ""
+                    }
+                ],
+                "year": 1998,
+                "venue": "",
+                "volume": "",
+                "issue": "",
+                "pages": "",
+                "other_ids": {},
+                "num": null,
+                "urls": [],
+                "raw_text": "LeCun, Y., Bottou, L., Bengio, Y., and Haffner, P. Gradient- based learning applied to document recognition. Proceed- ings of the IEEE, 1998.",
+                "links": null
+            },
+            "BIBREF31": {
+                "ref_id": "b31",
+                "title": "A convnet for the 2020s",
+                "authors": [
+                    {
+                        "first": "Z",
+                        "middle": [],
+                        "last": "Liu",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "H",
+                        "middle": [],
+                        "last": "Mao",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "C.-Y",
+                        "middle": [],
+                        "last": "Wu",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "C",
+                        "middle": [],
+                        "last": "Feichtenhofer",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "T",
+                        "middle": [],
+                        "last": "Darrell",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "S",
+                        "middle": [],
+                        "last": "Xie",
+                        "suffix": ""
+                    }
+                ],
+                "year": 2022,
+                "venue": "CVPR",
+                "volume": "",
+                "issue": "",
+                "pages": "",
+                "other_ids": {},
+                "num": null,
+                "urls": [],
+                "raw_text": "Liu, Z., Mao, H., Wu, C.-Y., Feichtenhofer, C., Darrell, T., and Xie, S. A convnet for the 2020s. In CVPR, 2022.",
+                "links": null
+            },
+            "BIBREF32": {
+                "ref_id": "b32",
+                "title": "Clip4clip: An empirical study of clip for end to end video clip retrieval and captioning",
+                "authors": [
+                    {
+                        "first": "H",
+                        "middle": [],
+                        "last": "Luo",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "L",
+                        "middle": [],
+                        "last": "Ji",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "M",
+                        "middle": [],
+                        "last": "Zhong",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "Y",
+                        "middle": [],
+                        "last": "Chen",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "W",
+                        "middle": [],
+                        "last": "Lei",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "N",
+                        "middle": [],
+                        "last": "Duan",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "T",
+                        "middle": [],
+                        "last": "Li",
+                        "suffix": ""
+                    }
+                ],
+                "year": 2022,
+                "venue": "Neurocomputing",
+                "volume": "",
+                "issue": "",
+                "pages": "",
+                "other_ids": {},
+                "num": null,
+                "urls": [],
+                "raw_text": "Luo, H., Ji, L., Zhong, M., Chen, Y., Lei, W., Duan, N., and Li, T. Clip4clip: An empirical study of clip for end to end video clip retrieval and captioning. Neurocomputing, 2022.",
+                "links": null
+            },
+            "BIBREF33": {
+                "ref_id": "b33",
+                "title": "Imagenet suffers from dichotomous data difficulty",
+                "authors": [
+                    {
+                        "first": "K",
+                        "middle": [],
+                        "last": "Meding",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "L",
+                        "middle": [
+                            "M S"
+                        ],
+                        "last": "Buschoff",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "R",
+                        "middle": [],
+                        "last": "Geirhos",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "F",
+                        "middle": [
+                            "A"
+                        ],
+                        "last": "Wichmann",
+                        "suffix": ""
+                    }
+                ],
+                "year": 2021,
+                "venue": "NeurIPS 2021 Workshop on ImageNet: Past, Present, and Future",
+                "volume": "",
+                "issue": "",
+                "pages": "",
+                "other_ids": {},
+                "num": null,
+                "urls": [],
+                "raw_text": "Meding, K., Buschoff, L. M. S., Geirhos, R., and Wichmann, F. A. Imagenet suffers from dichotomous data difficulty. In NeurIPS 2021 Workshop on ImageNet: Past, Present, and Future, 2021.",
+                "links": null
+            },
+            "BIBREF34": {
+                "ref_id": "b34",
+                "title": "Accuracy on the line: on the strong correlation between out-of-distribution and in-distribution generalization",
+                "authors": [
+                    {
+                        "first": "J",
+                        "middle": [
+                            "P"
+                        ],
+                        "last": "Miller",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "R",
+                        "middle": [],
+                        "last": "Taori",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "A",
+                        "middle": [],
+                        "last": "Raghunathan",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "S",
+                        "middle": [],
+                        "last": "Sagawa",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "P",
+                        "middle": [
+                            "W"
+                        ],
+                        "last": "Koh",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "V",
+                        "middle": [],
+                        "last": "Shankar",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "P",
+                        "middle": [],
+                        "last": "Liang",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "Y",
+                        "middle": [],
+                        "last": "Carmon",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "L",
+                        "middle": [],
+                        "last": "Schmidt",
+                        "suffix": ""
+                    }
+                ],
+                "year": 2021,
+                "venue": "ICML",
+                "volume": "",
+                "issue": "",
+                "pages": "",
+                "other_ids": {},
+                "num": null,
+                "urls": [],
+                "raw_text": "Miller, J. P., Taori, R., Raghunathan, A., Sagawa, S., Koh, P. W., Shankar, V., Liang, P., Carmon, Y., and Schmidt, L. Accuracy on the line: on the strong correlation between out-of-distribution and in-distribution generalization. In ICML, 2021.",
+                "links": null
+            },
+            "BIBREF35": {
+                "ref_id": "b35",
+                "title": "Revisiting the calibration of modern neural networks",
+                "authors": [
+                    {
+                        "first": "M",
+                        "middle": [],
+                        "last": "Minderer",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "J",
+                        "middle": [],
+                        "last": "Djolonga",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "R",
+                        "middle": [],
+                        "last": "Romijnders",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "F",
+                        "middle": [],
+                        "last": "Hubis",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "X",
+                        "middle": [],
+                        "last": "Zhai",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "N",
+                        "middle": [],
+                        "last": "Houlsby",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "D",
+                        "middle": [],
+                        "last": "Tran",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "M",
+                        "middle": [],
+                        "last": "Lucic",
+                        "suffix": ""
+                    }
+                ],
+                "year": 2021,
+                "venue": "",
+                "volume": "",
+                "issue": "",
+                "pages": "",
+                "other_ids": {},
+                "num": null,
+                "urls": [],
+                "raw_text": "Minderer, M., Djolonga, J., Romijnders, R., Hubis, F., Zhai, X., Houlsby, N., Tran, D., and Lucic, M. Revisiting the calibration of modern neural networks. NeurIPS, 2021.",
+                "links": null
+            },
+            "BIBREF36": {
+                "ref_id": "b36",
+                "title": "Intriguing properties of vision transformers",
+                "authors": [
+                    {
+                        "first": "M",
+                        "middle": [
+                            "M"
+                        ],
+                        "last": "Naseer",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "K",
+                        "middle": [],
+                        "last": "Ranasinghe",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "S",
+                        "middle": [
+                            "H"
+                        ],
+                        "last": "Khan",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "M",
+                        "middle": [],
+                        "last": "Hayat",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "F",
+                        "middle": [],
+                        "last": "Shahbaz Khan",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "M.-H",
+                        "middle": [],
+                        "last": "Yang",
+                        "suffix": ""
+                    }
+                ],
+                "year": 2021,
+                "venue": "",
+                "volume": "",
+                "issue": "",
+                "pages": "",
+                "other_ids": {},
+                "num": null,
+                "urls": [],
+                "raw_text": "Naseer, M. M., Ranasinghe, K., Khan, S. H., Hayat, M., Shahbaz Khan, F., and Yang, M.-H. Intriguing properties of vision transformers. In NeurIPS, 2021.",
+                "links": null
+            },
+            "BIBREF37": {
+                "ref_id": "b37",
+                "title": "Do wide and deep networks learn the same things? uncovering how neural network representations vary with width and depth",
+                "authors": [
+                    {
+                        "first": "T",
+                        "middle": [],
+                        "last": "Nguyen",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "M",
+                        "middle": [],
+                        "last": "Raghu",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "S",
+                        "middle": [],
+                        "last": "Kornblith",
+                        "suffix": ""
+                    }
+                ],
+                "year": 2020,
+                "venue": "",
+                "volume": "",
+                "issue": "",
+                "pages": "",
+                "other_ids": {
+                    "arXiv": [
+                        "arXiv:2010.15327"
+                    ]
+                },
+                "num": null,
+                "urls": [],
+                "raw_text": "Nguyen, T., Raghu, M., and Kornblith, S. Do wide and deep networks learn the same things? uncovering how neural network representations vary with width and depth. arXiv preprint arXiv:2010.15327, 2020.",
+                "links": null
+            },
+            "BIBREF38": {
+                "ref_id": "b38",
+                "title": "What do self-supervised vision transformers learn?",
+                "authors": [
+                    {
+                        "first": "N",
+                        "middle": [],
+                        "last": "Park",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "W",
+                        "middle": [],
+                        "last": "Kim",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "B",
+                        "middle": [],
+                        "last": "Heo",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "T",
+                        "middle": [],
+                        "last": "Kim",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "S",
+                        "middle": [],
+                        "last": "Yun",
+                        "suffix": ""
+                    }
+                ],
+                "year": 2023,
+                "venue": "",
+                "volume": "",
+                "issue": "",
+                "pages": "",
+                "other_ids": {
+                    "arXiv": [
+                        "arXiv:2305.00729"
+                    ]
+                },
+                "num": null,
+                "urls": [],
+                "raw_text": "Park, N., Kim, W., Heo, B., Kim, T., and Yun, S. What do self-supervised vision transformers learn? arXiv preprint arXiv:2305.00729, 2023.",
+                "links": null
+            },
+            "BIBREF39": {
+                "ref_id": "b39",
+                "title": "An impartial take to the cnn vs transformer robustness contest",
+                "authors": [
+                    {
+                        "first": "F",
+                        "middle": [],
+                        "last": "Pinto",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "P",
+                        "middle": [
+                            "H"
+                        ],
+                        "last": "Torr",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "K",
+                        "middle": [],
+                        "last": "Dokania",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "P",
+                        "middle": [],
+                        "last": "",
+                        "suffix": ""
+                    }
+                ],
+                "year": 2022,
+                "venue": "ECCV",
+                "volume": "",
+                "issue": "",
+                "pages": "",
+                "other_ids": {},
+                "num": null,
+                "urls": [],
+                "raw_text": "Pinto, F., Torr, P. H., and K. Dokania, P. An impartial take to the cnn vs transformer robustness contest. In ECCV, 2022.",
+                "links": null
+            },
+            "BIBREF40": {
+                "ref_id": "b40",
+                "title": "Learning transferable visual models from natural language supervision",
+                "authors": [
+                    {
+                        "first": "A",
+                        "middle": [],
+                        "last": "Radford",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "J",
+                        "middle": [
+                            "W"
+                        ],
+                        "last": "Kim",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "C",
+                        "middle": [],
+                        "last": "Hallacy",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "A",
+                        "middle": [],
+                        "last": "Ramesh",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "G",
+                        "middle": [],
+                        "last": "Goh",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "S",
+                        "middle": [],
+                        "last": "Agarwal",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "G",
+                        "middle": [],
+                        "last": "Sastry",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "A",
+                        "middle": [],
+                        "last": "Askell",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "P",
+                        "middle": [],
+                        "last": "Mishkin",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "J",
+                        "middle": [],
+                        "last": "Clark",
+                        "suffix": ""
+                    }
+                ],
+                "year": 2021,
+                "venue": "ICML",
+                "volume": "",
+                "issue": "",
+                "pages": "",
+                "other_ids": {},
+                "num": null,
+                "urls": [],
+                "raw_text": "Radford, A., Kim, J. W., Hallacy, C., Ramesh, A., Goh, G., Agarwal, S., Sastry, G., Askell, A., Mishkin, P., Clark, J., et al. Learning transferable visual models from natural language supervision. In ICML, 2021.",
+                "links": null
+            },
+            "BIBREF41": {
+                "ref_id": "b41",
+                "title": "Do vision transformers see like convolutional neural networks?",
+                "authors": [
+                    {
+                        "first": "M",
+                        "middle": [],
+                        "last": "Raghu",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "T",
+                        "middle": [],
+                        "last": "Unterthiner",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "S",
+                        "middle": [],
+                        "last": "Kornblith",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "C",
+                        "middle": [],
+                        "last": "Zhang",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "A",
+                        "middle": [],
+                        "last": "Dosovitskiy",
+                        "suffix": ""
+                    }
+                ],
+                "year": 2021,
+                "venue": "",
+                "volume": "",
+                "issue": "",
+                "pages": "",
+                "other_ids": {},
+                "num": null,
+                "urls": [],
+                "raw_text": "Raghu, M., Unterthiner, T., Kornblith, S., Zhang, C., and Dosovitskiy, A. Do vision transformers see like convolu- tional neural networks? NeurIPS, 2021.",
+                "links": null
+            },
+            "BIBREF42": {
+                "ref_id": "b42",
+                "title": "On the connection between pre-training data diversity and fine-tuning robustness",
+                "authors": [
+                    {
+                        "first": "V",
+                        "middle": [],
+                        "last": "Ramanujan",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "T",
+                        "middle": [],
+                        "last": "Nguyen",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "S",
+                        "middle": [],
+                        "last": "Oh",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "L",
+                        "middle": [],
+                        "last": "Schmidt",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "A",
+                        "middle": [],
+                        "last": "Farhadi",
+                        "suffix": ""
+                    }
+                ],
+                "year": 2023,
+                "venue": "",
+                "volume": "",
+                "issue": "",
+                "pages": "",
+                "other_ids": {
+                    "arXiv": [
+                        "arXiv:2307.12532"
+                    ]
+                },
+                "num": null,
+                "urls": [],
+                "raw_text": "Ramanujan, V., Nguyen, T., Oh, S., Schmidt, L., and Farhadi, A. On the connection between pre-training data diversity and fine-tuning robustness. arXiv preprint arXiv:2307.12532, 2023.",
+                "links": null
+            },
+            "BIBREF43": {
+                "ref_id": "b43",
+                "title": "Hierarchical text-conditional image generation with clip latents",
+                "authors": [
+                    {
+                        "first": "A",
+                        "middle": [],
+                        "last": "Ramesh",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "P",
+                        "middle": [],
+                        "last": "Dhariwal",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "A",
+                        "middle": [],
+                        "last": "Nichol",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "C",
+                        "middle": [],
+                        "last": "Chu",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "M",
+                        "middle": [],
+                        "last": "Chen",
+                        "suffix": ""
+                    }
+                ],
+                "year": 2022,
+                "venue": "",
+                "volume": "1",
+                "issue": "",
+                "pages": "",
+                "other_ids": {
+                    "arXiv": [
+                        "arXiv:2204.06125"
+                    ]
+                },
+                "num": null,
+                "urls": [],
+                "raw_text": "Ramesh, A., Dhariwal, P., Nichol, A., Chu, C., and Chen, M. Hierarchical text-conditional image generation with clip latents. arXiv preprint arXiv:2204.06125, 1(2):3, 2022.",
+                "links": null
+            },
+            "BIBREF44": {
+                "ref_id": "b44",
+                "title": "Do imagenet classifiers generalize to imagenet",
+                "authors": [
+                    {
+                        "first": "B",
+                        "middle": [],
+                        "last": "Recht",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "R",
+                        "middle": [],
+                        "last": "Roelofs",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "L",
+                        "middle": [],
+                        "last": "Schmidt",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "V",
+                        "middle": [],
+                        "last": "Shankar",
+                        "suffix": ""
+                    }
+                ],
+                "year": 2019,
+                "venue": "ICML",
+                "volume": "",
+                "issue": "",
+                "pages": "",
+                "other_ids": {},
+                "num": null,
+                "urls": [],
+                "raw_text": "Recht, B., Roelofs, R., Schmidt, L., and Shankar, V. Do imagenet classifiers generalize to imagenet? In ICML, 2019.",
+                "links": null
+            },
+            "BIBREF45": {
+                "ref_id": "b45",
+                "title": "Does progress on object recognition benchmarks improve real-world generalization",
+                "authors": [
+                    {
+                        "first": "M",
+                        "middle": [],
+                        "last": "Richards",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "P",
+                        "middle": [],
+                        "last": "Kirichenko",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "D",
+                        "middle": [],
+                        "last": "Bouchacourt",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "Ibrahim",
+                        "middle": [],
+                        "last": "",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "M",
+                        "middle": [],
+                        "last": "",
+                        "suffix": ""
+                    }
+                ],
+                "year": 2023,
+                "venue": "",
+                "volume": "",
+                "issue": "",
+                "pages": "",
+                "other_ids": {
+                    "arXiv": [
+                        "arXiv:2307.13136"
+                    ]
+                },
+                "num": null,
+                "urls": [],
+                "raw_text": "Richards, M., Kirichenko, P., Bouchacourt, D., and Ibrahim, M. Does progress on object recognition benchmarks improve real-world generalization? arXiv preprint arXiv:2307.13136, 2023.",
+                "links": null
+            },
+            "BIBREF46": {
+                "ref_id": "b46",
+                "title": "Finding differences between transformers and convnets using counterfactual simulation testing",
+                "authors": [
+                    {
+                        "first": "N",
+                        "middle": [],
+                        "last": "Ruiz",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "S",
+                        "middle": [],
+                        "last": "Bargal",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "C",
+                        "middle": [],
+                        "last": "Xie",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "K",
+                        "middle": [],
+                        "last": "Saenko",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "S",
+                        "middle": [],
+                        "last": "Sclaroff",
+                        "suffix": ""
+                    }
+                ],
+                "year": 2022,
+                "venue": "",
+                "volume": "",
+                "issue": "",
+                "pages": "",
+                "other_ids": {},
+                "num": null,
+                "urls": [],
+                "raw_text": "Ruiz, N., Bargal, S., Xie, C., Saenko, K., and Sclaroff, S. Finding differences between transformers and convnets using counterfactual simulation testing. NeurIPS, 2022.",
+                "links": null
+            },
+            "BIBREF47": {
+                "ref_id": "b47",
+                "title": "Objectives matter: Understanding the impact of self-supervised objectives on vision transformer representations",
+                "authors": [
+                    {
+                        "first": "S",
+                        "middle": [],
+                        "last": "Shekhar",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "F",
+                        "middle": [],
+                        "last": "Bordes",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "P",
+                        "middle": [],
+                        "last": "Vincent",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "A",
+                        "middle": [],
+                        "last": "Morcos",
+                        "suffix": ""
+                    }
+                ],
+                "year": 2023,
+                "venue": "",
+                "volume": "",
+                "issue": "",
+                "pages": "",
+                "other_ids": {
+                    "arXiv": [
+                        "arXiv:2304.13089"
+                    ]
+                },
+                "num": null,
+                "urls": [],
+                "raw_text": "Shekhar, S., Bordes, F., Vincent, P., and Morcos, A. Objec- tives matter: Understanding the impact of self-supervised objectives on vision transformer representations. arXiv preprint arXiv:2304.13089, 2023.",
+                "links": null
+            },
+            "BIBREF48": {
+                "ref_id": "b48",
+                "title": "Imagenet-hard: The hardest images remaining from a study of the power of zoom and spatial biases in image classification",
+                "authors": [
+                    {
+                        "first": "M",
+                        "middle": [
+                            "R"
+                        ],
+                        "last": "Taesiri",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "G",
+                        "middle": [],
+                        "last": "Nguyen",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "S",
+                        "middle": [],
+                        "last": "Habchi",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "C.-P",
+                        "middle": [],
+                        "last": "Bezemer",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "A",
+                        "middle": [],
+                        "last": "Nguyen",
+                        "suffix": ""
+                    }
+                ],
+                "year": null,
+                "venue": "",
+                "volume": "",
+                "issue": "",
+                "pages": "",
+                "other_ids": {},
+                "num": null,
+                "urls": [],
+                "raw_text": "Taesiri, M. R., Nguyen, G., Habchi, S., Bezemer, C.-P., and Nguyen, A. Imagenet-hard: The hardest images remaining from a study of the power of zoom and spatial biases in image classification.",
+                "links": null
+            },
+            "BIBREF49": {
+                "ref_id": "b49",
+                "title": "Synthetic images from text-to-image models make strong visual representation learners",
+                "authors": [
+                    {
+                        "first": "Y",
+                        "middle": [],
+                        "last": "Tian",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "L",
+                        "middle": [],
+                        "last": "Fan",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "P",
+                        "middle": [],
+                        "last": "Isola",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "H",
+                        "middle": [],
+                        "last": "Chang",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "D",
+                        "middle": [],
+                        "last": "Krishnan",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "",
+                        "middle": [],
+                        "last": "Stablerep",
+                        "suffix": ""
+                    }
+                ],
+                "year": 2023,
+                "venue": "",
+                "volume": "",
+                "issue": "",
+                "pages": "",
+                "other_ids": {
+                    "arXiv": [
+                        "arXiv:2306.00984"
+                    ]
+                },
+                "num": null,
+                "urls": [],
+                "raw_text": "Tian, Y., Fan, L., Isola, P., Chang, H., and Krishnan, D. Stablerep: Synthetic images from text-to-image models make strong visual representation learners. arXiv preprint arXiv:2306.00984, 2023.",
+                "links": null
+            },
+            "BIBREF50": {
+                "ref_id": "b50",
+                "title": "Training data-efficient image transformers & distillation through attention",
+                "authors": [
+                    {
+                        "first": "H",
+                        "middle": [],
+                        "last": "Touvron",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "M",
+                        "middle": [],
+                        "last": "Cord",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "M",
+                        "middle": [],
+                        "last": "Douze",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "F",
+                        "middle": [],
+                        "last": "Massa",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "A",
+                        "middle": [],
+                        "last": "Sablayrolles",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "H",
+                        "middle": [],
+                        "last": "J\u00e9gou",
+                        "suffix": ""
+                    }
+                ],
+                "year": 2021,
+                "venue": "ICML",
+                "volume": "",
+                "issue": "",
+                "pages": "",
+                "other_ids": {},
+                "num": null,
+                "urls": [],
+                "raw_text": "Touvron, H., Cord, M., Douze, M., Massa, F., Sablayrolles, A., and J\u00e9gou, H. Training data-efficient image trans- formers & distillation through attention. In ICML, 2021.",
+                "links": null
+            },
+            "BIBREF51": {
+                "ref_id": "b51",
+                "title": "Deit iii: Revenge of the vit",
+                "authors": [
+                    {
+                        "first": "H",
+                        "middle": [],
+                        "last": "Touvron",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "M",
+                        "middle": [],
+                        "last": "Cord",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "H",
+                        "middle": [],
+                        "last": "J\u00e9gou",
+                        "suffix": ""
+                    }
+                ],
+                "year": 2022,
+                "venue": "ECCV",
+                "volume": "",
+                "issue": "",
+                "pages": "",
+                "other_ids": {},
+                "num": null,
+                "urls": [],
+                "raw_text": "Touvron, H., Cord, M., and J\u00e9gou, H. Deit iii: Revenge of the vit. In ECCV, 2022.",
+                "links": null
+            },
+            "BIBREF52": {
+                "ref_id": "b52",
+                "title": "From ImageNet to image classification: Contextualizing progress on benchmarks",
+                "authors": [
+                    {
+                        "first": "D",
+                        "middle": [],
+                        "last": "Tsipras",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "S",
+                        "middle": [],
+                        "last": "Santurkar",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "L",
+                        "middle": [],
+                        "last": "Engstrom",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "A",
+                        "middle": [],
+                        "last": "Ilyas",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "A",
+                        "middle": [],
+                        "last": "Madry",
+                        "suffix": ""
+                    }
+                ],
+                "year": 2020,
+                "venue": "ICML",
+                "volume": "",
+                "issue": "",
+                "pages": "",
+                "other_ids": {},
+                "num": null,
+                "urls": [],
+                "raw_text": "Tsipras, D., Santurkar, S., Engstrom, L., Ilyas, A., and Madry, A. From ImageNet to image classification: Con- textualizing progress on benchmarks. In ICML, 2020.",
+                "links": null
+            },
+            "BIBREF53": {
+                "ref_id": "b53",
+                "title": "Are convolutional neural networks or transformers more like human vision? arXiv preprint",
+                "authors": [
+                    {
+                        "first": "S",
+                        "middle": [],
+                        "last": "Tuli",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "I",
+                        "middle": [],
+                        "last": "Dasgupta",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "E",
+                        "middle": [],
+                        "last": "Grant",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "T",
+                        "middle": [
+                            "L"
+                        ],
+                        "last": "Griffiths",
+                        "suffix": ""
+                    }
+                ],
+                "year": 2021,
+                "venue": "",
+                "volume": "",
+                "issue": "",
+                "pages": "",
+                "other_ids": {
+                    "arXiv": [
+                        "arXiv:2105.07197"
+                    ]
+                },
+                "num": null,
+                "urls": [],
+                "raw_text": "Tuli, S., Dasgupta, I., Grant, E., and Griffiths, T. L. Are convolutional neural networks or transformers more like human vision? arXiv preprint arXiv:2105.07197, 2021.",
+                "links": null
+            },
+            "BIBREF54": {
+                "ref_id": "b54",
+                "title": "Clipascene: Scene sketching with different types and levels of abstraction",
+                "authors": [
+                    {
+                        "first": "Y",
+                        "middle": [],
+                        "last": "Vinker",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "Y",
+                        "middle": [],
+                        "last": "Alaluf",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "D",
+                        "middle": [],
+                        "last": "Cohen-Or",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "A",
+                        "middle": [],
+                        "last": "Shamir",
+                        "suffix": ""
+                    }
+                ],
+                "year": 2023,
+                "venue": "ICCV",
+                "volume": "",
+                "issue": "",
+                "pages": "",
+                "other_ids": {},
+                "num": null,
+                "urls": [],
+                "raw_text": "Vinker, Y., Alaluf, Y., Cohen-Or, D., and Shamir, A. Cli- pascene: Scene sketching with different types and levels of abstraction. In ICCV, 2023.",
+                "links": null
+            },
+            "BIBREF55": {
+                "ref_id": "b55",
+                "title": "Teaching matters: Investigating the role of supervision in vision transformers",
+                "authors": [
+                    {
+                        "first": "M",
+                        "middle": [],
+                        "last": "Walmer",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "S",
+                        "middle": [],
+                        "last": "Suri",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "K",
+                        "middle": [],
+                        "last": "Gupta",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "A",
+                        "middle": [],
+                        "last": "Shrivastava",
+                        "suffix": ""
+                    }
+                ],
+                "year": 2023,
+                "venue": "CVPR",
+                "volume": "",
+                "issue": "",
+                "pages": "",
+                "other_ids": {},
+                "num": null,
+                "urls": [],
+                "raw_text": "Walmer, M., Suri, S., Gupta, K., and Shrivastava, A. Teach- ing matters: Investigating the role of supervision in vision transformers. In CVPR, 2023.",
+                "links": null
+            },
+            "BIBREF56": {
+                "ref_id": "b56",
+                "title": "Learning robust global representations by penalizing local predictive power",
+                "authors": [
+                    {
+                        "first": "H",
+                        "middle": [],
+                        "last": "Wang",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "S",
+                        "middle": [],
+                        "last": "Ge",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "Z",
+                        "middle": [],
+                        "last": "Lipton",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "E",
+                        "middle": [
+                            "P"
+                        ],
+                        "last": "Xing",
+                        "suffix": ""
+                    }
+                ],
+                "year": 2019,
+                "venue": "",
+                "volume": "",
+                "issue": "",
+                "pages": "",
+                "other_ids": {},
+                "num": null,
+                "urls": [],
+                "raw_text": "Wang, H., Ge, S., Lipton, Z., and Xing, E. P. Learning ro- bust global representations by penalizing local predictive power. NeurIPS, 2019.",
+                "links": null
+            },
+            "BIBREF57": {
+                "ref_id": "b57",
+                "title": "Can cnns be more robust than transformers? arXiv preprint",
+                "authors": [
+                    {
+                        "first": "Z",
+                        "middle": [],
+                        "last": "Wang",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "Y",
+                        "middle": [],
+                        "last": "Bai",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "Y",
+                        "middle": [],
+                        "last": "Zhou",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "C",
+                        "middle": [],
+                        "last": "Xie",
+                        "suffix": ""
+                    }
+                ],
+                "year": 2022,
+                "venue": "",
+                "volume": "",
+                "issue": "",
+                "pages": "",
+                "other_ids": {
+                    "arXiv": [
+                        "arXiv:2206.03452"
+                    ]
+                },
+                "num": null,
+                "urls": [],
+                "raw_text": "Wang, Z., Bai, Y., Zhou, Y., and Xie, C. Can cnns be more robust than transformers? arXiv preprint arXiv:2206.03452, 2022.",
+                "links": null
+            },
+            "BIBREF58": {
+                "ref_id": "b58",
+                "title": "Convnext v2: Co-designing and scaling convnets with masked autoencoders",
+                "authors": [
+                    {
+                        "first": "S",
+                        "middle": [],
+                        "last": "Woo",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "S",
+                        "middle": [],
+                        "last": "Debnath",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "R",
+                        "middle": [],
+                        "last": "Hu",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "X",
+                        "middle": [],
+                        "last": "Chen",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "Z",
+                        "middle": [],
+                        "last": "Liu",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "I",
+                        "middle": [
+                            "S"
+                        ],
+                        "last": "Kweon",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "S",
+                        "middle": [],
+                        "last": "Xie",
+                        "suffix": ""
+                    }
+                ],
+                "year": 2023,
+                "venue": "CVPR",
+                "volume": "",
+                "issue": "",
+                "pages": "",
+                "other_ids": {},
+                "num": null,
+                "urls": [],
+                "raw_text": "Woo, S., Debnath, S., Hu, R., Chen, X., Liu, Z., Kweon, I. S., and Xie, S. Convnext v2: Co-designing and scaling convnets with masked autoencoders. In CVPR, 2023.",
+                "links": null
+            },
+            "BIBREF59": {
+                "ref_id": "b59",
+                "title": "Robust fine-tuning of zero-shot models",
+                "authors": [
+                    {
+                        "first": "M",
+                        "middle": [],
+                        "last": "Wortsman",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "G",
+                        "middle": [],
+                        "last": "Ilharco",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "J",
+                        "middle": [
+                            "W"
+                        ],
+                        "last": "Kim",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "M",
+                        "middle": [],
+                        "last": "Li",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "S",
+                        "middle": [],
+                        "last": "Kornblith",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "R",
+                        "middle": [],
+                        "last": "Roelofs",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "R",
+                        "middle": [
+                            "G"
+                        ],
+                        "last": "Lopes",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "H",
+                        "middle": [],
+                        "last": "Hajishirzi",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "A",
+                        "middle": [],
+                        "last": "Farhadi",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "H",
+                        "middle": [],
+                        "last": "Namkoong",
+                        "suffix": ""
+                    }
+                ],
+                "year": 2022,
+                "venue": "CVPR",
+                "volume": "",
+                "issue": "",
+                "pages": "",
+                "other_ids": {},
+                "num": null,
+                "urls": [],
+                "raw_text": "Wortsman, M., Ilharco, G., Kim, J. W., Li, M., Kornblith, S., Roelofs, R., Lopes, R. G., Hajishirzi, H., Farhadi, A., Namkoong, H., et al. Robust fine-tuning of zero-shot models. In CVPR, 2022.",
+                "links": null
+            },
+            "BIBREF60": {
+                "ref_id": "b60",
+                "title": "Does robustness on imagenet transfer to downstream tasks?",
+                "authors": [
+                    {
+                        "first": "Y",
+                        "middle": [],
+                        "last": "Yamada",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "M",
+                        "middle": [],
+                        "last": "Otani",
+                        "suffix": ""
+                    }
+                ],
+                "year": 2022,
+                "venue": "CVPR",
+                "volume": "",
+                "issue": "",
+                "pages": "",
+                "other_ids": {},
+                "num": null,
+                "urls": [],
+                "raw_text": "Yamada, Y. and Otani, M. Does robustness on imagenet transfer to downstream tasks? In CVPR, 2022.",
+                "links": null
+            },
+            "BIBREF61": {
+                "ref_id": "b61",
+                "title": "Re-labeling imagenet: from single to multi-labels, from global to localized labels",
+                "authors": [
+                    {
+                        "first": "S",
+                        "middle": [],
+                        "last": "Yun",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "S",
+                        "middle": [
+                            "J"
+                        ],
+                        "last": "Oh",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "B",
+                        "middle": [],
+                        "last": "Heo",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "D",
+                        "middle": [],
+                        "last": "Han",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "J",
+                        "middle": [],
+                        "last": "Choe",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "S",
+                        "middle": [],
+                        "last": "Chun",
+                        "suffix": ""
+                    }
+                ],
+                "year": 2021,
+                "venue": "CVPR",
+                "volume": "",
+                "issue": "",
+                "pages": "",
+                "other_ids": {},
+                "num": null,
+                "urls": [],
+                "raw_text": "Yun, S., Oh, S. J., Heo, B., Han, D., Choe, J., and Chun, S. Re-labeling imagenet: from single to multi-labels, from global to localized labels. In CVPR, 2021.",
+                "links": null
+            },
+            "BIBREF62": {
+                "ref_id": "b62",
+                "title": "A large-scale study of representation learning with the visual task adaptation benchmark",
+                "authors": [
+                    {
+                        "first": "X",
+                        "middle": [],
+                        "last": "Zhai",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "J",
+                        "middle": [],
+                        "last": "Puigcerver",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "A",
+                        "middle": [],
+                        "last": "Kolesnikov",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "P",
+                        "middle": [],
+                        "last": "Ruyssen",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "C",
+                        "middle": [],
+                        "last": "Riquelme",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "M",
+                        "middle": [],
+                        "last": "Lucic",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "J",
+                        "middle": [],
+                        "last": "Djolonga",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "A",
+                        "middle": [
+                            "S"
+                        ],
+                        "last": "Pinto",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "M",
+                        "middle": [],
+                        "last": "Neumann",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "A",
+                        "middle": [],
+                        "last": "Dosovitskiy",
+                        "suffix": ""
+                    }
+                ],
+                "year": 2019,
+                "venue": "",
+                "volume": "",
+                "issue": "",
+                "pages": "",
+                "other_ids": {
+                    "arXiv": [
+                        "arXiv:1910.04867"
+                    ]
+                },
+                "num": null,
+                "urls": [],
+                "raw_text": "Zhai, X., Puigcerver, J., Kolesnikov, A., Ruyssen, P., Riquelme, C., Lucic, M., Djolonga, J., Pinto, A. S., Neu- mann, M., Dosovitskiy, A., et al. A large-scale study of representation learning with the visual task adaptation benchmark. arXiv preprint arXiv:1910.04867, 2019.",
+                "links": null
+            },
+            "BIBREF63": {
+                "ref_id": "b63",
+                "title": "Making convolutional networks shift-invariant again",
+                "authors": [
+                    {
+                        "first": "R",
+                        "middle": [],
+                        "last": "Zhang",
+                        "suffix": ""
+                    }
+                ],
+                "year": 2019,
+                "venue": "ICML",
+                "volume": "",
+                "issue": "",
+                "pages": "",
+                "other_ids": {},
+                "num": null,
+                "urls": [],
+                "raw_text": "Zhang, R. Making convolutional networks shift-invariant again. In ICML, 2019.",
+                "links": null
+            },
+            "BIBREF64": {
+                "ref_id": "b64",
+                "title": "Convnets vs. transformers: Whose visual representations are more transferable? In CVPR",
+                "authors": [
+                    {
+                        "first": "H.-Y",
+                        "middle": [],
+                        "last": "Zhou",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "C",
+                        "middle": [],
+                        "last": "Lu",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "S",
+                        "middle": [],
+                        "last": "Yang",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "Y",
+                        "middle": [],
+                        "last": "Yu",
+                        "suffix": ""
+                    }
+                ],
+                "year": 2021,
+                "venue": "",
+                "volume": "",
+                "issue": "",
+                "pages": "",
+                "other_ids": {},
+                "num": null,
+                "urls": [],
+                "raw_text": "Zhou, H.-Y., Lu, C., Yang, S., and Yu, Y. Convnets vs. trans- formers: Whose visual representations are more transfer- able? In CVPR, 2021.",
+                "links": null
+            }
+        },
+        "ref_entries": {
+            "FIGREF0": {
+                "num": null,
+                "type_str": "figure",
+                "text": "Figure 1. Models are often compared only by their ImageNet accuracy, without looking at many other important behaviors. In our work, we analyze models with similar ImageNet accuracies and find that they have vastly different properties.",
+                "fig_num": "1",
+                "uris": null
+            },
+            "FIGREF1": {
+                "num": null,
+                "type_str": "figure",
+                "text": "Figure 2. Model mistakes on ImageNet-X. Lower is better. ConvNeXt and ViT perform similarly within each training category. CLIP models achieve lower error ratios compared to supervised.",
+                "fig_num": "2",
+                "uris": null
+            },
+            "FIGREF2": {
+                "num": null,
+                "type_str": "figure",
+                "text": "Figure3. Fraction of shape vs texture decisions on cue-conflict dataset. ViT models show a higher shape bias. CLIP models are less texture-biased than their supervised counterparts. All models still have a significant fraction of texture decisions.",
+                "fig_num": "3",
+                "uris": null
+            },
+            "FIGREF3": {
+                "num": null,
+                "type_str": "figure",
+                "text": "Figure4. A cue-conflict image(Geirhos et al., 2018).",
+                "fig_num": "4",
+                "uris": null
+            },
+            "FIGREF4": {
+                "num": null,
+                "type_str": "figure",
+                "text": "Figure 5. Calibration results: confidence histograms (1 and 3 row), reliability diagrams (2 and 4 row), and ECE on ImageNet-1K (top) and ImageNet-R (bottom). Supervised models have lower ECE in both cases. CLIP models have bars under diagonal and many high confidence predictions, indicating overconfidence. ConvNeXt is better (ImageNet-1K) or competitive (ImageNet-R) to ViT.",
+                "fig_num": "5",
+                "uris": null
+            },
+            "FIGREF5": {
+                "num": null,
+                "type_str": "figure",
+                "text": "Figure 7. Results on synthetic data from PUG-ImageNet. ConvNeXt is superior on almost every factor for both supervised and CLIP.",
+                "fig_num": "7",
+                "uris": null
+            },
+            "FIGREF6": {
+                "num": null,
+                "type_str": "figure",
+                "text": "ConvNet vs Transformer, Supervised vs CLIP: Beyond ImageNet Accuracy real-world performance and in more accurately evaluating their effectiveness in such environments.ConvNet vs Transformer.(1) Supervised ConvNeXt is superior to supervised ViT: it is more invariant to data transformations, and demonstrates better transferability, robustness and calibration. (2) ConvNeXt outperforms ViT on synthetic data. (3) ViT has a higher shape bias.Supervised vs CLIP.(1) Supervised ConvNeXt competes well with CLIP in transferability, showing potential of supervised models.",
+                "fig_num": null,
+                "uris": null
+            },
+            "TABREF0": {
+                "html": null,
+                "num": null,
+                "type_str": "table",
+                "text": "Model summary in our analysis. We select ConvNeXt and ViT with similar ImageNet accuracies within each training paradigm.",
+                "content": "<table><tr><td>Model</td><td>Architecture</td><td>Pretraining</td><td>Finetuning</td><td>Paradigm</td><td>FLOPs</td><td>#Param</td><td>INet-1K val%</td></tr><tr><td>ViT-sup</td><td>ViT-B/16</td><td>ImageNet-21K</td><td>ImageNet-1K</td><td>supervised</td><td>17.5G</td><td>87M</td><td>85.5</td></tr><tr><td>ConvNeXt-sup</td><td>ConvNeXt-B</td><td>ImageNet-21K</td><td>ImageNet-1K</td><td>supervised</td><td>15.4G</td><td>89M</td><td>85.5</td></tr><tr><td>ViT-clip</td><td>ViT-B/16</td><td>LAION-400M</td><td>-</td><td>CLIP</td><td>17.5G</td><td>87M</td><td>67.0</td></tr><tr><td>ConvNeXt-clip</td><td>ConvNeXt-B</td><td>LAION-400M</td><td>-</td><td>CLIP</td><td>15.4G</td><td>89M</td><td>66.3</td></tr></table>"
+            },
+            "TABREF1": {
+                "html": null,
+                "num": null,
+                "type_str": "table",
+                "text": "",
+                "content": "<table><tr><td>ConvNet vs Transformer, Supervised vs CLIP: Beyond ImageNet Accuracy 0% 10% 20% Difference in Performance -10% Caltech101 +0.6 / 90.3% CIFAR-100 +2.5 / 84.5% DTD +5.7 / 73.5% Flowers102 +3.1 / 97.9% Pets +0.7 / 94.1% Sun397 +2.6 / 98.5% SVHN +6.3 / 71.3% Camelyon +0.4 / 82.8% EuroSAT +0.9 / 95.9% Resisc45 +2.1 / 90.7% Retinopathy +0.2 / 70.6% Clevr-Count +6.7 / 63.3% Clevr-Dist +6.1 / 56.1% DMLAB +2.2 / 49.1% dSpr-Loc dSpr-Ori +10.5 / 88.3% -20% +19.1 / 65.5% KITTI-Dist +11.7 / 43.9% sNORB-Azim +2.6 / 15.0% sNORB-Elev +1.5 / 30.7% Average +3.2 / 71.0 INet-Val +0.0 / 85.5% V2 +0.6 / 76.2% A +7.1 / 60.0% C +7.0 / 66.8% Hard +0.9 / 29.4% R +0.7 / 62.3% Sketch +2.5 / 48.6% Real +0.3 / 89.5% Average +0.5 / 60.7% ConvNeXt-sup ViT-sup Robustness Transferability -10% -8% -6% -4% -2% 0% Difference in Performance 2% Caltech101 +0.5 / 95.8% CIFAR-100 DTD +0.1 / 79.4% Flowers102 +0.1 / 96.4% Pets +1.0 / 91.7% 4% Sun397 +0.3 / 97.7% SVHN +7.5 / 78.1% Camelyon +1.6 / 83.6% EuroSAT +0.5 / 96.4% Resisc45 +1.2 / 94.1% Retinopathy +0.3 / 76.9% Clevr-Count +3.5 / 71.9% 6% +4.9 / 82.1% 8% Clevr-Dist +3.4 / 55.3% DMLAB +0.4 / 51.8% dSpr-Loc +0.9 / 55.7% dSpr-Ori +6.2 / 83.6% KITTI-Dist +3.8 / 47.4% sNORB-Azim +0.3 / 14.2% sNORB-Elev +1.5 / 38.2% Average +0.0 / 72.2 INet-Val +0.7 / 67.0% V2 +0.9 / 59.5% A +2.3 / 33.2% C +1.8 / 40.8% Hard +0.3 / 5.8% R +2.0 / 77.8% Sketch +0.3 / 52.3% Real +0.5 / 74.3% Average +1.1 /</td></tr></table>"
+            },
+            "TABREF2": {
+                "html": null,
+                "num": null,
+                "type_str": "table",
+                "text": "ConvNet vs Transformer, Supervised vs CLIP: Beyond ImageNet Accuracy Worlds Cam Pitch Cam Yaw Cam Roll Obj Pitch Obj Yaw Obj Roll Obj Scale Obj Texture Scene Light Average 0",
+                "content": "<table><tr><td>Accuracy</td><td>20 40</td><td>ViT-sup ConvNeXt-sup</td></tr><tr><td>Accuracy</td><td>20 40</td><td>ViT-clip ConvNeXt-clip</td></tr><tr><td/><td>0</td><td>Worlds Cam Pitch Cam Yaw Cam Roll Obj Pitch Obj Yaw Obj Roll Obj Scale Obj Texture Scene Light Average</td></tr></table>"
+            },
+            "TABREF3": {
+                "html": null,
+                "num": null,
+                "type_str": "table",
+                "text": ". Transferability results on VTAB in subgroups. CLIP models are better on each of the dataset subgroups. For supervised models, ConvNeXt outperforms ViT by a large margin.",
+                "content": "<table><tr><td>Model</td><td colspan=\"4\">Natural Specialized Structured Overall</td></tr><tr><td>ViT-sup</td><td>84.2</td><td>84.2</td><td>45.4</td><td>67.8</td></tr><tr><td>ConvNeXt-sup</td><td>87.1</td><td>85.0</td><td>50.0</td><td>71.0</td></tr><tr><td>ViT-clip</td><td>87.6</td><td>87.8</td><td>50.9</td><td>72.2</td></tr><tr><td>ConvNeXt-clip</td><td>87.8</td><td>86.9</td><td>51.2</td><td>72.2</td></tr></table>"
+            }
+        }
+    }
+}

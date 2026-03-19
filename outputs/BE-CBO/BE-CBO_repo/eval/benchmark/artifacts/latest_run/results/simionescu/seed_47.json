@@ -1,0 +1,2215 @@
+{
+  "problem_name": "Simionescu",
+  "problem_slug": "simionescu",
+  "seed": 47,
+  "initial_samples": 10,
+  "total_evaluations": 200,
+  "metrics": {
+    "best_objective": 0.004343425389379263,
+    "feasibility_ratio": 0.68,
+    "balanced_accuracy": null,
+    "total_evaluations": 200
+  },
+  "evaluation_trace": [
+    {
+      "iteration": 1,
+      "candidate": [
+        -0.10795736312866211,
+        0.9959762096405029
+      ],
+      "feasible": true,
+      "objective": 1.2079169750213623,
+      "best_objective": 1.2079169750213623,
+      "feasibility_ratio": 1.0
+    },
+    {
+      "iteration": 2,
+      "candidate": [
+        1.1501688957214355,
+        -1.0687062740325928
+      ],
+      "feasible": false,
+      "objective": null,
+      "best_objective": 1.2079169750213623,
+      "feasibility_ratio": 0.5
+    },
+    {
+      "iteration": 3,
+      "candidate": [
+        0.5057096481323242,
+        0.25654566287994385
+      ],
+      "feasible": true,
+      "objective": 0.07505645602941513,
+      "best_objective": 0.07505645602941513,
+      "feasibility_ratio": 0.6666666666666666
+    },
+    {
+      "iteration": 4,
+      "candidate": [
+        -0.7519561052322388,
+        -0.18396949768066406
+      ],
+      "feasible": true,
+      "objective": 0.3364425003528595,
+      "best_objective": 0.07505645602941513,
+      "feasibility_ratio": 0.75
+    },
+    {
+      "iteration": 5,
+      "candidate": [
+        -1.0449105501174927,
+        0.3418372869491577
+      ],
+      "feasible": true,
+      "objective": 1.8873506784439087,
+      "best_objective": 0.07505645602941513,
+      "feasibility_ratio": 0.8
+    },
+    {
+      "iteration": 6,
+      "candidate": [
+        0.19742131233215332,
+        -0.425514280796051
+      ],
+      "feasible": false,
+      "objective": null,
+      "best_objective": 0.07505645602941513,
+      "feasibility_ratio": 0.6666666666666666
+    },
+    {
+      "iteration": 7,
+      "candidate": [
+        0.802969217300415,
+        0.9054882526397705
+      ],
+      "feasible": true,
+      "objective": 0.08321807533502579,
+      "best_objective": 0.07505645602941513,
+      "feasibility_ratio": 0.7142857142857143
+    },
+    {
+      "iteration": 8,
+      "candidate": [
+        -0.4389069080352783,
+        -0.8219626545906067
+      ],
+      "feasible": true,
+      "objective": 0.18280822038650513,
+      "best_objective": 0.07505645602941513,
+      "feasibility_ratio": 0.75
+    },
+    {
+      "iteration": 9,
+      "candidate": [
+        -0.5309473276138306,
+        0.1126176118850708
+      ],
+      "feasible": true,
+      "objective": 0.40819644927978516,
+      "best_objective": 0.07505645602941513,
+      "feasibility_ratio": 0.7777777777777778
+    },
+    {
+      "iteration": 10,
+      "candidate": [
+        0.7088665962219238,
+        -0.030351758003234863
+      ],
+      "feasible": false,
+      "objective": null,
+      "best_objective": 0.07505645602941513,
+      "feasibility_ratio": 0.7
+    },
+    {
+      "iteration": 11,
+      "candidate": [
+        0.14254069328308105,
+        1.134716272354126
+      ],
+      "feasible": true,
+      "objective": 1.000586748123169,
+      "best_objective": 0.07505645602941513,
+      "feasibility_ratio": 0.7272727272727273
+    },
+    {
+      "iteration": 12,
+      "candidate": [
+        -1.0968176126480103,
+        -1.2171359062194824
+      ],
+      "feasible": true,
+      "objective": 0.14797410368919373,
+      "best_objective": 0.07505645602941513,
+      "feasibility_ratio": 0.75
+    },
+    {
+      "iteration": 13,
+      "candidate": [
+        -0.8563157320022583,
+        0.75644850730896
+      ],
+      "feasible": true,
+      "objective": 2.5362324714660645,
+      "best_objective": 0.07505645602941513,
+      "feasibility_ratio": 0.7692307692307693
+    },
+    {
+      "iteration": 14,
+      "candidate": [
+        0.4043283462524414,
+        -0.682611882686615
+      ],
+      "feasible": false,
+      "objective": null,
+      "best_objective": 0.07505645602941513,
+      "feasibility_ratio": 0.7142857142857143
+    },
+    {
+      "iteration": 15,
+      "candidate": [
+        1.0879950523376465,
+        0.49606502056121826
+      ],
+      "feasible": false,
+      "objective": null,
+      "best_objective": 0.07505645602941513,
+      "feasibility_ratio": 0.6666666666666666
+    },
+    {
+      "iteration": 16,
+      "candidate": [
+        -0.172188401222229,
+        -0.570052981376648
+      ],
+      "feasible": true,
+      "objective": 0.1681118756532669,
+      "best_objective": 0.07505645602941513,
+      "feasibility_ratio": 0.6875
+    },
+    {
+      "iteration": 17,
+      "candidate": [
+        -0.2637925148010254,
+        0.6203455924987793
+      ],
+      "feasible": true,
+      "objective": 0.7653359174728394,
+      "best_objective": 0.07505645602941513,
+      "feasibility_ratio": 0.7058823529411765
+    },
+    {
+      "iteration": 18,
+      "candidate": [
+        0.9941051006317139,
+        -0.5379641056060791
+      ],
+      "feasible": false,
+      "objective": null,
+      "best_objective": 0.07505645602941513,
+      "feasibility_ratio": 0.6666666666666666
+    },
+    {
+      "iteration": 19,
+      "candidate": [
+        0.349340558052063,
+        0.627294659614563
+      ],
+      "feasible": true,
+      "objective": 0.0991724282503128,
+      "best_objective": 0.07505645602941513,
+      "feasibility_ratio": 0.6842105263157895
+    },
+    {
+      "iteration": 20,
+      "candidate": [
+        -0.9087069034576416,
+        -0.7098275423049927
+      ],
+      "feasible": true,
+      "objective": 0.10405552387237549,
+      "best_objective": 0.07505645602941513,
+      "feasibility_ratio": 0.7
+    },
+    {
+      "iteration": 21,
+      "candidate": [
+        -1.2006597518920898,
+        1.1862220764160156
+      ],
+      "feasible": true,
+      "objective": 5.554780006408691,
+      "best_objective": 0.07505645602941513,
+      "feasibility_ratio": 0.7142857142857143
+    },
+    {
+      "iteration": 22,
+      "candidate": [
+        0.04129040241241455,
+        -1.1125010251998901
+      ],
+      "feasible": false,
+      "objective": null,
+      "best_objective": 0.07505645602941513,
+      "feasibility_ratio": 0.6818181818181818
+    },
+    {
+      "iteration": 23,
+      "candidate": [
+        0.6465330123901367,
+        0.06598520278930664
+      ],
+      "feasible": false,
+      "objective": null,
+      "best_objective": 0.07505645602941513,
+      "feasibility_ratio": 0.6521739130434783
+    },
+    {
+      "iteration": 24,
+      "candidate": [
+        -0.595571756362915,
+        -0.13985991477966309
+      ],
+      "feasible": true,
+      "objective": 0.2160029411315918,
+      "best_objective": 0.07505645602941513,
+      "feasibility_ratio": 0.6666666666666666
+    },
+    {
+      "iteration": 25,
+      "candidate": [
+        -0.37427306175231934,
+        0.8002147674560547
+      ],
+      "feasible": true,
+      "objective": 1.3494718074798584,
+      "best_objective": 0.07505645602941513,
+      "feasibility_ratio": 0.68
+    },
+    {
+      "iteration": 26,
+      "candidate": [
+        0.8653120994567871,
+        -0.8729053735733032
+      ],
+      "feasible": false,
+      "objective": null,
+      "best_objective": 0.07505645602941513,
+      "feasibility_ratio": 0.6538461538461539
+    },
+    {
+      "iteration": 27,
+      "candidate": [
+        0.2986811399459839,
+        0.45200324058532715
+      ],
+      "feasible": true,
+      "objective": 0.03700815141201019,
+      "best_objective": 0.03700815141201019,
+      "feasibility_ratio": 0.6666666666666666
+    },
+    {
+      "iteration": 28,
+      "candidate": [
+        -0.9410587549209595,
+        -0.37946391105651855
+      ],
+      "feasible": true,
+      "objective": 0.35109853744506836,
+      "best_objective": 0.03700815141201019,
+      "feasibility_ratio": 0.6785714285714286
+    },
+    {
+      "iteration": 29,
+      "candidate": [
+        -0.6995745301246643,
+        0.2250959873199463
+      ],
+      "feasible": true,
+      "objective": 0.8392684459686279,
+      "best_objective": 0.03700815141201019,
+      "feasibility_ratio": 0.6896551724137931
+    },
+    {
+      "iteration": 30,
+      "candidate": [
+        0.5606878995895386,
+        -0.30881237983703613
+      ],
+      "feasible": false,
+      "objective": null,
+      "best_objective": 0.03700815141201019,
+      "feasibility_ratio": 0.6666666666666666
+    },
+    {
+      "iteration": 31,
+      "candidate": [
+        1.2440495491027832,
+        1.0225334167480469
+      ],
+      "feasible": true,
+      "objective": 0.17627763748168945,
+      "best_objective": 0.03700815141201019,
+      "feasibility_ratio": 0.6774193548387096
+    },
+    {
+      "iteration": 32,
+      "candidate": [
+        -0.016362667083740234,
+        -0.9389709234237671
+      ],
+      "feasible": false,
+      "objective": null,
+      "best_objective": 0.03700815141201019,
+      "feasibility_ratio": 0.65625
+    },
+    {
+      "iteration": 33,
+      "candidate": [
+        -0.07323479652404785,
+        0.2895866632461548
+      ],
+      "feasible": true,
+      "objective": 0.12951862812042236,
+      "best_objective": 0.03700815141201019,
+      "feasibility_ratio": 0.6666666666666666
+    },
+    {
+      "iteration": 34,
+      "candidate": [
+        1.1886301040649414,
+        -0.20709097385406494
+      ],
+      "feasible": false,
+      "objective": null,
+      "best_objective": 0.03700815141201019,
+      "feasibility_ratio": 0.6470588235294118
+    },
+    {
+      "iteration": 35,
+      "candidate": [
+        0.6222970485687256,
+        0.9581966400146484
+      ],
+      "feasible": true,
+      "objective": 0.17245683073997498,
+      "best_objective": 0.03700815141201019,
+      "feasibility_ratio": 0.6571428571428571
+    },
+    {
+      "iteration": 36,
+      "candidate": [
+        -0.639107346534729,
+        -1.0405385494232178
+      ],
+      "feasible": true,
+      "objective": 0.22764860093593597,
+      "best_objective": 0.03700815141201019,
+      "feasibility_ratio": 0.6666666666666666
+    },
+    {
+      "iteration": 37,
+      "candidate": [
+        -1.0015283823013306,
+        0.8921318054199219
+      ],
+      "feasible": true,
+      "objective": 3.4965994358062744,
+      "best_objective": 0.03700815141201019,
+      "feasibility_ratio": 0.6756756756756757
+    },
+    {
+      "iteration": 38,
+      "candidate": [
+        0.23706483840942383,
+        -0.8182203769683838
+      ],
+      "feasible": false,
+      "objective": null,
+      "best_objective": 0.03700815141201019,
+      "feasibility_ratio": 0.6578947368421053
+    },
+    {
+      "iteration": 39,
+      "candidate": [
+        0.920738935470581,
+        0.3602374792098999
+      ],
+      "feasible": false,
+      "objective": null,
+      "best_objective": 0.03700815141201019,
+      "feasibility_ratio": 0.6410256410256411
+    },
+    {
+      "iteration": 40,
+      "candidate": [
+        -0.3173986077308655,
+        -0.4339975118637085
+      ],
+      "feasible": true,
+      "objective": 0.027370326220989227,
+      "best_objective": 0.027370326220989227,
+      "feasibility_ratio": 0.65
+    },
+    {
+      "iteration": 41,
+      "candidate": [
+        -0.5682259798049927,
+        1.1311171054840088
+      ],
+      "feasible": true,
+      "objective": 2.823493719100952,
+      "best_objective": 0.027370326220989227,
+      "feasibility_ratio": 0.6585365853658537
+    },
+    {
+      "iteration": 42,
+      "candidate": [
+        0.6728851795196533,
+        -1.2036173343658447
+      ],
+      "feasible": false,
+      "objective": null,
+      "best_objective": 0.027370326220989227,
+      "feasibility_ratio": 0.6428571428571429
+    },
+    {
+      "iteration": 43,
+      "candidate": [
+        0.02843308448791504,
+        0.12124395370483398
+      ],
+      "feasible": true,
+      "objective": 0.008958591148257256,
+      "best_objective": 0.008958591148257256,
+      "feasibility_ratio": 0.6511627906976745
+    },
+    {
+      "iteration": 44,
+      "candidate": [
+        -1.2122224569320679,
+        -0.04858982563018799
+      ],
+      "feasible": true,
+      "objective": 1.3599309921264648,
+      "best_objective": 0.008958591148257256,
+      "feasibility_ratio": 0.6590909090909091
+    },
+    {
+      "iteration": 45,
+      "candidate": [
+        -0.8971418738365173,
+        0.5193486213684082
+      ],
+      "feasible": true,
+      "objective": 1.9598524570465088,
+      "best_objective": 0.008958591148257256,
+      "feasibility_ratio": 0.6666666666666666
+    },
+    {
+      "iteration": 46,
+      "candidate": [
+        0.36220502853393555,
+        -0.602950930595398
+      ],
+      "feasible": false,
+      "objective": null,
+      "best_objective": 0.008958591148257256,
+      "feasibility_ratio": 0.6521739130434783
+    },
+    {
+      "iteration": 47,
+      "candidate": [
+        0.9677457809448242,
+        0.728442907333374
+      ],
+      "feasible": true,
+      "objective": 0.1277606189250946,
+      "best_objective": 0.008958591148257256,
+      "feasibility_ratio": 0.6595744680851063
+    },
+    {
+      "iteration": 48,
+      "candidate": [
+        -0.29114073514938354,
+        -0.6446893215179443
+      ],
+      "feasible": true,
+      "objective": 0.1437661349773407,
+      "best_objective": 0.008958591148257256,
+      "feasibility_ratio": 0.6666666666666666
+    },
+    {
+      "iteration": 49,
+      "candidate": [
+        -0.22899341583251953,
+        0.7018376588821411
+      ],
+      "feasible": true,
+      "objective": 0.8503748774528503,
+      "best_objective": 0.008958591148257256,
+      "feasibility_ratio": 0.673469387755102
+    },
+    {
+      "iteration": 50,
+      "candidate": [
+        1.0324897766113281,
+        -0.7744535803794861
+      ],
+      "feasible": false,
+      "objective": null,
+      "best_objective": 0.008958591148257256,
+      "feasibility_ratio": 0.66
+    },
+    {
+      "iteration": 51,
+      "candidate": [
+        0.46585142612457275,
+        0.5508272647857666
+      ],
+      "feasible": true,
+      "objective": 0.03288125991821289,
+      "best_objective": 0.008958591148257256,
+      "feasibility_ratio": 0.6666666666666666
+    },
+    {
+      "iteration": 52,
+      "candidate": [
+        -0.7957816123962402,
+        -0.47805994749069214
+      ],
+      "feasible": true,
+      "objective": 0.13899019360542297,
+      "best_objective": 0.008958591148257256,
+      "feasibility_ratio": 0.6730769230769231
+    },
+    {
+      "iteration": 53,
+      "candidate": [
+        -1.1573539972305298,
+        0.011125326156616211
+      ],
+      "feasible": true,
+      "objective": 1.3640563488006592,
+      "best_objective": 0.008958591148257256,
+      "feasibility_ratio": 0.6792452830188679
+    },
+    {
+      "iteration": 54,
+      "candidate": [
+        0.08101046085357666,
+        -0.09461188316345215
+      ],
+      "feasible": true,
+      "objective": 0.030076751485466957,
+      "best_objective": 0.008958591148257256,
+      "feasibility_ratio": 0.6851851851851852
+    },
+    {
+      "iteration": 55,
+      "candidate": [
+        0.7643792629241943,
+        1.2363622188568115
+      ],
+      "feasible": true,
+      "objective": 0.3172728717327118,
+      "best_objective": 0.008958591148257256,
+      "feasibility_ratio": 0.6909090909090909
+    },
+    {
+      "iteration": 56,
+      "candidate": [
+        -0.474139928817749,
+        -1.1527220010757446
+      ],
+      "feasible": false,
+      "objective": null,
+      "best_objective": 0.008958591148257256,
+      "feasibility_ratio": 0.6785714285714286
+    },
+    {
+      "iteration": 57,
+      "candidate": [
+        -0.4114752411842346,
+        0.40689826011657715
+      ],
+      "feasible": true,
+      "objective": 0.652992308139801,
+      "best_objective": 0.008958591148257256,
+      "feasibility_ratio": 0.6842105263157895
+    },
+    {
+      "iteration": 58,
+      "candidate": [
+        0.829254150390625,
+        -0.32444190979003906
+      ],
+      "feasible": false,
+      "objective": null,
+      "best_objective": 0.008958591148257256,
+      "feasibility_ratio": 0.6724137931034483
+    },
+    {
+      "iteration": 59,
+      "candidate": [
+        0.18449687957763672,
+        0.840578556060791
+      ],
+      "feasible": true,
+      "objective": 0.44595158100128174,
+      "best_objective": 0.008958591148257256,
+      "feasibility_ratio": 0.6779661016949152
+    },
+    {
+      "iteration": 60,
+      "candidate": [
+        -1.056387186050415,
+        -0.9228836297988892
+      ],
+      "feasible": true,
+      "objective": 0.11531544476747513,
+      "best_objective": 0.008958591148257256,
+      "feasibility_ratio": 0.6833333333333333
+    },
+    {
+      "iteration": 61,
+      "candidate": [
+        -0.7404770851135254,
+        1.0873217582702637
+      ],
+      "feasible": true,
+      "objective": 3.2603349685668945,
+      "best_objective": 0.008958591148257256,
+      "feasibility_ratio": 0.6885245901639344
+    },
+    {
+      "iteration": 62,
+      "candidate": [
+        0.5186412334442139,
+        -1.0133708715438843
+      ],
+      "feasible": false,
+      "objective": null,
+      "best_objective": 0.008958591148257256,
+      "feasibility_ratio": 0.6774193548387096
+    },
+    {
+      "iteration": 63,
+      "candidate": [
+        1.1238768100738525,
+        0.16535401344299316
+      ],
+      "feasible": false,
+      "objective": null,
+      "best_objective": 0.008958591148257256,
+      "feasibility_ratio": 0.6666666666666666
+    },
+    {
+      "iteration": 64,
+      "candidate": [
+        -0.1353914737701416,
+        -0.2391510009765625
+      ],
+      "feasible": true,
+      "objective": 0.014003939926624298,
+      "best_objective": 0.008958591148257256,
+      "feasibility_ratio": 0.671875
+    },
+    {
+      "iteration": 65,
+      "candidate": [
+        -0.14824390411376953,
+        0.3884432315826416
+      ],
+      "feasible": true,
+      "objective": 0.28227463364601135,
+      "best_objective": 0.008958591148257256,
+      "feasibility_ratio": 0.676923076923077
+    },
+    {
+      "iteration": 66,
+      "candidate": [
+        1.1123247146606445,
+        -0.4622405171394348
+      ],
+      "feasible": false,
+      "objective": null,
+      "best_objective": 0.008958591148257256,
+      "feasibility_ratio": 0.6666666666666666
+    },
+    {
+      "iteration": 67,
+      "candidate": [
+        0.5459963083267212,
+        0.8642230033874512
+      ],
+      "feasible": true,
+      "objective": 0.148454487323761,
+      "best_objective": 0.008958591148257256,
+      "feasibility_ratio": 0.6716417910447762
+    },
+    {
+      "iteration": 68,
+      "candidate": [
+        -0.7141117453575134,
+        -0.7902718186378479
+      ],
+      "feasible": true,
+      "objective": 0.06223459541797638,
+      "best_objective": 0.008958591148257256,
+      "feasibility_ratio": 0.6764705882352942
+    },
+    {
+      "iteration": 69,
+      "candidate": [
+        -1.0827502012252808,
+        0.9495224952697754
+      ],
+      "feasible": true,
+      "objective": 4.027323246002197,
+      "best_objective": 0.008958591148257256,
+      "feasibility_ratio": 0.6811594202898551
+    },
+    {
+      "iteration": 70,
+      "candidate": [
+        0.15713942050933838,
+        -1.0318278074264526
+      ],
+      "feasible": false,
+      "objective": null,
+      "best_objective": 0.008958591148257256,
+      "feasibility_ratio": 0.6714285714285714
+    },
+    {
+      "iteration": 71,
+      "candidate": [
+        0.8408088684082031,
+        0.29796385765075684
+      ],
+      "feasible": false,
+      "objective": null,
+      "best_objective": 0.008958591148257256,
+      "feasibility_ratio": 0.6619718309859155
+    },
+    {
+      "iteration": 72,
+      "candidate": [
+        -0.39862513542175293,
+        -0.21550726890563965
+      ],
+      "feasible": true,
+      "objective": 0.04212281480431557,
+      "best_objective": 0.008958591148257256,
+      "feasibility_ratio": 0.6666666666666666
+    },
+    {
+      "iteration": 73,
+      "candidate": [
+        -0.4931023120880127,
+        0.7196842432022095
+      ],
+      "feasible": true,
+      "objective": 1.4353634119033813,
+      "best_objective": 0.008958591148257256,
+      "feasibility_ratio": 0.6712328767123288
+    },
+    {
+      "iteration": 74,
+      "candidate": [
+        0.749152660369873,
+        -0.6360440850257874
+      ],
+      "feasible": false,
+      "objective": null,
+      "best_objective": 0.008958591148257256,
+      "feasibility_ratio": 0.6621621621621622
+    },
+    {
+      "iteration": 75,
+      "candidate": [
+        0.10469567775726318,
+        0.5277938842773438
+      ],
+      "feasible": true,
+      "objective": 0.1845378577709198,
+      "best_objective": 0.008958591148257256,
+      "feasibility_ratio": 0.6666666666666666
+    },
+    {
+      "iteration": 76,
+      "candidate": [
+        -1.13710355758667,
+        -0.6112802624702454
+      ],
+      "feasible": true,
+      "objective": 0.3459990620613098,
+      "best_objective": 0.008958591148257256,
+      "feasibility_ratio": 0.6710526315789473
+    },
+    {
+      "iteration": 77,
+      "candidate": [
+        -0.8160345554351807,
+        0.14953398704528809
+      ],
+      "feasible": true,
+      "objective": 0.920120120048523,
+      "best_objective": 0.008958591148257256,
+      "feasibility_ratio": 0.6753246753246753
+    },
+    {
+      "iteration": 78,
+      "candidate": [
+        0.44216859340667725,
+        -0.07676708698272705
+      ],
+      "feasible": false,
+      "objective": null,
+      "best_objective": 0.008958591148257256,
+      "feasibility_ratio": 0.6666666666666666
+    },
+    {
+      "iteration": 79,
+      "candidate": [
+        1.0477139949798584,
+        1.1031403541564941
+      ],
+      "feasible": true,
+      "objective": 0.11864963918924332,
+      "best_objective": 0.008958591148257256,
+      "feasibility_ratio": 0.6708860759493671
+    },
+    {
+      "iteration": 80,
+      "candidate": [
+        -0.21002864837646484,
+        -1.1757558584213257
+      ],
+      "feasible": false,
+      "objective": null,
+      "best_objective": 0.008958591148257256,
+      "feasibility_ratio": 0.6625
+    },
+    {
+      "iteration": 81,
+      "candidate": [
+        -0.30407893657684326,
+        1.2280213832855225
+      ],
+      "feasible": true,
+      "objective": 2.3099896907806396,
+      "best_objective": 0.008958591148257256,
+      "feasibility_ratio": 0.6666666666666666
+    },
+    {
+      "iteration": 82,
+      "candidate": [
+        0.9562604427337646,
+        -1.1442681550979614
+      ],
+      "feasible": false,
+      "objective": null,
+      "best_objective": 0.008958591148257256,
+      "feasibility_ratio": 0.6585365853658537
+    },
+    {
+      "iteration": 83,
+      "candidate": [
+        0.38962697982788086,
+        0.019760727882385254
+      ],
+      "feasible": true,
+      "objective": 0.13757097721099854,
+      "best_objective": 0.008958591148257256,
+      "feasibility_ratio": 0.6626506024096386
+    },
+    {
+      "iteration": 84,
+      "candidate": [
+        -0.8708623647689819,
+        -0.1033625602722168
+      ],
+      "feasible": true,
+      "objective": 0.5980573892593384,
+      "best_objective": 0.008958591148257256,
+      "feasibility_ratio": 0.6666666666666666
+    },
+    {
+      "iteration": 85,
+      "candidate": [
+        -1.2384995222091675,
+        0.5786985158920288
+      ],
+      "feasible": true,
+      "objective": 3.230536937713623,
+      "best_objective": 0.008958591148257256,
+      "feasibility_ratio": 0.6705882352941176
+    },
+    {
+      "iteration": 86,
+      "candidate": [
+        0.001008749008178711,
+        -0.506044864654541
+      ],
+      "feasible": false,
+      "objective": null,
+      "best_objective": 0.008958591148257256,
+      "feasibility_ratio": 0.6627906976744186
+    },
+    {
+      "iteration": 87,
+      "candidate": [
+        0.6843729019165039,
+        0.6736719608306885
+      ],
+      "feasible": true,
+      "objective": 0.04621879756450653,
+      "best_objective": 0.008958591148257256,
+      "feasibility_ratio": 0.6666666666666666
+    },
+    {
+      "iteration": 88,
+      "candidate": [
+        -0.5552901029586792,
+        -0.7461718916893005
+      ],
+      "feasible": true,
+      "objective": 0.07787004113197327,
+      "best_objective": 0.008958591148257256,
+      "feasibility_ratio": 0.6704545454545454
+    },
+    {
+      "iteration": 89,
+      "candidate": [
+        -0.3364279270172119,
+        0.1932908296585083
+      ],
+      "feasible": true,
+      "objective": 0.27409911155700684,
+      "best_objective": 0.008958591148257256,
+      "feasibility_ratio": 0.6741573033707865
+    },
+    {
+      "iteration": 90,
+      "candidate": [
+        0.9055979251861572,
+        -0.267051100730896
+      ],
+      "feasible": false,
+      "objective": null,
+      "best_objective": 0.008958591148257256,
+      "feasibility_ratio": 0.6666666666666666
+    },
+    {
+      "iteration": 91,
+      "candidate": [
+        0.2608358860015869,
+        1.0590689182281494
+      ],
+      "feasible": true,
+      "objective": 0.6648002862930298,
+      "best_objective": 0.008958591148257256,
+      "feasibility_ratio": 0.6703296703296703
+    },
+    {
+      "iteration": 92,
+      "candidate": [
+        -0.9813445806503296,
+        -0.9851572513580322
+      ],
+      "feasible": true,
+      "objective": 0.09669240564107895,
+      "best_objective": 0.008958591148257256,
+      "feasibility_ratio": 0.6739130434782609
+    },
+    {
+      "iteration": 93,
+      "candidate": [
+        -0.6592934727668762,
+        0.832172155380249
+      ],
+      "feasible": true,
+      "objective": 2.169604778289795,
+      "best_objective": 0.008958591148257256,
+      "feasibility_ratio": 0.6774193548387096
+    },
+    {
+      "iteration": 94,
+      "candidate": [
+        0.5985283851623535,
+        -0.9145143032073975
+      ],
+      "feasible": false,
+      "objective": null,
+      "best_objective": 0.008958591148257256,
+      "feasibility_ratio": 0.6702127659574468
+    },
+    {
+      "iteration": 95,
+      "candidate": [
+        1.2037687301635742,
+        0.41562068462371826
+      ],
+      "feasible": false,
+      "objective": null,
+      "best_objective": 0.008958591148257256,
+      "feasibility_ratio": 0.6631578947368421
+    },
+    {
+      "iteration": 96,
+      "candidate": [
+        -0.054203033447265625,
+        -0.3331247568130493
+      ],
+      "feasible": true,
+      "objective": 0.07960297167301178,
+      "best_objective": 0.008958591148257256,
+      "feasibility_ratio": 0.6666666666666666
+    },
+    {
+      "iteration": 97,
+      "candidate": [
+        -0.032953500747680664,
+        0.9337406158447266
+      ],
+      "feasible": true,
+      "objective": 0.9314205050468445,
+      "best_objective": 0.008958591148257256,
+      "feasibility_ratio": 0.6701030927835051
+    },
+    {
+      "iteration": 98,
+      "candidate": [
+        1.2264702320098877,
+        -0.8501777648925781
+      ],
+      "feasible": false,
+      "objective": null,
+      "best_objective": 0.008958591148257256,
+      "feasibility_ratio": 0.6632653061224489
+    },
+    {
+      "iteration": 99,
+      "candidate": [
+        0.5820157527923584,
+        0.31389832496643066
+      ],
+      "feasible": true,
+      "objective": 0.09015633165836334,
+      "best_objective": 0.008958591148257256,
+      "feasibility_ratio": 0.6666666666666666
+    },
+    {
+      "iteration": 100,
+      "candidate": [
+        -0.6769475936889648,
+        -0.39761507511138916
+      ],
+      "feasible": true,
+      "objective": 0.10494311153888702,
+      "best_objective": 0.008958591148257256,
+      "feasibility_ratio": 0.67
+    },
+    {
+      "iteration": 101,
+      "candidate": [
+        -0.9636834263801575,
+        0.24782538414001465
+      ],
+      "feasible": true,
+      "objective": 1.4438709020614624,
+      "best_objective": 0.008958591148257256,
+      "feasibility_ratio": 0.6732673267326733
+    },
+    {
+      "iteration": 102,
+      "candidate": [
+        0.27735090255737305,
+        -0.1752856969833374
+      ],
+      "feasible": true,
+      "objective": 0.20001833140850067,
+      "best_objective": 0.008958591148257256,
+      "feasibility_ratio": 0.6764705882352942
+    },
+    {
+      "iteration": 103,
+      "candidate": [
+        0.8828940391540527,
+        1.0043830871582031
+      ],
+      "feasible": true,
+      "objective": 0.10343597829341888,
+      "best_objective": 0.008958591148257256,
+      "feasibility_ratio": 0.6796116504854369
+    },
+    {
+      "iteration": 104,
+      "candidate": [
+        -0.35768455266952515,
+        -1.0770740509033203
+      ],
+      "feasible": false,
+      "objective": null,
+      "best_objective": 0.008958591148257256,
+      "feasibility_ratio": 0.6730769230769231
+    },
+    {
+      "iteration": 105,
+      "candidate": [
+        -0.6060655117034912,
+        0.4874293804168701
+      ],
+      "feasible": true,
+      "objective": 1.1661896705627441,
+      "best_objective": 0.008958591148257256,
+      "feasibility_ratio": 0.6761904761904762
+    },
+    {
+      "iteration": 106,
+      "candidate": [
+        0.6326032876968384,
+        -0.5613038539886475
+      ],
+      "feasible": false,
+      "objective": null,
+      "best_objective": 0.008958591148257256,
+      "feasibility_ratio": 0.6698113207547169
+    },
+    {
+      "iteration": 107,
+      "candidate": [
+        0.06627261638641357,
+        0.7647874355316162
+      ],
+      "feasible": true,
+      "objective": 0.4929914176464081,
+      "best_objective": 0.008958591148257256,
+      "feasibility_ratio": 0.6728971962616822
+    },
+    {
+      "iteration": 108,
+      "candidate": [
+        -1.171940565109253,
+        -0.6910666227340698
+      ],
+      "feasible": true,
+      "objective": 0.31222864985466003,
+      "best_objective": 0.008958591148257256,
+      "feasibility_ratio": 0.6759259259259259
+    },
+    {
+      "iteration": 109,
+      "candidate": [
+        -0.9374284744262695,
+        1.162883996963501
+      ],
+      "feasible": true,
+      "objective": 4.302300453186035,
+      "best_objective": 0.008958591148257256,
+      "feasibility_ratio": 0.6788990825688074
+    },
+    {
+      "iteration": 110,
+      "candidate": [
+        0.324360728263855,
+        -1.2454167604446411
+      ],
+      "feasible": false,
+      "objective": null,
+      "best_objective": 0.008958591148257256,
+      "feasibility_ratio": 0.6727272727272727
+    },
+    {
+      "iteration": 111,
+      "candidate": [
+        1.0080323219299316,
+        0.0847465991973877
+      ],
+      "feasible": false,
+      "objective": null,
+      "best_objective": 0.008958591148257256,
+      "feasibility_ratio": 0.6666666666666666
+    },
+    {
+      "iteration": 112,
+      "candidate": [
+        -0.2532963752746582,
+        -0.0023653507232666016
+      ],
+      "feasible": true,
+      "objective": 0.06302628666162491,
+      "best_objective": 0.008958591148257256,
+      "feasibility_ratio": 0.6696428571428571
+    },
+    {
+      "iteration": 113,
+      "candidate": [
+        -0.18871235847473145,
+        0.0575408935546875
+      ],
+      "feasible": true,
+      "objective": 0.059554796665906906,
+      "best_objective": 0.008958591148257256,
+      "feasibility_ratio": 0.672566371681416
+    },
+    {
+      "iteration": 114,
+      "candidate": [
+        1.0703301429748535,
+        -0.13152849674224854
+      ],
+      "feasible": false,
+      "objective": null,
+      "best_objective": 0.008958591148257256,
+      "feasibility_ratio": 0.6666666666666666
+    },
+    {
+      "iteration": 115,
+      "candidate": [
+        0.4255704879760742,
+        1.1949822902679443
+      ],
+      "feasible": true,
+      "objective": 0.6428494453430176,
+      "best_objective": 0.008958591148257256,
+      "feasibility_ratio": 0.6695652173913044
+    },
+    {
+      "iteration": 116,
+      "candidate": [
+        -0.8336220383644104,
+        -1.1211459636688232
+      ],
+      "feasible": true,
+      "objective": 0.1761312186717987,
+      "best_objective": 0.008958591148257256,
+      "feasibility_ratio": 0.6724137931034483
+    },
+    {
+      "iteration": 117,
+      "candidate": [
+        -1.1195088624954224,
+        0.6552698612213135
+      ],
+      "feasible": true,
+      "objective": 3.076481342315674,
+      "best_objective": 0.008958591148257256,
+      "feasibility_ratio": 0.6752136752136753
+    },
+    {
+      "iteration": 118,
+      "candidate": [
+        0.12129616737365723,
+        -0.7376892566680908
+      ],
+      "feasible": false,
+      "objective": null,
+      "best_objective": 0.008958591148257256,
+      "feasibility_ratio": 0.6694915254237288
+    },
+    {
+      "iteration": 119,
+      "candidate": [
+        0.7265341281890869,
+        0.5920543670654297
+      ],
+      "feasible": true,
+      "objective": 0.061099573969841,
+      "best_objective": 0.008958591148257256,
+      "feasibility_ratio": 0.6722689075630253
+    },
+    {
+      "iteration": 120,
+      "candidate": [
+        -0.5144256949424744,
+        -0.5097889304161072
+      ],
+      "feasible": true,
+      "objective": 0.02624635398387909,
+      "best_objective": 0.008958591148257256,
+      "feasibility_ratio": 0.675
+    },
+    {
+      "iteration": 121,
+      "candidate": [
+        -0.44931501150131226,
+        1.050443172454834
+      ],
+      "feasible": true,
+      "objective": 2.2020766735076904,
+      "best_objective": 0.008958591148257256,
+      "feasibility_ratio": 0.6776859504132231
+    },
+    {
+      "iteration": 122,
+      "candidate": [
+        0.7889726161956787,
+        -0.9669173359870911
+      ],
+      "feasible": false,
+      "objective": null,
+      "best_objective": 0.008958591148257256,
+      "feasibility_ratio": 0.6721311475409836
+    },
+    {
+      "iteration": 123,
+      "candidate": [
+        0.2223367691040039,
+        0.1968919038772583
+      ],
+      "feasible": true,
+      "objective": 0.005025072023272514,
+      "best_objective": 0.005025072023272514,
+      "feasibility_ratio": 0.6747967479674797
+    },
+    {
+      "iteration": 124,
+      "candidate": [
+        -1.0161055326461792,
+        -0.2805691361427307
+      ],
+      "feasible": true,
+      "objective": 0.5695225596427917,
+      "best_objective": 0.005025072023272514,
+      "feasibility_ratio": 0.6774193548387096
+    },
+    {
+      "iteration": 125,
+      "candidate": [
+        -0.7807635068893433,
+        0.4436243772506714
+      ],
+      "feasible": true,
+      "objective": 1.4644891023635864,
+      "best_objective": 0.005025072023272514,
+      "feasibility_ratio": 0.68
+    },
+    {
+      "iteration": 126,
+      "candidate": [
+        0.48079657554626465,
+        -0.3710479140281677
+      ],
+      "feasible": false,
+      "objective": null,
+      "best_objective": 0.005025072023272514,
+      "feasibility_ratio": 0.6746031746031746
+    },
+    {
+      "iteration": 127,
+      "candidate": [
+        1.1641631126403809,
+        0.8088879585266113
+      ],
+      "feasible": true,
+      "objective": 0.22038818895816803,
+      "best_objective": 0.005025072023272514,
+      "feasibility_ratio": 0.6771653543307087
+    },
+    {
+      "iteration": 128,
+      "candidate": [
+        -0.09754681587219238,
+        -0.8816182613372803
+      ],
+      "feasible": false,
+      "objective": null,
+      "best_objective": 0.005025072023272514,
+      "feasibility_ratio": 0.671875
+    },
+    {
+      "iteration": 129,
+      "candidate": [
+        -0.08407700061798096,
+        0.12706506252288818
+      ],
+      "feasible": true,
+      "objective": 0.04351264610886574,
+      "best_objective": 0.005025072023272514,
+      "feasibility_ratio": 0.6744186046511628
+    },
+    {
+      "iteration": 130,
+      "candidate": [
+        1.1555843353271484,
+        -0.05437767505645752
+      ],
+      "feasible": false,
+      "objective": null,
+      "best_objective": 0.005025072023272514,
+      "feasibility_ratio": 0.6692307692307692
+    },
+    {
+      "iteration": 131,
+      "candidate": [
+        0.47221899032592773,
+        1.120422601699829
+      ],
+      "feasible": true,
+      "objective": 0.47307640314102173,
+      "best_objective": 0.005025072023272514,
+      "feasibility_ratio": 0.6717557251908397
+    },
+    {
+      "iteration": 132,
+      "candidate": [
+        -0.7672923803329468,
+        -1.1929562091827393
+      ],
+      "feasible": true,
+      "objective": 0.27272433042526245,
+      "best_objective": 0.005025072023272514,
+      "feasibility_ratio": 0.6742424242424242
+    },
+    {
+      "iteration": 133,
+      "candidate": [
+        -1.0295767784118652,
+        0.7421510219573975
+      ],
+      "feasible": true,
+      "objective": 3.0626094341278076,
+      "best_objective": 0.005025072023272514,
+      "feasibility_ratio": 0.6766917293233082
+    },
+    {
+      "iteration": 134,
+      "candidate": [
+        0.23091435432434082,
+        -0.658440351486206
+      ],
+      "feasible": false,
+      "objective": null,
+      "best_objective": 0.005025072023272514,
+      "feasibility_ratio": 0.6716417910447762
+    },
+    {
+      "iteration": 135,
+      "candidate": [
+        0.7975513935089111,
+        0.5105139017105103
+      ],
+      "feasible": true,
+      "objective": 0.12310662865638733,
+      "best_objective": 0.005025072023272514,
+      "feasibility_ratio": 0.674074074074074
+    },
+    {
+      "iteration": 136,
+      "candidate": [
+        -0.46278488636016846,
+        -0.5940731763839722
+      ],
+      "feasible": true,
+      "objective": 0.04472942277789116,
+      "best_objective": 0.005025072023272514,
+      "feasibility_ratio": 0.6764705882352942
+    },
+    {
+      "iteration": 137,
+      "candidate": [
+        -0.5253781080245972,
+        0.971306562423706
+      ],
+      "feasible": true,
+      "objective": 2.1890347003936768,
+      "best_objective": 0.005025072023272514,
+      "feasibility_ratio": 0.6788321167883211
+    },
+    {
+      "iteration": 138,
+      "candidate": [
+        0.7325954437255859,
+        -1.05368173122406
+      ],
+      "feasible": false,
+      "objective": null,
+      "best_objective": 0.005025072023272514,
+      "feasibility_ratio": 0.6739130434782609
+    },
+    {
+      "iteration": 139,
+      "candidate": [
+        0.12735629081726074,
+        0.28136909008026123
+      ],
+      "feasible": true,
+      "objective": 0.027303354814648628,
+      "best_objective": 0.005025072023272514,
+      "feasibility_ratio": 0.6762589928057554
+    },
+    {
+      "iteration": 140,
+      "candidate": [
+        -1.130462646484375,
+        -0.19884014129638672
+      ],
+      "feasible": true,
+      "objective": 0.8903986811637878,
+      "best_objective": 0.005025072023272514,
+      "feasibility_ratio": 0.6785714285714286
+    },
+    {
+      "iteration": 141,
+      "candidate": [
+        -0.8226684331893921,
+        0.3666621446609497
+      ],
+      "feasible": true,
+      "objective": 1.384343147277832,
+      "best_objective": 0.005025072023272514,
+      "feasibility_ratio": 0.6808510638297872
+    },
+    {
+      "iteration": 142,
+      "candidate": [
+        0.4195103645324707,
+        -0.44037914276123047
+      ],
+      "feasible": false,
+      "objective": null,
+      "best_objective": 0.005025072023272514,
+      "feasibility_ratio": 0.676056338028169
+    },
+    {
+      "iteration": 143,
+      "candidate": [
+        1.0642688274383545,
+        0.880814790725708
+      ],
+      "feasible": true,
+      "objective": 0.12739776074886322,
+      "best_objective": 0.005025072023272514,
+      "feasibility_ratio": 0.6783216783216783
+    },
+    {
+      "iteration": 144,
+      "candidate": [
+        -0.17776000499725342,
+        -0.806946337223053
+      ],
+      "feasible": false,
+      "objective": null,
+      "best_objective": 0.005025072023272514,
+      "feasibility_ratio": 0.6736111111111112
+    },
+    {
+      "iteration": 145,
+      "candidate": [
+        -0.2399120330810547,
+        0.8543386459350586
+      ],
+      "feasible": true,
+      "objective": 1.1768879890441895,
+      "best_objective": 0.005025072023272514,
+      "feasibility_ratio": 0.6758620689655173
+    },
+    {
+      "iteration": 146,
+      "candidate": [
+        0.9995200634002686,
+        -0.9366006255149841
+      ],
+      "feasible": false,
+      "objective": null,
+      "best_objective": 0.005025072023272514,
+      "feasibility_ratio": 0.6712328767123288
+    },
+    {
+      "iteration": 147,
+      "candidate": [
+        0.3158496618270874,
+        0.39803075790405273
+      ],
+      "feasible": true,
+      "objective": 0.01932552084326744,
+      "best_objective": 0.005025072023272514,
+      "feasibility_ratio": 0.673469387755102
+    },
+    {
+      "iteration": 148,
+      "candidate": [
+        -0.9240429401397705,
+        -0.31561726331710815
+      ],
+      "feasible": true,
+      "objective": 0.3993462026119232,
+      "best_objective": 0.005025072023272514,
+      "feasibility_ratio": 0.6756756756756757
+    },
+    {
+      "iteration": 149,
+      "candidate": [
+        -1.185326099395752,
+        0.17113161087036133
+      ],
+      "feasible": true,
+      "objective": 1.819692850112915,
+      "best_objective": 0.005025072023272514,
+      "feasibility_ratio": 0.6778523489932886
+    },
+    {
+      "iteration": 150,
+      "candidate": [
+        0.07478368282318115,
+        -0.24496209621429443
+      ],
+      "feasible": true,
+      "objective": 0.10040544718503952,
+      "best_objective": 0.005025072023272514,
+      "feasibility_ratio": 0.68
+    },
+    {
+      "iteration": 151,
+      "candidate": [
+        0.641115665435791,
+        1.0766515731811523
+      ],
+      "feasible": true,
+      "objective": 0.2587173581123352,
+      "best_objective": 0.005025072023272514,
+      "feasibility_ratio": 0.6821192052980133
+    },
+    {
+      "iteration": 152,
+      "candidate": [
+        -0.6194499135017395,
+        -1.0026675462722778
+      ],
+      "feasible": true,
+      "objective": 0.2089659869670868,
+      "best_objective": 0.005025072023272514,
+      "feasibility_ratio": 0.6842105263157895
+    },
+    {
+      "iteration": 153,
+      "candidate": [
+        -0.3687036633491516,
+        0.5572178363800049
+      ],
+      "feasible": true,
+      "objective": 0.8367857933044434,
+      "best_objective": 0.005025072023272514,
+      "feasibility_ratio": 0.6862745098039216
+    },
+    {
+      "iteration": 154,
+      "candidate": [
+        0.8890409469604492,
+        -0.4844934344291687
+      ],
+      "feasible": false,
+      "objective": null,
+      "best_objective": 0.005025072023272514,
+      "feasibility_ratio": 0.6818181818181818
+    },
+    {
+      "iteration": 155,
+      "candidate": [
+        0.2834964990615845,
+        0.6905736923217773
+      ],
+      "feasible": true,
+      "objective": 0.18528935313224792,
+      "best_objective": 0.005025072023272514,
+      "feasibility_ratio": 0.6838709677419355
+    },
+    {
+      "iteration": 156,
+      "candidate": [
+        -0.9747035503387451,
+        -0.7631468176841736
+      ],
+      "feasible": true,
+      "objective": 0.11914044618606567,
+      "best_objective": 0.005025072023272514,
+      "feasibility_ratio": 0.6858974358974359
+    },
+    {
+      "iteration": 157,
+      "candidate": [
+        -0.6659273505210876,
+        1.249495506286621
+      ],
+      "feasible": true,
+      "objective": 3.5856375694274902,
+      "best_objective": 0.005025072023272514,
+      "feasibility_ratio": 0.6878980891719745
+    },
+    {
+      "iteration": 158,
+      "candidate": [
+        0.575870156288147,
+        -1.1658216714859009
+      ],
+      "feasible": false,
+      "objective": null,
+      "best_objective": 0.005025072023272514,
+      "feasibility_ratio": 0.6835443037974683
+    },
+    {
+      "iteration": 159,
+      "candidate": [
+        1.2203235626220703,
+        0.0028655529022216797
+      ],
+      "feasible": false,
+      "objective": null,
+      "best_objective": 0.005025072023272514,
+      "feasibility_ratio": 0.6792452830188679
+    },
+    {
+      "iteration": 160,
+      "candidate": [
+        -0.0219343900680542,
+        -0.08638548851013184
+      ],
+      "feasible": true,
+      "objective": 0.004343425389379263,
+      "best_objective": 0.004343425389379263,
+      "feasibility_ratio": 0.68125
+    },
+    {
+      "iteration": 161,
+      "candidate": [
+        -0.04813230037689209,
+        1.1459856033325195
+      ],
+      "feasible": true,
+      "objective": 1.420401692390442,
+      "best_objective": 0.004343425389379263,
+      "feasibility_ratio": 0.6832298136645962
+    },
+    {
+      "iteration": 162,
+      "candidate": [
+        1.1928257942199707,
+        -1.2284384965896606
+      ],
+      "feasible": false,
+      "objective": null,
+      "best_objective": 0.004343425389379263,
+      "feasibility_ratio": 0.6790123456790124
+    },
+    {
+      "iteration": 163,
+      "candidate": [
+        0.5875842571258545,
+        0.10622155666351318
+      ],
+      "feasible": true,
+      "objective": 0.23795145750045776,
+      "best_objective": 0.004343425389379263,
+      "feasibility_ratio": 0.6809815950920245
+    },
+    {
+      "iteration": 164,
+      "candidate": [
+        -0.6532238721847534,
+        -0.023922443389892578
+      ],
+      "feasible": true,
+      "objective": 0.3975829780101776,
+      "best_objective": 0.004343425389379263,
+      "feasibility_ratio": 0.6829268292682927
+    },
+    {
+      "iteration": 165,
+      "candidate": [
+        -0.9874142408370972,
+        0.5043302774429321
+      ],
+      "feasible": true,
+      "objective": 2.1755034923553467,
+      "best_objective": 0.004343425389379263,
+      "feasibility_ratio": 0.6848484848484848
+    },
+    {
+      "iteration": 166,
+      "candidate": [
+        0.27178001403808594,
+        -0.5782752633094788
+      ],
+      "feasible": false,
+      "objective": null,
+      "best_objective": 0.004343425389379263,
+      "feasibility_ratio": 0.6807228915662651
+    },
+    {
+      "iteration": 167,
+      "candidate": [
+        0.9165408611297607,
+        0.7433099746704102
+      ],
+      "feasible": true,
+      "objective": 0.09813633561134338,
+      "best_objective": 0.004343425389379263,
+      "feasibility_ratio": 0.6826347305389222
+    },
+    {
+      "iteration": 168,
+      "candidate": [
+        -0.34249866008758545,
+        -0.669516384601593
+      ],
+      "feasible": true,
+      "objective": 0.1298714429140091,
+      "best_objective": 0.004343425389379263,
+      "feasibility_ratio": 0.6845238095238095
+    },
+    {
+      "iteration": 169,
+      "candidate": [
+        -0.5638784170150757,
+        0.265408992767334
+      ],
+      "feasible": true,
+      "objective": 0.672751784324646,
+      "best_objective": 0.004343425389379263,
+      "feasibility_ratio": 0.6863905325443787
+    },
+    {
+      "iteration": 170,
+      "candidate": [
+        0.6978332996368408,
+        -0.19279944896697998
+      ],
+      "feasible": false,
+      "objective": null,
+      "best_objective": 0.004343425389379263,
+      "feasibility_ratio": 0.6823529411764706
+    },
+    {
+      "iteration": 171,
+      "candidate": [
+        0.014470338821411133,
+        0.9822204113006592
+      ],
+      "feasible": true,
+      "objective": 0.9379615187644958,
+      "best_objective": 0.004343425389379263,
+      "feasibility_ratio": 0.6842105263157895
+    },
+    {
+      "iteration": 172,
+      "candidate": [
+        -1.247086763381958,
+        -1.0549838542938232
+      ],
+      "feasible": true,
+      "objective": 0.16846917569637299,
+      "best_objective": 0.004343425389379263,
+      "feasibility_ratio": 0.686046511627907
+    },
+    {
+      "iteration": 173,
+      "candidate": [
+        -0.8622751832008362,
+        0.916154146194458
+      ],
+      "feasible": true,
+      "objective": 3.083812952041626,
+      "best_objective": 0.004343425389379263,
+      "feasibility_ratio": 0.6878612716763006
+    },
+    {
+      "iteration": 174,
+      "candidate": [
+        0.37616539001464844,
+        -0.8326714038848877
+      ],
+      "feasible": false,
+      "objective": null,
+      "best_objective": 0.004343425389379263,
+      "feasibility_ratio": 0.6839080459770115
+    },
+    {
+      "iteration": 175,
+      "candidate": [
+        0.9428000450134277,
+        0.33606386184692383
+      ],
+      "feasible": false,
+      "objective": null,
+      "best_objective": 0.004343425389379263,
+      "feasibility_ratio": 0.68
+    },
+    {
+      "iteration": 176,
+      "candidate": [
+        -0.2954906225204468,
+        -0.4196978211402893
+      ],
+      "feasible": true,
+      "objective": 0.027829105034470558,
+      "best_objective": 0.004343425389379263,
+      "feasibility_ratio": 0.6818181818181818
+    },
+    {
+      "iteration": 177,
+      "candidate": [
+        -0.20389115810394287,
+        0.46021533012390137
+      ],
+      "feasible": true,
+      "objective": 0.43165403604507446,
+      "best_objective": 0.004343425389379263,
+      "feasibility_ratio": 0.6836158192090396
+    },
+    {
+      "iteration": 178,
+      "candidate": [
+        1.0366854667663574,
+        -0.38771891593933105
+      ],
+      "feasible": false,
+      "objective": null,
+      "best_objective": 0.004343425389379263,
+      "feasibility_ratio": 0.6797752808988764
+    },
+    {
+      "iteration": 179,
+      "candidate": [
+        0.43113887310028076,
+        0.7871100902557373
+      ],
+      "feasible": true,
+      "objective": 0.16065087914466858,
+      "best_objective": 0.004343425389379263,
+      "feasibility_ratio": 0.6815642458100558
+    },
+    {
+      "iteration": 180,
+      "candidate": [
+        -0.8098983764648438,
+        -0.8597580194473267
+      ],
+      "feasible": true,
+      "objective": 0.0721176490187645,
+      "best_objective": 0.004343425389379263,
+      "feasibility_ratio": 0.6833333333333333
+    },
+    {
+      "iteration": 181,
+      "candidate": [
+        -1.1432397365570068,
+        1.0338451862335205
+      ],
+      "feasible": true,
+      "objective": 4.6215057373046875,
+      "best_objective": 0.004343425389379263,
+      "feasibility_ratio": 0.6850828729281768
+    },
+    {
+      "iteration": 182,
+      "candidate": [
+        0.11572539806365967,
+        -0.9502490758895874
+      ],
+      "feasible": false,
+      "objective": null,
+      "best_objective": 0.004343425389379263,
+      "feasibility_ratio": 0.6813186813186813
+    },
+    {
+      "iteration": 183,
+      "candidate": [
+        0.760181188583374,
+        0.21867680549621582
+      ],
+      "feasible": false,
+      "objective": null,
+      "best_objective": 0.004343425389379263,
+      "feasibility_ratio": 0.6775956284153005
+    },
+    {
+      "iteration": 184,
+      "candidate": [
+        -0.49923980236053467,
+        -0.3024265766143799
+      ],
+      "feasible": true,
+      "objective": 0.05383378267288208,
+      "best_objective": 0.004343425389379263,
+      "feasibility_ratio": 0.6793478260869565
+    },
+    {
+      "iteration": 185,
+      "candidate": [
+        -0.40712785720825195,
+        0.6379932165145874
+      ],
+      "feasible": true,
+      "objective": 1.0663034915924072,
+      "best_objective": 0.004343425389379263,
+      "feasibility_ratio": 0.6810810810810811
+    },
+    {
+      "iteration": 186,
+      "candidate": [
+        0.8542027473449707,
+        -0.7204833030700684
+      ],
+      "feasible": false,
+      "objective": null,
+      "best_objective": 0.004343425389379263,
+      "feasibility_ratio": 0.6774193548387096
+    },
+    {
+      "iteration": 187,
+      "candidate": [
+        0.17053461074829102,
+        0.6145203113555908
+      ],
+      "feasible": true,
+      "objective": 0.20760300755500793,
+      "best_objective": 0.004343425389379263,
+      "feasibility_ratio": 0.679144385026738
+    },
+    {
+      "iteration": 188,
+      "candidate": [
+        -1.0912516117095947,
+        -0.5321816205978394
+      ],
+      "feasible": true,
+      "objective": 0.37063366174697876,
+      "best_objective": 0.004343425389379263,
+      "feasibility_ratio": 0.6808510638297872
+    },
+    {
+      "iteration": 189,
+      "candidate": [
+        -0.7056102752685547,
+        0.07482409477233887
+      ],
+      "feasible": true,
+      "objective": 0.6037981510162354,
+      "best_objective": 0.004343425389379263,
+      "feasibility_ratio": 0.6825396825396826
+    },
+    {
+      "iteration": 190,
+      "candidate": [
+        0.5326011180877686,
+        -0.14873230457305908
+      ],
+      "feasible": false,
+      "objective": null,
+      "best_objective": 0.004343425389379263,
+      "feasibility_ratio": 0.6789473684210526
+    },
+    {
+      "iteration": 191,
+      "candidate": [
+        1.0989305973052979,
+        1.1725096702575684
+      ],
+      "feasible": true,
+      "objective": 0.13426455855369568,
+      "best_objective": 0.004343425389379263,
+      "feasibility_ratio": 0.680628272251309
+    },
+    {
+      "iteration": 192,
+      "candidate": [
+        -0.1397411823272705,
+        -1.0987553596496582
+      ],
+      "feasible": false,
+      "objective": null,
+      "best_objective": 0.004343425389379263,
+      "feasibility_ratio": 0.6770833333333334
+    },
+    {
+      "iteration": 193,
+      "candidate": [
+        -0.12436163425445557,
+        0.7736506462097168
+      ],
+      "feasible": true,
+      "objective": 0.7968047857284546,
+      "best_objective": 0.004343425389379263,
+      "feasibility_ratio": 0.6787564766839378
+    },
+    {
+      "iteration": 194,
+      "candidate": [
+        1.1177401542663574,
+        -0.6998966932296753
+      ],
+      "feasible": false,
+      "objective": null,
+      "best_objective": 0.004343425389379263,
+      "feasibility_ratio": 0.6752577319587629
+    },
+    {
+      "iteration": 195,
+      "candidate": [
+        0.5125035047531128,
+        0.47367358207702637
+      ],
+      "feasible": true,
+      "objective": 0.02578369900584221,
+      "best_objective": 0.004343425389379263,
+      "feasibility_ratio": 0.676923076923077
+    },
+    {
+      "iteration": 196,
+      "candidate": [
+        -0.7294483780860901,
+        -0.5475814342498779
+      ],
+      "feasible": true,
+      "objective": 0.07301882654428482,
+      "best_objective": 0.004343425389379263,
+      "feasibility_ratio": 0.6785714285714286
+    },
+    {
+      "iteration": 197,
+      "candidate": [
+        -1.0674159526824951,
+        0.0954124927520752
+      ],
+      "feasible": true,
+      "objective": 1.3419854640960693,
+      "best_objective": 0.004343425389379263,
+      "feasibility_ratio": 0.6802030456852792
+    },
+    {
+      "iteration": 198,
+      "candidate": [
+        0.1906346082687378,
+        -0.013074159622192383
+      ],
+      "feasible": true,
+      "objective": 0.04124801978468895,
+      "best_objective": 0.004343425389379263,
+      "feasibility_ratio": 0.6818181818181818
+    },
+    {
+      "iteration": 199,
+      "candidate": [
+        0.835390567779541,
+        1.1571106910705566
+      ],
+      "feasible": true,
+      "objective": 0.20016777515411377,
+      "best_objective": 0.004343425389379263,
+      "feasibility_ratio": 0.6834170854271356
+    },
+    {
+      "iteration": 200,
+      "candidate": [
+        -0.42250508069992065,
+        -1.2396003007888794
+      ],
+      "feasible": false,
+      "objective": null,
+      "best_objective": 0.004343425389379263,
+      "feasibility_ratio": 0.68
+    }
+  ]
+}

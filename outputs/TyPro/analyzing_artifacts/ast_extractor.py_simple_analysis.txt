@@ -1,0 +1,102 @@
+Below is our comprehensive logic analysis for the ASTExtractor module (ast_extractor.py). This analysis describes step by step how the ASTExtractor class will traverse the Clang AST via clang.cindex to extract the various “fact” objects required by TyPro. Note that the extracted facts (TypeContextPair, Cast, FunctionPointer, ICall, and the supporting type constructs such as PointsTo, StructMember, UnionMember, etc.) directly follow the paper’s description. We also ensure that our extraction process integrates settings from config.yaml (for instance, using clang version 10 as required, the –O3 optimization setting, and expecting support for dynamic linking in a later pass). The design is not changed in any way and the Fact class—and its unique identifier assignment based on type and context—is used consistently throughout.
+
+──────────────────────────────
+1. Traversal and Context Management
+
+• Upon calling extract_facts(source_dir: str), the ASTExtractor will:
+ – Enumerate all C source files (*.c) in the provided directory.
+ – For each file, create a Clang TranslationUnit (using clang.cindex) with the proper compile flags (e.g., “-std=c99”, –O3 from config, and using clang version “10” as specified).
+
+• The extractor will then recursively visit every AST node in each TranslationUnit. To correctly capture context:
+ – We maintain a “current context” that is normally the enclosing function name (or the global variable name, if processing a global declaration).
+ – For nodes inside a function definition, the context is set to that function’s identifier. For global declarations, the context defaults to the global symbol name.
+ – This context information is used when creating TypeContextPair facts in order to improve precision (as explained in the paper).
+
+──────────────────────────────
+2. Generating the Core Facts
+
+A. TypeContextPair Facts  
+ • For every AST node representing an expression, declaration, or variable initialization, extract its type information:
+  – Query the node’s type (using the libclang API) and convert it to a canonical string.
+  – Determine its context (the current function name or global context).
+  – Use a helper (e.g., an internal dictionary mapping (type, context) tuples to unique IDs) to obtain or assign a unique identifier.
+  – Create a Fact of type “TypeContextPair” with fields: id, fact_type “TypeContextPair”, and data containing the type string and context.
+   This satisfies the paper’s requirement to represent every occurrence of type usage (e.g., expression type in a function, parameter types in function declarations, or even global variable types).
+
+B. Cast Facts  
+ • When a node represents a cast (which may be either explicit C-style casts, CXXCastExpr, or even ImplicitCastExpr nodes encountered via libclang), the extractor must:
+  – Identify the cast node’s destination type and its child expression’s source type.
+  – For both the source expression and the cast result, obtain their TypeContextPair IDs (using our unique id dictionary).
+  – Create a Fact of type “Cast” with data { "src_id": <id_of_source>, "dest_id": <id_of_cast_result> }.
+  – In this way, we capture all the explicit and implicit type conversions that later, in the Datalog rules, are used to model transitive propagation (rule (T)) and pointer aliasing (rule (P)). 
+  – (Note: Any chain of casts—e.g. from (fptr_long) to (fptr_int) and then used in an indirect call—will be recorded as multiple Cast facts, which may later be collapsed during the optimization phase.)
+
+C. FunctionPointer Facts  
+ • For address-taken functions (commonly detected by the “&” operator applied to a function declaration):
+  – When encountering a UnaryOperator node (or similar) that represents “address-of” and whose child is a FunctionDecl, record a Fact of type “FunctionPointer.”
+  – Extract the function name, the number of parameters, and whether the function is variadic (using the libclang API on the FunctionDecl).
+  – Use the unique id for the function’s type/context pair, and store additional metadata (e.g., num_args, is_vararg) as specified.
+  – This ensures that functions used via pointers outside of direct calls are recorded correctly.
+
+D. ICall (Indirect Call) Facts  
+ • For call expressions (AST nodes of kind CallExpr), determine if the call is indirect:
+  – Check the callee expression: if it does not directly resolve to a FunctionDecl (or if it is wrapped inside a cast that hides the direct reference), mark it as an indirect call.
+  – Retrieve the callee’s expression’s TypeContextPair id.
+  – Record a Fact of type “ICall” with data containing:
+   • the callee’s unique id (obtained as above),
+   • an identifier for the call site (this could be the node’s spelling or source location), and
+   • the number of arguments in the call.
+  – In addition, one may later record TypeCall facts (for the expected parameter and return types at the call site), but these are not strictly part of the minimal extraction in this module.
+
+E. Type Constructs (Pointers, Structs, Unions)  
+ • For every TypeContextPair fact just created, check if the type is a pointer or array:
+  – If yes, use libclang’s API (e.g., get_pointee()) to extract the pointee type.
+  – Recursively generate and record a TypeContextPair fact for the pointee in the same context.
+  – Additionally, create a “PointsTo” fact that links the original pointer’s id to the newly created pointee fact id.
+ • Similarly, if the type represents a struct or union (detected by type.kind or by the cursor kind such as StructDecl):
+  – Iterate over the field declarations (FieldDecl nodes) inside the struct.
+  – For each field, extract its type, record a corresponding TypeContextPair (using the same or a related context) and for structs create “StructMember” facts (including byte offset if available) or for unions “UnionMember” facts.
+  – These facts are essential for later propagations when function pointers are stored as struct members.
+
+──────────────────────────────
+3. Handling Special Cases and Ambiguities
+
+• Inline Assembly and Non-Standard AST Nodes:  
+ – The extractor will check the node kind. For nodes representing inline assembly or constructs not critical to C type propagation, the extractor can safely skip recording facts.  
+ – Any ambiguity (e.g., when an expression is not clearly part of a function or global variable) is resolved by defaulting to the nearest enclosing context.
+
+• Implicit Casts:  
+ – Even though not written by the programmer, implicit casts (e.g., qualifier casts) are visible in the AST. The extractor should record these similar to explicit casts, so that type propagation is fully modeled.  
+ – This ensures that scenarios such as casting a function pointer from one type to another (even implicitly) are correctly captured.
+
+• Unique ID Generation:  
+ – Throughout the extraction process, every new (type, context) pair is assigned a unique identifier using a function akin to N(t, c).  
+ – This step is crucial since later Datalog rules operate on fact predicates that rely on these unique IDs.  
+ – The internal dictionary mapping (type string, context) → id is maintained and consulted before creating a new TypeContextPair fact.
+
+──────────────────────────────
+4. Summary of Extraction Flow
+
+• Start from the root of each C source file’s AST.  
+• For each encountered declaration, expression, or statement:  
+ – Determine its type using clang’s type APIs.  
+ – Ascertain its context (function name, global scope, etc.).  
+ – Create a TypeContextPair fact if one does not already exist for that (type, context) combination.  
+• Specifically detect cast expressions and generate corresponding Cast facts linking the source’s TypeContextPair to the destination’s.  
+• For address-of operations applied to FunctionDecl nodes, generate FunctionPointer facts.  
+• For call expressions, decide whether they are indirect (if the callee is not directly a function declaration) and create ICall facts accordingly.  
+• For compound types (pointers, arrays, structs, unions), extract additional facts (PointsTo, StructMember, UnionMember) that describe their internal structure.  
+• Finally, return the complete list of fact objects (instances of the Fact class) that will later be fed directly into the fact optimizer and the DatalogSolver.
+
+──────────────────────────────
+5. Integration with Configuration and Overall Pipeline
+
+• The extraction logic respects the configuration file (config.yaml) by:  
+ – Using clang/LLVM version “10” and the –O3 optimization setting during parsing.  
+ – Ensuring that dynamic linking support is anticipated (e.g., by ensuring global declarations and module-level contexts are properly recorded).  
+• The facts output by this module will be in a structured format (likely JSON or a similar text format) so that downstream tools (fact_optimizer.py and datalog_solver.py) can process them without discrepancies.
+
+──────────────────────────────
+Conclusion
+
+This logic analysis outlines a clear, step‐by‐step approach for the ASTExtractor. It shows how we map C source code’s AST to a comprehensive set of facts representing type and context information, casts, function pointer usages, and indirect calls—all of which form the foundation for TyPro’s datalog-based target set computation. This analysis respects the original paper’s methodology and aligns with the modular design and configuration (from config.yaml) specified in our project plan.

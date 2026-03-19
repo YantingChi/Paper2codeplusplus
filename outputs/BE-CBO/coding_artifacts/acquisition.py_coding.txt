@@ -1,0 +1,190 @@
+## Code: acquisition.py
+```python
+"""
+acquisition.py
+
+This module implements the AcquisitionOptimizer class which optimizes the 
+acquisition function (e.g., Expected Improvement) under the dynamic feasibility 
+constraint derived from the deep ensemble classifier. The optimization consists 
+of two phases:
+  1. A pre-optimization step using Adam to nudge a candidate point toward the 
+     decision boundary of the feasibility classifier (target feasibility ≃ 0.5).
+  2. A constrained optimization refinement using SciPy's SLSQP optimizer that 
+     maximizes the acquisition function while enforcing that the candidate 
+     satisfies: C(x) ≥ (0.5 - σ_E(x)).
+
+The final candidate is returned as a torch.Tensor.
+"""
+
+import numpy as np
+import torch
+from torch import Tensor
+from torch.optim import Adam
+from scipy.optimize import minimize
+from typing import Callable, Optional
+
+from config import config
+from utils import to_device, get_logger
+
+class AcquisitionOptimizer:
+    """
+    AcquisitionOptimizer bridges the GP surrogate's acquisition (e.g., EI) and
+    the deep ensemble classifier's prediction to propose a new candidate design 
+    that is both promising in objective value and close to the feasibility boundary.
+    
+    Public Method:
+      - optimize(acq_func: Callable, classifier: DeepEnsembleClassifier, bounds: Tensor) -> Tensor
+    """
+    def __init__(self, config_obj: Optional[object] = None) -> None:
+        """
+        Initializes the AcquisitionOptimizer with configuration settings.
+        
+        Args:
+            config_obj (optional): Configuration object; if None, uses global config.
+        
+        Default hyperparameters used (if not set externally):
+            - Pre-optimization learning rate: 1e-2.
+            - Pre-optimization iterations: 50.
+            - SLSQP maximum iterations: 100.
+            - SLSQP tolerance (ftol): 1e-6.
+        """
+        self.config = config_obj if config_obj is not None else config
+        self.device = self.config.general.device
+        
+        # Default settings for pre-optimization and SLSQP refinement
+        self.pre_opt_lr: float = 1e-2
+        self.pre_opt_iters: int = 50
+        self.slsqp_max_iter: int = 100
+        self.slsqp_ftol: float = 1e-6
+        
+        self.logger = get_logger("AcquisitionOptimizer")
+        self.logger.info("AcquisitionOptimizer initialized with pre_opt_lr=%.2e, pre_opt_iters=%d, "
+                         "SLSQP max_iter=%d, ftol=%.2e.",
+                         self.pre_opt_lr, self.pre_opt_iters, self.slsqp_max_iter, self.slsqp_ftol)
+    
+    def optimize(self, acq_func: Callable[[Tensor], Tensor], classifier: object, bounds: Tensor) -> Tensor:
+        """
+        Optimizes the acquisition function subject to the dynamic feasibility constraint.
+        
+        Args:
+            acq_func (Callable): Function taking a tensor x (shape [n, d]) and returning
+                                 a scalar tensor (the acquisition value, e.g., EI).
+            classifier: An instance of DeepEnsembleClassifier providing 
+                        predict(x) -> (feasibility_probability, uncertainty).
+            bounds (Tensor): A tensor of shape [2, d] where bounds[0] contains lower bounds 
+                             and bounds[1] contains upper bounds for each design dimension.
+                             
+        Returns:
+            Tensor: A candidate design point as a 1D torch.Tensor on the configured device.
+        """
+        # Ensure bounds are on the proper device
+        bounds = to_device(bounds, self.device)
+        d = bounds.shape[1]
+        
+        # Pre-optimization: initialize candidate randomly within bounds.
+        lower_bounds = bounds[0]
+        upper_bounds = bounds[1]
+        x_init = lower_bounds + (upper_bounds - lower_bounds) * torch.rand(d, device=self.device)
+        x = x_init.clone().detach().requires_grad_(True)
+        
+        self.logger.info("Starting pre-optimization with initial candidate: %s", x.detach().cpu().numpy())
+        
+        # Pre-optimize: use Adam optimizer to adjust x so that the classifier's feasibility prediction nears 0.5.
+        optimizer_adam = Adam([x], lr=self.pre_opt_lr)
+        for it in range(self.pre_opt_iters):
+            optimizer_adam.zero_grad()
+            # Classifier expects input of shape [n, d]
+            x_input = x.unsqueeze(0)
+            feasibility_prob, uncertainty = classifier.predict(x_input)
+            # MSE loss: encourage candidate so that C(x) ~ 0.5 (i.e., near the boundary)
+            loss = (feasibility_prob[0] - 0.5) ** 2
+            loss.backward()
+            optimizer_adam.step()
+            # Project updated candidate x back into the design bounds.
+            with torch.no_grad():
+                x.data = torch.max(torch.min(x, upper_bounds), lower_bounds)
+            if (it + 1) % max(1, self.pre_opt_iters // 5) == 0:
+                self.logger.info("Pre-opt iter %d/%d: Loss=%.6f, Feasibility=%.6f, Uncertainty=%.6f",
+                                 it + 1, self.pre_opt_iters, loss.item(), feasibility_prob.item(), uncertainty.item())
+        x_pre = x.detach().clone()
+        self.logger.info("Pre-optimization complete. x_pre = %s", x_pre.cpu().numpy())
+        
+        # Define the objective for SLSQP: minimize negative acquisition function so as to maximize EI.
+        def objective_np(x_np: np.ndarray) -> float:
+            with torch.no_grad():
+                x_tensor = torch.tensor(x_np, dtype=torch.float32, device=self.device)
+                if x_tensor.dim() == 1:
+                    x_tensor = x_tensor.unsqueeze(0)
+                acq_value = acq_func(x_tensor)
+                return -acq_value.item()
+        
+        # Define the inequality constraint for SLSQP:
+        # Constraint: g(x) = C(x) - (0.5 - σ_E(x)) >= 0.
+        def constraint_np(x_np: np.ndarray) -> float:
+            with torch.no_grad():
+                x_tensor = torch.tensor(x_np, dtype=torch.float32, device=self.device)
+                if x_tensor.dim() == 1:
+                    x_tensor = x_tensor.unsqueeze(0)
+                feasibility_prob, uncertainty = classifier.predict(x_tensor)
+                return feasibility_prob.item() - (0.5 - uncertainty.item())
+        
+        # Prepare bounds for SLSQP: convert torch bounds to list of (lower, upper) tuples.
+        lower_np = lower_bounds.cpu().numpy()
+        upper_np = upper_bounds.cpu().numpy()
+        bounds_list = list(zip(lower_np, upper_np))
+        
+        # SLSQP optimizer options.
+        options = {
+            'maxiter': self.slsqp_max_iter,
+            'ftol': self.slsqp_ftol,
+            'disp': False
+        }
+        
+        x0_np = x_pre.cpu().numpy()
+        self.logger.info("Starting SLSQP optimization with initial candidate: %s", x0_np)
+        try:
+            result = minimize(
+                fun=objective_np,
+                x0=x0_np,
+                method='SLSQP',
+                bounds=bounds_list,
+                constraints={'type': 'ineq', 'fun': constraint_np},
+                options=options
+            )
+            if result.success:
+                x_final_np = result.x
+                self.logger.info("SLSQP converged. Final candidate: %s", x_final_np)
+            else:
+                self.logger.warning("SLSQP did not converge. Using pre-optimized candidate.")
+                x_final_np = x0_np
+        except Exception as e:
+            self.logger.error("SLSQP optimization failed (%s). Using pre-optimized candidate.", str(e))
+            x_final_np = x0_np
+        
+        # Convert the final candidate from numpy back to torch tensor.
+        x_final = torch.tensor(x_final_np, dtype=torch.float32, device=self.device)
+        return x_final
+
+# For independent module testing.
+if __name__ == "__main__":
+    # Dummy acquisition function for testing.
+    def dummy_acq(x: Tensor) -> Tensor:
+        # A simple dummy function: return 1 - sum of x (to simulate EI).
+        return 1.0 - torch.sum(x)
+    
+    # Dummy classifier with constant prediction.
+    class DummyClassifier:
+        def predict(self, x: Tensor) -> (Tensor, Tensor):
+            batch_size = x.shape[0]
+            # Return feasibility probability 0.45 and uncertainty 0.05 for all samples.
+            return torch.full((batch_size,), 0.45, device=x.device), torch.full((batch_size,), 0.05, device=x.device)
+    
+    dummy_classifier = DummyClassifier()
+    # Define dummy bounds for a 3-dimensional problem.
+    dummy_bounds = torch.tensor([[0.0, 0.0, 0.0],
+                                 [1.0, 1.0, 1.0]], dtype=torch.float32)
+    
+    optimizer = AcquisitionOptimizer()
+    candidate = optimizer.optimize(dummy_acq, dummy_classifier, dummy_bounds)
+    print("Optimized candidate:", candidate.cpu().numpy())
+```

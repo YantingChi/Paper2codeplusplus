@@ -1,0 +1,126 @@
+Below is a detailed logic analysis for the Evaluator class (to be implemented in evaluation.py). This analysis explains how the evaluation module should set up, run, and measure the experiments so that the entire pipeline reproduces the TyPro experiments as described in the paper.
+
+──────────────────────────────
+1. General Evaluation Objectives
+
+• Correctness:  
+  – Verify that the TyPro-protected binary produces the same outputs as the unprotected version.  
+  – Confirm that no benchmark or unit test crashes (i.e., all indirect call targets are correctly preserved).
+
+• Security (Target Set Reduction):  
+  – Measure, for each benchmark, the computed TargetSet mapping—that is, the number of allowed (validated) function targets per indirect call.  
+  – Compute the average target set size across all indirect calls reached during execution.  
+  – Although the paper compares TyPro with Clang CFI, IFCC, and CFGuard, our evaluation will primarily report TyPro’s numbers and later (if available) correlate to published baselines.
+
+• Performance Overhead:  
+  – Run the protected binary and compare its runtime with an unprotected baseline.  
+  – Collect multiple (e.g., 10 or more) runs per benchmark to compute the mean and standard deviation.  
+  – Verify that the overall overhead is negligible (around –0.3% to a few percent extra as per the paper).
+
+• Binary Size Overhead:  
+  – Measure the file size of TyPro-transformed binaries versus their unmodified counterparts.  
+  – Report the percentage increase in binary size (expecting an average of roughly 9.1% and larger increases on cases like gobmk).
+
+──────────────────────────────
+2. Integration of Configuration Parameters
+
+• The evaluator must read values from config.yaml (using, for example, pyyaml). Key parameters include:  
+  – Build settings such as "-O3", use of link-time optimization, and clang version ("10").  
+  – Runtime dynamic linking is enabled in the config; thus, the evaluator should also optionally measure any additional overhead (or dynamic updating times) from the runtime_enforcer component.  
+  – Benchmarks are defined as SPEC CPU 2006 plus real-world programs (Apache, lighttpd, nginx, pureftpd, vsftpd, memcached, redis).  
+  – Metrics to be recorded are correctness, security (average target set size), performance overhead, and binary size overhead.
+
+──────────────────────────────
+3. Evaluator Workflow and Method Logic
+
+A. Benchmark Setup  
+  • The Evaluator should (based on configuration) iterate over all benchmark programs.  
+  • For each benchmark, there will be two builds:  
+   – An unprotected (baseline) binary built with regular Clang/LLVM 10 using the provided optimization flags.  
+   – The TyPro-protected binary produced by running the full pipeline (AST extraction, fact optimization, datalog solver, IR transformation, etc.).  
+  • The evaluator should ensure that the environment (e.g., CPU governor, constant machine state) is controlled to minimize noise in the measurements.
+
+B. Correctness Evaluation  
+  • For a given benchmark, the evaluator will run both the baseline and the protected binary with their known inputs (for SPEC CPU 2006, use the provided input sets; for server applications, use representative request sets).  
+  • The evaluator should compare the outputs of both versions. A mismatch, crash, or error in the TyPro-protected binary indicates a failure in correctness.  
+  • Log results per benchmark, storing a Boolean flag (or error message) that indicates whether the program output matches expected behavior.
+
+C. Security (Target Set) Measurement  
+  • The TyPro pipeline outputs a TargetSet mapping (from the Datalog solver) that maps each indirect call’s unique identifier to a list of allowed function IDs.  
+  • To gauge security, the evaluator should:  
+   – Parse the output of the Soufflé solver (or the produced file) that contains this mapping.  
+   – For each indirect call reached during execution (if runtime instrumentation is available) or computed at compile time, compute the number of allowed targets.  
+   – Compute the average (geometric or arithmetic mean as appropriate) across all such indirect calls.  
+  • Finally, report this average target set size per benchmark as a security metric.
+
+D. Performance Overhead Measurement  
+  • Using Python’s timing mechanisms or by calling external timing tools, the evaluator should:  
+   – Run each binary (baseline and protected) for a given benchmark at least 10 times.  
+   – Capture the execution time for each run.  
+   – Compute the average runtime and the standard deviation.  
+  • The performance overhead is then given as the percentage increase (or decrease) of the protected binary’s runtime relative to the unprotected one.  
+  • Log these values (mean runtime, relative overhead percentage, and standard deviation).
+
+E. Binary Size Overhead Measurement  
+  • The evaluator must determine the file sizes of the produced binaries.  
+  • This involves:  
+   – Reading the file size in bytes for the baseline binary.  
+   – Reading the file size for the TyPro-protected binary.  
+   – Calculating the percentage increase in size.  
+  • Report these results and optionally flag any significant deviations (for instance, if any binary exceeds the “worst-case” reported in the paper).
+
+F. Dynamic Linking / Runtime Module Update  
+  • If dynamic linking is enabled (as per the config), the evaluator should include tests that load additional modules at runtime.  
+  • Measure the additional time required for:  
+   – Loading the module summary via the runtime enforcer.  
+   – Recomputing and triggering any just-in-time switch-case recompilation for new target sets.  
+  – Report these times as part of performance overhead metrics.
+
+G. Aggregation and Reporting  
+  • After running all benchmarks/tests, the evaluator aggregates metrics into a dictionary structure. For example, the output dictionary might include keys like:  
+   – "correctness": {benchmark_name: True/False or error details}  
+   – "target_set": {benchmark_name: average_target_set_size}  
+   – "performance": {benchmark_name: {"baseline_runtime": value, "protected_runtime": value, "overhead(%)": value, "std_dev": value}}  
+   – "binary_size": {benchmark_name: {"baseline_size": value, "protected_size": value, "overhead(%)": value}}  
+  • Finally, the Evaluator returns the compiled dictionary for logging and further analysis.
+
+──────────────────────────────
+4. Measurement Granularity and Statistical Considerations
+
+• Each benchmark should be run several times (the paper suggests at least 10 runs) to ensure that random fluctuations are averaged out.  
+• The evaluator should log the standard deviation of the runtime measurements (as noted in the paper, e.g., SPEC had standard deviations ≤0.76% on average).  
+• Where possible, the evaluator should also check that the runtime differences are within the margin of error, thereby validating that the TyPro protection does not introduce significant performance penalties.
+
+──────────────────────────────
+5. Interaction with Other Modules
+
+• The Evaluator class will rely on the outputs from earlier stages of the pipeline:  
+  – The DatalogSolver’s TargetSet mapping will be parsed to compute the security metric (average target set size).  
+  – The code transformation (performed by the CodeTransformer) should yield an LLVM IR or final binary whose path is then used for runtime and binary size measurement.  
+  – The Evaluator may invoke the runtime enforcer (if dynamic linking tests are to be run) to simulate module loading and target set updates.
+  
+• The Evaluator uses utilities from utils.py (for reading configuration, file I/O, logging) to ensure a uniform reporting format.
+
+──────────────────────────────
+6. Summary of Logical Flow for Evaluator.run_benchmarks()
+
+1. Read and parse configuration from config.yaml to get the list of benchmarks and metric definitions.
+2. For each benchmark:
+  a. Identify or build the baseline (unprotected) binary and remove any TyPro modifications.
+  b. Identify or build the TyPro-protected binary (ensuring that the invariant transformations, fact extractions, and Datalog solving have been applied).
+  c. Run the baseline binary multiple times, capturing runtime measurements and outputs.
+  d. Run the protected binary multiple times, again capturing runtime measurements and outputs.
+  e. Compare program outputs to determine correctness.
+  f. Read the final TargetSet mapping produced by the DatalogSolver to compute the average number of allowed targets per indirect call.
+  g. Get the file sizes for both binaries and compute the size overhead.
+3. Additionally, if runtime dynamic linking is enabled, run tests that load extra modules and record the extra initialization and re-JIT times.
+4. Aggregate and return all measurement metrics in a structured dictionary.
+
+──────────────────────────────
+7. Final Considerations
+
+• Precision: The evaluation module must carefully distinguish between different types of benchmarks (compute-bound SPEC CPU 2006 versus server workloads such as Apache or redis) and report metrics in a comparable way.  
+• Reproducibility: All steps—from controlled environment settings (following the config details for optimization, CPU governor, etc.) to repeated benchmark runs—should be logged so that the experiment is reproducible.  
+• Documentation: Any assumptions (for example, how the TargetSet file is parsed or the exact command-line used to invoke benchmarks) should be well documented in the evaluation module so that future researchers can replicate the experiments.
+
+This logic analysis provides a clear blueprint for how evaluation.py—and specifically the Evaluator class’s run_benchmarks() method—should be structured and implemented to mimic the experimental methodology described in the TyPro paper while adhering to the provided design and configuration.

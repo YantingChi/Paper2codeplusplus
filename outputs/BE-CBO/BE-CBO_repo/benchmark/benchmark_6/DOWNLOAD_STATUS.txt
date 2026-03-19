@@ -1,0 +1,22 @@
+paper_benchmark_name: 4D welded beam design
+paper_research_field: Constrained Bayesian Optimization
+matched_benchmark_name: 4D welded beam design
+matched_research_field: Structural Design Optimization
+name_match_type: exact
+field_match_status: same_field
+status: well_established_formula
+materialization_strategy: generate_definition
+source_type: literature_formula
+source_url: Not provided
+match_reason: A classical engineering benchmark with full name matching commonly used in optimization studies.
+definition_summary: A four-dimensional structural design optimization benchmark for a welded beam, with cost minimization under mechanical and geometric constraints.
+equations_or_components:
+- Cost function and constraint equations for bending, shear, and deflection (standard formulations)
+variables_or_inputs:
+- Beam dimensions: thickness, length, width, and weld size
+constraints_or_bounds:
+- Mechanical stress and deflection bounds as established in the literature.
+license_or_access_notes:
+- Widely recognized academic benchmark.
+expected_artifacts:
+- benchmark_definition.txt

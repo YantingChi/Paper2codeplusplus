@@ -1,0 +1,15 @@
+2026-03-19 03:59:00,728 [INFO] Benchmark-Townsend: Candidate [-2.0, -2.0] is infeasible as per constraint evaluation.
+2026-03-19 03:59:00,728 [INFO] Benchmark-Townsend: Candidate [-2.0, 1.5] is infeasible as per constraint evaluation.
+2026-03-19 03:59:00,728 [INFO] Benchmark-Townsend: Candidate [0.0, 1.7000000476837158] is infeasible as per constraint evaluation.
+2026-03-19 03:59:00,728 [INFO] Benchmark-Townsend: Candidate [2.200000047683716, 1.600000023841858] is infeasible as per constraint evaluation.
+2026-03-19 03:59:00,729 [WARNING] Evaluation: Classifier performance data ('classifier_true_labels' and/or 'classifier_pred_probs') missing. Skipping balanced accuracy computation.
+2026-03-19 03:59:00,729 [INFO] Evaluation: Evaluation Metrics Computed: Best Objective = -1.3079232530820846, Feasibility Ratio = 0.3333, Balanced Accuracy = None, Total Evaluations = 6
+2026-03-19 03:59:00,729 [INFO] Benchmark-Simionescu: Candidate [1.0, 0.5] is infeasible as per constraint evaluation.
+2026-03-19 03:59:00,729 [INFO] Benchmark-Simionescu: Candidate [-0.800000011920929, 0.4000000059604645] is infeasible as per constraint evaluation.
+2026-03-19 03:59:00,729 [WARNING] Evaluation: Classifier performance data ('classifier_true_labels' and/or 'classifier_pred_probs') missing. Skipping balanced accuracy computation.
+2026-03-19 03:59:00,729 [INFO] Evaluation: Evaluation Metrics Computed: Best Objective = 0.0, Feasibility Ratio = 0.6667, Balanced Accuracy = None, Total Evaluations = 6
+2026-03-19 03:59:00,729 [INFO] Benchmark-LSQ: Candidate [0.10000000149011612, 0.10000000149011612] is infeasible as per constraint evaluation.
+2026-03-19 03:59:00,729 [INFO] Benchmark-LSQ: Candidate [0.6000000238418579, 0.10000000149011612] is infeasible as per constraint evaluation.
+2026-03-19 03:59:00,729 [INFO] Benchmark-LSQ: Candidate [0.20000000298023224, 0.6000000238418579] is infeasible as per constraint evaluation.
+2026-03-19 03:59:00,729 [WARNING] Evaluation: Classifier performance data ('classifier_true_labels' and/or 'classifier_pred_probs') missing. Skipping balanced accuracy computation.
+2026-03-19 03:59:00,729 [INFO] Evaluation: Evaluation Metrics Computed: Best Objective = 1.0, Feasibility Ratio = 0.5000, Balanced Accuracy = None, Total Evaluations = 6

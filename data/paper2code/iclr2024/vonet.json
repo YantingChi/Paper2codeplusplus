@@ -1,0 +1,3639 @@
+{
+    "paper_id": "vonet",
+    "header": {
+        "generated_with": "S2ORC 1.0.0",
+        "date_generated": "2025-02-25T21:49:48.700884Z"
+    },
+    "title": "VONET: UNSUPERVISED VIDEO OBJECT LEARNING WITH PARALLEL U-NET ATTENTION AND OBJECT-WISE SEQUENTIAL VAE",
+    "authors": [
+        {
+            "first": "Haonan",
+            "middle": [],
+            "last": "Yu",
+            "suffix": "",
+            "affiliation": {},
+            "email": "haonan.yu@horizon.cc"
+        },
+        {
+            "first": "Wei",
+            "middle": [],
+            "last": "Xu",
+            "suffix": "",
+            "affiliation": {},
+            "email": "wei.xu@horizon.cc"
+        }
+    ],
+    "year": "",
+    "venue": null,
+    "identifiers": {},
+    "abstract": "Unsupervised video object learning seeks to decompose video scenes into structural object representations without any supervision from depth, optical flow, or segmentation. We present VONet, an innovative approach that is inspired by MONet. While utilizing a U-Net architecture, VONet employs an efficient and effective parallel attention inference process, generating attention masks for all slots simultaneously. Additionally, to enhance the temporal consistency of each mask across consecutive video frames, VONet develops an object-wise sequential VAE framework. The integration of these innovative encoder-side techniques, in conjunction with an expressive transformer-based decoder, establishes VONet as the leading unsupervised method for object learning across five MOVI datasets, encompassing videos of diverse complexities. Code is available at https://github.com/hnyu/vonet.",
+    "pdf_parse": {
+        "paper_id": "vonet",
+        "_pdf_hash": "",
+        "abstract": [
+            {
+                "text": "Unsupervised video object learning seeks to decompose video scenes into structural object representations without any supervision from depth, optical flow, or segmentation. We present VONet, an innovative approach that is inspired by MONet. While utilizing a U-Net architecture, VONet employs an efficient and effective parallel attention inference process, generating attention masks for all slots simultaneously. Additionally, to enhance the temporal consistency of each mask across consecutive video frames, VONet develops an object-wise sequential VAE framework. The integration of these innovative encoder-side techniques, in conjunction with an expressive transformer-based decoder, establishes VONet as the leading unsupervised method for object learning across five MOVI datasets, encompassing videos of diverse complexities. Code is available at https://github.com/hnyu/vonet.",
+                "cite_spans": [],
+                "ref_spans": [],
+                "eq_spans": [],
+                "section": "Abstract",
+                "sec_num": null
+            }
+        ],
+        "body_text": [
+            {
+                "text": "Unsupervised video object learning has garnered increasing attention in recent years. It focuses on the extraction of structural object representations from video sequences, without the aid of any supervision, such as depth information, optical flow, or labeled segmentation masks. The goal is to enable machines to automatically learn to discern and understand objects within video streams, an essential capability with wide-ranging applications in fields such as autonomous robotics (Veerapaneni et al., 2020; Creswell et al., 2021) , surveillance (Jiang et al., 2019) , and video content analysis (Zhou et al., 2022) . The utilization of such object-centric representations could lead to improved sample efficiency, robustness, and generalization to novel tasks (Greff et al., 2020) . Slot attention methods (Locatello et al., 2020; Kipf et al., 2021; Elsayed et al., 2022; Singh et al., 2022b) have recently demonstrated significant successes in video object learning. They typically utilize a CNN to extract a feature map from an input image. This feature map is spatially flattened into a sequence of features, which are then queried by each slot latent to generate an attention mask. Our observation is that slot attention often encounters a dilemma, referred to as \"granularity versus continuity\". To generate fine-grained attention masks, it is necessary to select a large spatial shape for the feature map. However, doing so makes it challenging to ensure the smoothness of the mask due to the nature of the Key-Query-Value attention mechanism (Locatello et al., 2020) . Sometimes the absence of smoothness may result in significant mask quality degradation. This paper introduces VONet for unsupervised video object learning. Inspired by MONet (Burgess et al., 2019) for image object learning, we posit that the inductive bias for spatial locality, as seen in the U-Net (Ronneberger et al., 2015) of MONet, offers a solution to the dilemma. However, MONet's recurrent attention generation, forwarding the same U-Net multiple times sequentially, is very inefficient when handling a large number of slots, and consequently impedes its further application to video. Our first key innovation is an efficient and effective parallel attention inference process (Figure 1 , b) that generates attention masks for all slots simultaneously from a U-Net. It can sustain a nearly constant inference time as the number of slots increases within a reasonable range. Furthermore, to achieve temporal consistency of objects between adjacent video frames, VONet incorporates an object-wise sequential VAE framework. This framework adapts the conventional sequential VAE (Kingma & Welling, 2013; Hafner et al., 2019) to the context of multi-object interaction and dynamics. The minimization of the KLD between the posterior and a forecasted prior models the dynamic interaction and coevolvement of multiple objects in the scene. This encourages the emergence of slot content that is temporally predictable and thus consistent in a holistic manner. By adjusting the weight of the KLD, we are able to control the importance of temporal consistency relative to video reconstruction quality.",
+                "cite_spans": [
+                    {
+                        "start": 485,
+                        "end": 511,
+                        "text": "(Veerapaneni et al., 2020;",
+                        "ref_id": "BIBREF35"
+                    },
+                    {
+                        "start": 512,
+                        "end": 534,
+                        "text": "Creswell et al., 2021)",
+                        "ref_id": "BIBREF7"
+                    },
+                    {
+                        "start": 550,
+                        "end": 570,
+                        "text": "(Jiang et al., 2019)",
+                        "ref_id": "BIBREF21"
+                    },
+                    {
+                        "start": 600,
+                        "end": 619,
+                        "text": "(Zhou et al., 2022)",
+                        "ref_id": "BIBREF38"
+                    },
+                    {
+                        "start": 765,
+                        "end": 785,
+                        "text": "(Greff et al., 2020)",
+                        "ref_id": "BIBREF14"
+                    },
+                    {
+                        "start": 811,
+                        "end": 835,
+                        "text": "(Locatello et al., 2020;",
+                        "ref_id": "BIBREF28"
+                    },
+                    {
+                        "start": 836,
+                        "end": 854,
+                        "text": "Kipf et al., 2021;",
+                        "ref_id": "BIBREF25"
+                    },
+                    {
+                        "start": 855,
+                        "end": 876,
+                        "text": "Elsayed et al., 2022;",
+                        "ref_id": "BIBREF8"
+                    },
+                    {
+                        "start": 877,
+                        "end": 897,
+                        "text": "Singh et al., 2022b)",
+                        "ref_id": null
+                    },
+                    {
+                        "start": 1554,
+                        "end": 1578,
+                        "text": "(Locatello et al., 2020)",
+                        "ref_id": "BIBREF28"
+                    },
+                    {
+                        "start": 1749,
+                        "end": 1777,
+                        "text": "MONet (Burgess et al., 2019)",
+                        "ref_id": "BIBREF2"
+                    },
+                    {
+                        "start": 1881,
+                        "end": 1907,
+                        "text": "(Ronneberger et al., 2015)",
+                        "ref_id": "BIBREF30"
+                    },
+                    {
+                        "start": 2664,
+                        "end": 2688,
+                        "text": "(Kingma & Welling, 2013;",
+                        "ref_id": "BIBREF24"
+                    },
+                    {
+                        "start": 2689,
+                        "end": 2709,
+                        "text": "Hafner et al., 2019)",
+                        "ref_id": "BIBREF16"
+                    }
+                ],
+                "ref_spans": [
+                    {
+                        "start": 2274,
+                        "end": 2275,
+                        "text": "1",
+                        "ref_id": "FIGREF1"
+                    }
+                ],
+                "eq_spans": [],
+                "section": "INTRODUCTION",
+                "sec_num": "1"
+            },
+            {
+                "text": "To further bolster its capabilities, VONet employs an expressive transformer-based decoder (Singh et al., 2022b) that empowers itself to successfully derive object representations from complex video scenes. To showcase the effectiveness of VONet, we conduct extensive evaluations across five MOVI datasets (Greff et al., 2022) encompassing video scenes of varying complexities. The evaluation results position VONet as the new state-of-the-art unsupervised method for video object learning. 2022), explored unsupervised object learning in single images. For unsupervised video object learning, applying these image-based methods to video frames independently is not a viable approach, as it would likely result in slot masks lacking temporal consistency. A conventional strategy for transitioning from image object learning to video object learning entails inheriting and modifying the slot content from the preceding time step. For instance, AIR (Eslami et al., 2016) , SQAIR (Kosiorek et al., 2018) , STOVE (Kossen et al., 2019) , and SCALOR (Jiang et al., 2019) all employed a propagation process in which a subset of currently existing objects is propagated to the next time step; TBA (He et al., 2019) , ViMON (Weis et al., 2021) , SAVI (Kipf et al., 2021) , SAVI++ (Elsayed et al., 2022) , STEVE (Singh et al., 2022b) , VideoSAUR (Zadaianchuk et al., 2023) , and RSM (Nguyen et al., 2024) initialized slots for the current step using the output of a forward predictor/tracker applied to the preceding slots. Another technique for ensuring temporal consistency is to model constant object latents across time, as demonstrated in Kabra et al. (2021) . These object latents remain invariant across all frames by design, enabling stable object tracking. Alternatively, an explicit temporal consistency loss could be incorporated. Creswell et al. (2021) proposed an alignment loss which ensures that each object is represented in the same slot across time; Bao et al. (2022) encouraged similarity between the feature representations of slots in consecutive frames. Our approach inherits preceding slot content while also introducing a KLD loss of a sequential VAE to further enhance temporal consistency.",
+                "cite_spans": [
+                    {
+                        "start": 91,
+                        "end": 112,
+                        "text": "(Singh et al., 2022b)",
+                        "ref_id": null
+                    },
+                    {
+                        "start": 306,
+                        "end": 326,
+                        "text": "(Greff et al., 2022)",
+                        "ref_id": "BIBREF8"
+                    },
+                    {
+                        "start": 947,
+                        "end": 968,
+                        "text": "(Eslami et al., 2016)",
+                        "ref_id": "BIBREF11"
+                    },
+                    {
+                        "start": 977,
+                        "end": 1000,
+                        "text": "(Kosiorek et al., 2018)",
+                        "ref_id": "BIBREF26"
+                    },
+                    {
+                        "start": 1009,
+                        "end": 1030,
+                        "text": "(Kossen et al., 2019)",
+                        "ref_id": "BIBREF27"
+                    },
+                    {
+                        "start": 1044,
+                        "end": 1064,
+                        "text": "(Jiang et al., 2019)",
+                        "ref_id": "BIBREF21"
+                    },
+                    {
+                        "start": 1189,
+                        "end": 1206,
+                        "text": "(He et al., 2019)",
+                        "ref_id": "BIBREF19"
+                    },
+                    {
+                        "start": 1215,
+                        "end": 1234,
+                        "text": "(Weis et al., 2021)",
+                        "ref_id": "BIBREF36"
+                    },
+                    {
+                        "start": 1242,
+                        "end": 1261,
+                        "text": "(Kipf et al., 2021)",
+                        "ref_id": "BIBREF25"
+                    },
+                    {
+                        "start": 1271,
+                        "end": 1293,
+                        "text": "(Elsayed et al., 2022)",
+                        "ref_id": "BIBREF8"
+                    },
+                    {
+                        "start": 1302,
+                        "end": 1323,
+                        "text": "(Singh et al., 2022b)",
+                        "ref_id": null
+                    },
+                    {
+                        "start": 1336,
+                        "end": 1362,
+                        "text": "(Zadaianchuk et al., 2023)",
+                        "ref_id": "BIBREF37"
+                    },
+                    {
+                        "start": 1373,
+                        "end": 1394,
+                        "text": "(Nguyen et al., 2024)",
+                        "ref_id": "BIBREF29"
+                    },
+                    {
+                        "start": 1634,
+                        "end": 1653,
+                        "text": "Kabra et al. (2021)",
+                        "ref_id": "BIBREF22"
+                    },
+                    {
+                        "start": 1832,
+                        "end": 1854,
+                        "text": "Creswell et al. (2021)",
+                        "ref_id": "BIBREF7"
+                    },
+                    {
+                        "start": 1958,
+                        "end": 1975,
+                        "text": "Bao et al. (2022)",
+                        "ref_id": "BIBREF1"
+                    }
+                ],
+                "ref_spans": [],
+                "eq_spans": [],
+                "section": "INTRODUCTION",
+                "sec_num": "1"
+            },
+            {
+                "text": "Due to the absence of supervision signals, most existing methods could only handle uncomplicated video scenes with uniformly-colored objects or objects with simple sizes and shapes. For instance, in an unsupervised setting, Creswell et al. (2021) ; Kipf et al. (2021) ; Elsayed et al. (2022) demonstrated effectiveness primarily on uniformly-colored objects with clean backgrounds. Similarly, while SCALOR (Jiang et al., 2019) showcases an impressive capability in discovering and tracking dozens of simple objects of similar sizes in certain videos, it exhibits sensitivity to hyperparameters related to object scale and size ratio. As a result, it performs inadequately when dealing with textured objects of diverse shapes and sizes. STEVE (Singh et al., 2022b) , on the other hand, successfully improved performance in complex videos through the introduction of an expressive transformer-based decoder. Nevertheless, it faces significant issues of over-segmentation and object identity swapping in less complex videos. Our method adopts the same transformer-based decoder to handle complex video scenes, while still being able to maintain superior performance in simple scenes.",
+                "cite_spans": [
+                    {
+                        "start": 224,
+                        "end": 246,
+                        "text": "Creswell et al. (2021)",
+                        "ref_id": "BIBREF7"
+                    },
+                    {
+                        "start": 249,
+                        "end": 267,
+                        "text": "Kipf et al. (2021)",
+                        "ref_id": "BIBREF25"
+                    },
+                    {
+                        "start": 270,
+                        "end": 291,
+                        "text": "Elsayed et al. (2022)",
+                        "ref_id": "BIBREF8"
+                    },
+                    {
+                        "start": 406,
+                        "end": 426,
+                        "text": "(Jiang et al., 2019)",
+                        "ref_id": "BIBREF21"
+                    },
+                    {
+                        "start": 742,
+                        "end": 763,
+                        "text": "(Singh et al., 2022b)",
+                        "ref_id": null
+                    }
+                ],
+                "ref_spans": [],
+                "eq_spans": [],
+                "section": "INTRODUCTION",
+                "sec_num": "1"
+            },
+            {
+                "text": "A substantial body of related work in the field of video segmentation (Zhou et al., 2022) relies on supervision signals such as segmentation masks, depth information, optical flow, and more. Our problem also bears relevance to the domain of video object tracking (Ciaparrone et al., 2020) , where object locations or bounding boxes are specified in the initial video frames and tracked across subsequent frames. Since we do not assume these additional learning signals, due to space constraints, we will not delve into detailed discussions of these two topics here. Notably, certain previous works, such as Zadaianchuk et al. (2023) , employ a vision backbone pretrained on large-scale datasets for feature extraction from video frames, aiding in the process of object learning. While their objective remains unsupervised, the use of pretrained features integrates valuable prior knowledge of everyday object appearances. Consequently, the results they reported, though surpassing what typical unsupervised methods including ours could achieve, hold limited reference value in this context. VONet shares a similarity with ViMON (Weis et al., 2021) A slot represents either an object or a background region. The procedure comprises K -1 steps, and at each step, the mask is determined as",
+                "cite_spans": [
+                    {
+                        "start": 70,
+                        "end": 89,
+                        "text": "(Zhou et al., 2022)",
+                        "ref_id": "BIBREF38"
+                    },
+                    {
+                        "start": 263,
+                        "end": 288,
+                        "text": "(Ciaparrone et al., 2020)",
+                        "ref_id": "BIBREF6"
+                    },
+                    {
+                        "start": 604,
+                        "end": 632,
+                        "text": "as Zadaianchuk et al. (2023)",
+                        "ref_id": "BIBREF37"
+                    },
+                    {
+                        "start": 1128,
+                        "end": 1147,
+                        "text": "(Weis et al., 2021)",
+                        "ref_id": "BIBREF36"
+                    }
+                ],
+                "ref_spans": [],
+                "eq_spans": [],
+                "section": "INTRODUCTION",
+                "sec_num": "1"
+            },
+            {
+                "text": "m k = s k-1 \u03b1(x, s k-1 )",
+                "cite_spans": [],
+                "ref_spans": [],
+                "eq_spans": [],
+                "section": "INTRODUCTION",
+                "sec_num": "1"
+            },
+            {
+                "text": ", where the scope s k-1 \u2208 [0, 1] H\u00d7W represents the remaining attention for each pixel, with the initial scope being s 0 = 1. The attention network, denoted as \u03b1, is implemented as a U-Net (Ronneberger et al., 2015) , to predict the amount of attention the k-th step will consume from the current scope s k-1 . The scope is then updated as s k = s k-1 (1 -\u03b1(x, s k-1 )). At the last step, MONet directly sets m K = s K-1 , which ensures that the entire image is explained by all slots ( K k=1 m k = 1). Conditioned on the predicted attention mask, each slot undergoes independent processing through a VAE to (partially) reconstruct the input image. The VAE first encodes each slot into a compact embedding by z k \u223c q(z k |x, m k ) and then derives a decoded image distribution o(x|z k ) from this embedding. To do so, pixels {x n } are decoded independently from each other conditioned on the slot embedding, namely o(x|z k ) = n o(x n |z k ). Finally, to consolidate the reconstruction results from different slots, MONet formulates a mixture of components decoder distribution in its training loss1 :",
+                "cite_spans": [
+                    {
+                        "start": 189,
+                        "end": 215,
+                        "text": "(Ronneberger et al., 2015)",
+                        "ref_id": "BIBREF30"
+                    }
+                ],
+                "ref_spans": [],
+                "eq_spans": [],
+                "section": "INTRODUCTION",
+                "sec_num": "1"
+            },
+            {
+                "text": "EQUATION",
+                "cite_spans": [],
+                "ref_spans": [],
+                "eq_spans": [
+                    {
+                        "start": 0,
+                        "end": 8,
+                        "text": "EQUATION",
+                        "ref_id": "EQREF",
+                        "raw_str": "L MONet = - H\u00d7W n=1 log K k=1 o(x n |z k )m k,n + \u03b2 K k=1 D KL q(z k |x, m k ) p(z k ) ,",
+                        "eq_num": "(1)"
+                    }
+                ],
+                "section": "INTRODUCTION",
+                "sec_num": "1"
+            },
+            {
+                "text": "where the prior p(z k ) is a unit Gaussian. Intuitively, each slot only needs to encode/decode image regions that has been selected by its attention mask. Figure 1 (a) depicts the simplified attention process of MONet, emphasizing the data flow during a forward pass. MONet is deterministic and its masks have only unidirectional dependencies. Due to the recurrent nature of mask generation, as K increases, the inference time for a forward pass will become prohibitive.",
+                "cite_spans": [],
+                "ref_spans": [
+                    {
+                        "start": 162,
+                        "end": 163,
+                        "text": "1",
+                        "ref_id": "FIGREF1"
+                    }
+                ],
+                "eq_spans": [],
+                "section": "INTRODUCTION",
+                "sec_num": "1"
+            },
+            {
+                "text": "Unsupervised video object learning. In the context of unsupervised video object learning, each input sample is a sequence of RGB frames {x 1 , . . . , x T }. The goal is to determine a set of attention masks, {m t,k } K k=1 , for each frame x t as in the single-image case. Additionally, the mask sequence, {m t,k } T t=1 , associated with a specific slot k, should focus on a consistent set of objects. Because MONet was originally proposed for single images, there is no guarantee that directly applying it to two adjacent video frames will result in temporally coherent object masks, even though the two video frames might look similar. It is yet to be determined how MONet can be extended to facilitate video object learning with temporal consistency. ",
+                "cite_spans": [],
+                "ref_spans": [],
+                "eq_spans": [],
+                "section": "INTRODUCTION",
+                "sec_num": "1"
+            },
+            {
+                "text": "Parallel U-Net attention. VONet begins by eliminating the concept of \"scope\" in MONet and introduces context, a compact embedding vector expected to encompass prior object information for each slot to be generated. Let the context vector of slot k at time step t be c t-1,k . Instead of recurrent mask generation, VONet generates all masks at step t at once (Figure 1, b ):",
+                "cite_spans": [],
+                "ref_spans": [
+                    {
+                        "start": 366,
+                        "end": 368,
+                        "text": "1,",
+                        "ref_id": "FIGREF1"
+                    },
+                    {
+                        "start": 369,
+                        "end": 370,
+                        "text": "b",
+                        "ref_id": null
+                    }
+                ],
+                "eq_spans": [],
+                "section": "VONET FOR UNSUPERVISED VIDEO OBJECT LEARNING",
+                "sec_num": "4"
+            },
+            {
+                "text": "m t,1 , . . . , m t,K = ParallelAttn(x t , c t-1,1 , . . . , c t-1,K ).",
+                "cite_spans": [],
+                "ref_spans": [],
+                "eq_spans": [],
+                "section": "VONET FOR UNSUPERVISED VIDEO OBJECT LEARNING",
+                "sec_num": "4"
+            },
+            {
+                "text": "(2)",
+                "cite_spans": [],
+                "ref_spans": [],
+                "eq_spans": [],
+                "section": "VONET FOR UNSUPERVISED VIDEO OBJECT LEARNING",
+                "sec_num": "4"
+            },
+            {
+                "text": "The parallel attention network operates by simultaneously applying the same U-Net architecture to the K context inputs in parallel, while establishing communication among the slots at the U-Net bottleneck layer. To achieve this, the output of the U-Net downsampling path is first flattened, and the outputs from different slots are pooled to create a sequence. This sequence is then input into a decoder-only transformer that produces a sequence of latent mask embeddings. Each mask embedding is further projected and reshaped to a 2D feature map, which then serves as the input for the U-Net upsampling path. In the final step, the K output logits maps undergo pixel-wise softmax to derive the ultimate attention masks (Figure 2 ). Formally,",
+                "cite_spans": [],
+                "ref_spans": [
+                    {
+                        "start": 728,
+                        "end": 729,
+                        "text": "2",
+                        "ref_id": "FIGREF2"
+                    }
+                ],
+                "eq_spans": [],
+                "section": "VONET FOR UNSUPERVISED VIDEO OBJECT LEARNING",
+                "sec_num": "4"
+            },
+            {
+                "text": "EQUATION",
+                "cite_spans": [],
+                "ref_spans": [],
+                "eq_spans": [
+                    {
+                        "start": 0,
+                        "end": 8,
+                        "text": "EQUATION",
+                        "ref_id": "EQREF",
+                        "raw_str": "h t,k = U down (x t , c t-1,k ), q t,1 , . . . , q t,K = Transformer mask (h t,1 , . . . , h t,K ). l t,k = U up (q t,k ), m t,1 , . . . , m t,K = Softmax(l t,1 , . . . , l t,K ).",
+                        "eq_num": "(3)"
+                    }
+                ],
+                "section": "VONET FOR UNSUPERVISED VIDEO OBJECT LEARNING",
+                "sec_num": "4"
+            },
+            {
+                "text": "Due to the single shared downsampling/upsampling path among the slots, in practice, U down and U up can be executed efficiently by rearranging the slot dimension into the batch dimension.",
+                "cite_spans": [],
+                "ref_spans": [],
+                "eq_spans": [],
+                "section": "VONET FOR UNSUPERVISED VIDEO OBJECT LEARNING",
+                "sec_num": "4"
+            },
+            {
+                "text": "Calculating the contexts. One may pose the question: how can the context vectors be acquired? As previously mentioned, a context vector for a specific slot should encapsulate prior information regarding the aspects of the scene that this particular slot is intended to encode. Indeed, this prior information can naturally be derived from the content of that slot at the preceding time steps. For each slot k, we derive its context c t,k (used by t + 1) based on the history of the slot up to step t:",
+                "cite_spans": [],
+                "ref_spans": [],
+                "eq_spans": [],
+                "section": "VONET FOR UNSUPERVISED VIDEO OBJECT LEARNING",
+                "sec_num": "4"
+            },
+            {
+                "text": "EQUATION",
+                "cite_spans": [],
+                "ref_spans": [],
+                "eq_spans": [
+                    {
+                        "start": 0,
+                        "end": 8,
+                        "text": "EQUATION",
+                        "ref_id": "EQREF",
+                        "raw_str": "y t,k = SlotEnc(x t , m t,k ), r t,k = RNN(y t,k , r t-1,k ), c t,k = MLP cxt (r t,k ),",
+                        "eq_num": "(4)"
+                    }
+                ],
+                "section": "VONET FOR UNSUPERVISED VIDEO OBJECT LEARNING",
+                "sec_num": "4"
+            },
+            {
+                "text": "where the per-frame slot latent y t,k is extracted through a slot encoder that takes both the image x t and the generated attention mask m t,k as the inputs. Meanwhile, r t,k can be viewed as the pertrajectory slot latent, as it accumulates previous per-frame slot latents via a recurrent network. We initialize the per-trajectory slot latent by transforming a collection of noise vectors independently drawn from a unit Gaussian:",
+                "cite_spans": [],
+                "ref_spans": [],
+                "eq_spans": [],
+                "section": "VONET FOR UNSUPERVISED VIDEO OBJECT LEARNING",
+                "sec_num": "4"
+            },
+            {
+                "text": "EQUATION",
+                "cite_spans": [],
+                "ref_spans": [],
+                "eq_spans": [
+                    {
+                        "start": 0,
+                        "end": 8,
+                        "text": "EQUATION",
+                        "ref_id": "EQREF",
+                        "raw_str": "r 0,1 , . . . , r 0,K = Transformer slot (\u03f5 1 , . . . , \u03f5 K ), \u03f5 k \u223c N (0, 1),",
+                        "eq_num": "(5)"
+                    }
+                ],
+                "section": "VONET FOR UNSUPERVISED VIDEO OBJECT LEARNING",
+                "sec_num": "4"
+            },
+            {
+                "text": "This initialization signifies a stochastic process where the slots are collaboratively seeded prior to any exposure to the video content. Figure 9 (Appendix A.2) illustrates the temporal unrolling of VONet during a forward pass on a video.",
+                "cite_spans": [],
+                "ref_spans": [
+                    {
+                        "start": 145,
+                        "end": 146,
+                        "text": "9",
+                        "ref_id": null
+                    }
+                ],
+                "eq_spans": [],
+                "section": "VONET FOR UNSUPERVISED VIDEO OBJECT LEARNING",
+                "sec_num": "4"
+            },
+            {
+                "text": "Object-wise sequential VAE. Finally, we compute the slot posterior distribution directly based on its most recent per-trajectory slot latent at t as Meanwhile, we derive the slot prior distribution using all the K per-trajectory slot latents up to t -1,",
+                "cite_spans": [],
+                "ref_spans": [],
+                "eq_spans": [],
+                "section": "VONET FOR UNSUPERVISED VIDEO OBJECT LEARNING",
+                "sec_num": "4"
+            },
+            {
+                "text": "EQUATION",
+                "cite_spans": [],
+                "ref_spans": [],
+                "eq_spans": [
+                    {
+                        "start": 0,
+                        "end": 8,
+                        "text": "EQUATION",
+                        "ref_id": "EQREF",
+                        "raw_str": "z t,k \u223c q(z t,k |r t,k ).",
+                        "eq_num": "(6)"
+                    }
+                ],
+                "section": "VONET FOR UNSUPERVISED VIDEO OBJECT LEARNING",
+                "sec_num": "4"
+            },
+            {
+                "text": "p(z t,k |r t-1,1 , . . . , r t-1,K ),",
+                "cite_spans": [],
+                "ref_spans": [],
+                "eq_spans": [],
+                "section": "VONET FOR UNSUPERVISED VIDEO OBJECT LEARNING",
+                "sec_num": "4"
+            },
+            {
+                "text": "which in fact results in an object-wise sequential VAE. In essence, for proper learning of the prior, VONet must anticipate how each slot will evolve in interaction with the other K -1 slots. A straightforward approach to instantiating the prior would involve utilizing a transformer to predict a future slot latent for each slot. This prediction can then serve as the basis for computing the prior:",
+                "cite_spans": [],
+                "ref_spans": [],
+                "eq_spans": [],
+                "section": "VONET FOR UNSUPERVISED VIDEO OBJECT LEARNING",
+                "sec_num": "4"
+            },
+            {
+                "text": "EQUATION",
+                "cite_spans": [],
+                "ref_spans": [],
+                "eq_spans": [
+                    {
+                        "start": 0,
+                        "end": 8,
+                        "text": "EQUATION",
+                        "ref_id": "EQREF",
+                        "raw_str": "r \u2032 t,1 , . . . , r \u2032 t,K = Transformer prior (r t-1,1 , . . . , r t-1,K ), zt,k \u223c p(z t,k |r \u2032 t,k ).",
+                        "eq_num": "(7)"
+                    }
+                ],
+                "section": "VONET FOR UNSUPERVISED VIDEO OBJECT LEARNING",
+                "sec_num": "4"
+            },
+            {
+                "text": "For reconstruction, we opt for the transformer-based decoder (Singh et al., 2022a; b) , owing to its remarkable performance observed in handling complex images. Thus our overall training loss is",
+                "cite_spans": [
+                    {
+                        "start": 61,
+                        "end": 82,
+                        "text": "(Singh et al., 2022a;",
+                        "ref_id": null
+                    },
+                    {
+                        "start": 83,
+                        "end": 85,
+                        "text": "b)",
+                        "ref_id": null
+                    }
+                ],
+                "ref_spans": [],
+                "eq_spans": [],
+                "section": "VONET FOR UNSUPERVISED VIDEO OBJECT LEARNING",
+                "sec_num": "4"
+            },
+            {
+                "text": "EQUATION",
+                "cite_spans": [],
+                "ref_spans": [],
+                "eq_spans": [
+                    {
+                        "start": 0,
+                        "end": 8,
+                        "text": "EQUATION",
+                        "ref_id": "EQREF",
+                        "raw_str": "L VONet = T t=1 -log P TransDec (x t |z t,1 , . . . , z t,K ) +\u03b2 K k=1 D KL q(z t,k |r t,k ) p(z t,k |r t-1,1 , . . . , r t-1,K ) .",
+                        "eq_num": "(8)"
+                    }
+                ],
+                "section": "VONET FOR UNSUPERVISED VIDEO OBJECT LEARNING",
+                "sec_num": "4"
+            },
+            {
+                "text": "Note that our KLD term, which integrates a learned prior, plays a pivotal role in strengthening the temporal consistency of individual slots across consecutive video frames. The rationale behind this enhancement lies in the fact that only slot representations that exhibit temporal consistency can exhibit predictability, consequently resulting in a reduced KLD loss.",
+                "cite_spans": [],
+                "ref_spans": [],
+                "eq_spans": [],
+                "section": "VONET FOR UNSUPERVISED VIDEO OBJECT LEARNING",
+                "sec_num": "4"
+            },
+            {
+                "text": "An overview of the architecture of VONet is illustrated in Figure 3 .",
+                "cite_spans": [],
+                "ref_spans": [
+                    {
+                        "start": 66,
+                        "end": 67,
+                        "text": "3",
+                        "ref_id": "FIGREF3"
+                    }
+                ],
+                "eq_spans": [],
+                "section": "VONET FOR UNSUPERVISED VIDEO OBJECT LEARNING",
+                "sec_num": "4"
+            },
+            {
+                "text": "Backbone. In the very initial stage of the encoding step, we use a CNN backbone (Appendix A.2) to extract a feature map from each input image x t . The output from the backbone is shared between the parallel attention network (Eq. 3) and the slot encoder (Eq. 4), serving as the actual image input. Through parameter sharing, this backbone effectively reduces the total number of model parameters.",
+                "cite_spans": [],
+                "ref_spans": [],
+                "eq_spans": [],
+                "section": "IMPLEMENTATION",
+                "sec_num": "5"
+            },
+            {
+                "text": "It is trained from scratch using VONet's training loss.",
+                "cite_spans": [],
+                "ref_spans": [],
+                "eq_spans": [],
+                "section": "IMPLEMENTATION",
+                "sec_num": "5"
+            },
+            {
+                "text": "Parallel attention network. Directly training the attention network formulated in Eq. 3 could be challenging due to the very depth of the U-Net. In each individual frame, this challenge stems from the intricate path that the gradient signal must traverse, starting from the VAE decoder, progressing through the slot encoder, then navigating the U-Net, and ultimately reaching the context vectors.",
+                "cite_spans": [],
+                "ref_spans": [],
+                "eq_spans": [],
+                "section": "IMPLEMENTATION",
+                "sec_num": "5"
+            },
+            {
+                "text": "Consequently, the generated masks m t,k may be trapped in a trivial solution, where each pixel receives equal attention values from the K slots. To address this issue, we first convolve each context vector across the backbone feature locations, yielding an estimated attention mask for each slot. This operation is analogous to slot attention (Locatello et al., 2020; Kipf et al., 2021) . Subsequently, the U-Net is tasked with generating only delta changes (in log space) atop the estimated mask. This effectively establishes a special skip connection between the U-Net's input and output layers. We found that this skip connection plays a crucial role in learning meaningful attention masks.",
+                "cite_spans": [
+                    {
+                        "start": 343,
+                        "end": 367,
+                        "text": "(Locatello et al., 2020;",
+                        "ref_id": "BIBREF28"
+                    },
+                    {
+                        "start": 368,
+                        "end": 386,
+                        "text": "Kipf et al., 2021)",
+                        "ref_id": "BIBREF25"
+                    }
+                ],
+                "ref_spans": [],
+                "eq_spans": [],
+                "section": "IMPLEMENTATION",
+                "sec_num": "5"
+            },
+            {
+                "text": "Slot encoder. We adopt a simple architecture for the slot encoder. The attention mask is first element-wise multiplied with the backbone feature map, with broadcasting in the channel dimension. Then, the per-frame slot latent y t,k is obtained by performing average pooling on the masked feature map across the spatial domain. While there may be other possible implementations of the slot encoder, we have found this straightforward approach to be highly effective and easy to train.",
+                "cite_spans": [],
+                "ref_spans": [],
+                "eq_spans": [],
+                "section": "IMPLEMENTATION",
+                "sec_num": "5"
+            },
+            {
+                "text": "Computing the per-trajectory slot latent. We instantiate the RNN for calculating r t,k (Eq. 4) as a GRU (Cho et al., 2014) followed by an MLP. Specifically, it is defined as",
+                "cite_spans": [
+                    {
+                        "start": 104,
+                        "end": 122,
+                        "text": "(Cho et al., 2014)",
+                        "ref_id": "BIBREF5"
+                    }
+                ],
+                "ref_spans": [],
+                "eq_spans": [],
+                "section": "IMPLEMENTATION",
+                "sec_num": "5"
+            },
+            {
+                "text": "EQUATION",
+                "cite_spans": [],
+                "ref_spans": [],
+                "eq_spans": [
+                    {
+                        "start": 0,
+                        "end": 8,
+                        "text": "EQUATION",
+                        "ref_id": "EQREF",
+                        "raw_str": "r \u2032 t,k = GRU(y t,k , r t-1,k ), r t,k = LayerNorm(r \u2032 t,k + MLP slot (r \u2032 t,k )).",
+                        "eq_num": "(9)"
+                    }
+                ],
+                "section": "IMPLEMENTATION",
+                "sec_num": "5"
+            },
+            {
+                "text": "LayerNorm (Ba et al., 2016) ensures that the latent values will not explode even for a long video.",
+                "cite_spans": [
+                    {
+                        "start": 10,
+                        "end": 27,
+                        "text": "(Ba et al., 2016)",
+                        "ref_id": null
+                    }
+                ],
+                "ref_spans": [],
+                "eq_spans": [],
+                "section": "IMPLEMENTATION",
+                "sec_num": "5"
+            },
+            {
+                "text": "Computing the KLD. We model both the posterior and prior distributions as diagonal Gaussians.",
+                "cite_spans": [],
+                "ref_spans": [],
+                "eq_spans": [],
+                "section": "IMPLEMENTATION",
+                "sec_num": "5"
+            },
+            {
+                "text": "When minimizing the KLD loss in Eq. 8, two primary influences come into play: the posterior is regularized by the prior, and conversely, the prior is shaped towards the posterior. These dynamics jointly contribute to the learning of slot representations. Following Hafner et al. (2020) , we use a KL balancing coefficient \u03ba > 0.5 to accelerate the learning of the prior relative to the posterior. This is done to prevent the regularization of the posterior by a poorly trained prior. Mathematically,",
+                "cite_spans": [
+                    {
+                        "start": 265,
+                        "end": 285,
+                        "text": "Hafner et al. (2020)",
+                        "ref_id": "BIBREF17"
+                    }
+                ],
+                "ref_spans": [],
+                "eq_spans": [],
+                "section": "IMPLEMENTATION",
+                "sec_num": "5"
+            },
+            {
+                "text": "EQUATION",
+                "cite_spans": [],
+                "ref_spans": [],
+                "eq_spans": [
+                    {
+                        "start": 0,
+                        "end": 8,
+                        "text": "EQUATION",
+                        "ref_id": "EQREF",
+                        "raw_str": "KLD = \u03ba \u2022 D KL (StopGrad(q)\u2225p) + (1 -\u03ba) \u2022 D KL (q\u2225StopGrad(p)).",
+                        "eq_num": "(10)"
+                    }
+                ],
+                "section": "IMPLEMENTATION",
+                "sec_num": "5"
+            },
+            {
+                "text": "Benchmarks. We assess VONet on five well-established public datasets MOVI-{A,B,C,D,E} (Greff et al., 2022) , which include both synthetic and naturalistic videos. MOVI-A and MOVI-B consist of simple scenarios featuring nearly uniform backgrounds and objects with varying colors but minimal texture. MOVI-B exhibits greater complexity compared to MOVI-A, owing to the inclusion of 8 additional object shapes. MOVI-{C,D,E} stand out as the most challenging, featuring realistic, intricately textured everyday objects and backgrounds. While MOVI-{A,B,C} include up to 10 objects in a given scene, MOVI-D and MOVI-E include up to 23 objects. Each video within the five datasets comprises 24 frames, lasting 2 seconds. We adhere to the official dataset splits, except that the validation split is employed as the test split, following Kipf et al. (2021) . Some example frames of the five datasets are shown in Figure 4 .",
+                "cite_spans": [
+                    {
+                        "start": 86,
+                        "end": 106,
+                        "text": "(Greff et al., 2022)",
+                        "ref_id": "BIBREF8"
+                    },
+                    {
+                        "start": 830,
+                        "end": 848,
+                        "text": "Kipf et al. (2021)",
+                        "ref_id": "BIBREF25"
+                    }
+                ],
+                "ref_spans": [
+                    {
+                        "start": 912,
+                        "end": 913,
+                        "text": "4",
+                        "ref_id": "FIGREF4"
+                    }
+                ],
+                "eq_spans": [],
+                "section": "EXPERIMENTS",
+                "sec_num": "6"
+            },
+            {
+                "text": "Metrics. We assess the quality of 3D slot segmentation masks generated from slot attention masks across the full length of 24 video frames (details in Appendix A.2). Two common metrics for video object learning are used: FG-ARI (Greff et al., 2019) and mIoU. FG-ARI serves as a clustering similarity metric, measuring the degree to which predicted segmentation masks align with groundtruth masks in a permutation-invariant manner. It only considers foreground pixels, where each cluster corresponds to a foreground segmentation mask. To also evaluate background pixels, mIoU calculates the mean Intersection-over-Union by first employing the Hungarian algorithm to find the optimal bipartite matching (in terms of IoU) between predicted and groundtruth masks, and then dividing sum of the optimal IoUs by the number of groundtruth masks. Both FG-ARI and mIoU demand temporal consistency and penalize object identity switches at any video frame. Nonetheless, neither of them is perfect. For a comprehensive evaluation, a combined interpretation is necessary. We start with measuring how efficient our parallel attention is compared to the recurrent attention of MONet. With the same U-Net architecture (Appendix A.2), we report the average time of generating attention masks for a varying number of slots on an image of size 128 \u00d7 128. The results are plotted in Figure 5 . VONet demonstrates a strong advantage of being able to maintain a nearly constant inference time regardless of the increasing number of slots. Conversely, MONet's time grows linearly with respect to the slot number, which is expected as MONet generates one attention mask after another. The superior efficiency of VONet on images forms the basis for it being extended to video frame sequences.",
+                "cite_spans": [
+                    {
+                        "start": 228,
+                        "end": 248,
+                        "text": "(Greff et al., 2019)",
+                        "ref_id": "BIBREF13"
+                    }
+                ],
+                "ref_spans": [
+                    {
+                        "start": 1369,
+                        "end": 1370,
+                        "text": "5",
+                        "ref_id": null
+                    }
+                ],
+                "eq_spans": [],
+                "section": "EXPERIMENTS",
+                "sec_num": "6"
+            },
+            {
+                "text": "Baselines. We conduct a comparative analysis of VONet against five representative unsupervised video object learning baselines: SCALOR (Jiang et al., 2019) , ViMON (Weis et al., 2021) , SI-MONe (Kabra et al., 2021) , SAVI (Kipf et al., 2021; Elsayed et al., 2022) , and STEVE (Singh et al., 2022b) . A crucial criterion for baseline selection is the accessibility of an official or public implementation. We employ official implementations of SCALOR, ViMON, SAVI, and STEVE, and a re-implementation of SIMONe (Appendix A.4). SCALOR, ViMON, SIMONe, and STEVE were originally designed for unsupervised learning, with their reconstruction targets being RGB video frames. SAVI, on the other hand, relies on object bounding boxes in initial video frames and reconstructs supervision signals like depth or optical flow. For a fair comparison, we eliminated the bounding box conditioning and only allowed SAVI to reconstruct RGB frames. We adhered to best practices from the literature for configuring the hyperparameters of the five baselines, selecting values recommended either by official codebases or by hyperparameter search results.",
+                "cite_spans": [
+                    {
+                        "start": 135,
+                        "end": 155,
+                        "text": "(Jiang et al., 2019)",
+                        "ref_id": "BIBREF21"
+                    },
+                    {
+                        "start": 164,
+                        "end": 183,
+                        "text": "(Weis et al., 2021)",
+                        "ref_id": "BIBREF36"
+                    },
+                    {
+                        "start": 194,
+                        "end": 214,
+                        "text": "(Kabra et al., 2021)",
+                        "ref_id": "BIBREF22"
+                    },
+                    {
+                        "start": 222,
+                        "end": 241,
+                        "text": "(Kipf et al., 2021;",
+                        "ref_id": "BIBREF25"
+                    },
+                    {
+                        "start": 242,
+                        "end": 263,
+                        "text": "Elsayed et al., 2022)",
+                        "ref_id": "BIBREF8"
+                    },
+                    {
+                        "start": 276,
+                        "end": 297,
+                        "text": "(Singh et al., 2022b)",
+                        "ref_id": null
+                    }
+                ],
+                "ref_spans": [],
+                "eq_spans": [],
+                "section": "COMPARISON WITH BASELINES",
+                "sec_num": "6.2"
+            },
+            {
+                "text": "In Table 1 , it is evident that VONet surpasses all the baselines in terms of both FG-ARI and mIoU metrics across all five MOVI datasets. Furthermore, the low std values imply its stability, an important characteristic often lacking in unsupervised video object learning methods. It can also be seen that MOVI-{C,D,E} are indeed much more challenging than MOVI-{A,B}, due to the rich textures and complex backgrounds contained in these datasets. SAVI, SCALOR, and ViMON face challenges when dealing with complex video scenes. Surprisingly, while STEVE performed admirably on MOVI-{C,D,E}, its FG-ARI performance on MOVI-{A,B} was unexpectedly low. Upon closer examination of its visualized results, STEVE tends to over-segment foreground objects and swap object identities, when provided with redundant slots in simpler scenarios (see examples in Figure 7 ). This behavior significantly diminishes its FG-ARI performance.",
+                "cite_spans": [],
+                "ref_spans": [
+                    {
+                        "start": 9,
+                        "end": 10,
+                        "text": "1",
+                        "ref_id": "TABREF1"
+                    },
+                    {
+                        "start": 854,
+                        "end": 855,
+                        "text": "7",
+                        "ref_id": null
+                    }
+                ],
+                "eq_spans": [],
+                "section": "Results.",
+                "sec_num": null
+            },
+            {
+                "text": "We conduct an ablation study to quantify the contribution of various components to the effectiveness of VONet. We select several key ingredients for ablation, resulting in four variants of VONet.",
+                "cite_spans": [],
+                "ref_spans": [],
+                "eq_spans": [],
+                "section": "HOW CRITICAL ARE DIFFERENT COMPONENTS TO VONET?",
+                "sec_num": "6.3"
+            },
+            {
+                "text": "a) wo-UNet ablates the U-Net for attention mask generation by removing it, along with the mask transformer at its bottleneck layer, from the parallel attention pipeline. Instead, it directly outputs the estimated attention masks (Section 5). This variant aims to investigate whether the mask refinement provided by the U-Net is indispensable. All four variants were trained using three random seeds on the five MOVI datasets. For each variant, the remaining training configurations are exactly the same as those used for VONet.",
+                "cite_spans": [],
+                "ref_spans": [],
+                "eq_spans": [],
+                "section": "HOW CRITICAL ARE DIFFERENT COMPONENTS TO VONET?",
+                "sec_num": "6.3"
+            },
+            {
+                "text": "Results. Figure 6 shows the impact on the performance if a specific component is removed or weakened in VONet. Notably, without KL balancing, the outcome is very poor on MOVi-A. In this case, VONet struggles to acquire any meaningful mask, as each pixel receives uniform attention from all slots. It is obvious that the posterior has been heavily forced into resembling the prior before the latter is adequately learned. Interestingly, the replay buffer is far more important on MOVI-{A,B} than on the other three. One plausible explanation is that these two datasets can have objects with similar appearances in a video, which makes object tracking more challenging. Training with replayed slot states enhances the long-term object tracking ability of VONet. As for the U-Net architecture, the mask refinement it offers proves to be particularly crucial for MOVI-{C,D,E}. This aligns with our expectation that its inherent spatial locality bias is beneficial for handling complex videos. Lastly, we have observed that the complete removal of the KLD term (W = \u221e) consistently results in unstable training and eventual crashes, and thus its results were not plotted. Apart from this, we do observe performance declines as the weight decreases, especially on MOVI-{B,C,D,E}. In summary, the four components all prove to be essential. The removal of any of them results in catastrophic outcomes on at least one dataset.",
+                "cite_spans": [],
+                "ref_spans": [
+                    {
+                        "start": 16,
+                        "end": 17,
+                        "text": "6",
+                        "ref_id": "FIGREF8"
+                    }
+                ],
+                "eq_spans": [],
+                "section": "HOW CRITICAL ARE DIFFERENT COMPONENTS TO VONET?",
+                "sec_num": "6.3"
+            },
+            {
+                "text": "Object masks. Figure 7 shows example object masks for VONet and STEVE. While VONet occasionally splits the background, it excels at preserving the structural integrity of moving foreground objects. On the contrary, STEVE tends to over-segment foreground objects, and its object masks exhibit temporal shifts over time. VONet generates smoother and more compact foreground object masks, whereas STEVE produces jagged ones with irregular shapes. We believe that this difference VAE prior. One can evaluate the quality of the VAE prior modeling in VONet by reconstructing input frames using forward-predicted slots. We randomly sample multiple video frames and utilize the predicted priors for their reconstruction. The results are shown in Figure 8 (left). We can see that the prior is effectively modeled, since the decoded images generated from the prior closely resembles reconstructed image derived from the posterior slots.",
+                "cite_spans": [],
+                "ref_spans": [
+                    {
+                        "start": 21,
+                        "end": 22,
+                        "text": "7",
+                        "ref_id": null
+                    },
+                    {
+                        "start": 745,
+                        "end": 746,
+                        "text": "8",
+                        "ref_id": "FIGREF7"
+                    }
+                ],
+                "eq_spans": [],
+                "section": "VISUALIZATION AND ANALYSIS",
+                "sec_num": "6.4"
+            },
+            {
+                "text": "KLD visualization. One can also inspect how the per-slot KLD loss in Eq. 8 varies from frame to frame. We anticipate that when a slot exhibits greater temporal variation at specific frames, the corresponding KLD losses will also rise. Figure 8 (right) illustrates two example videos in which the KLD curves are plotted for slot 0. It is evident that the KLD effectively measures the degree of variation in slot content. When the content undergoes significant changes, the KLD loss rises, whereas when the object represented by the slot remains stable, the KLD loss stays at a low level.",
+                "cite_spans": [],
+                "ref_spans": [
+                    {
+                        "start": 242,
+                        "end": 243,
+                        "text": "8",
+                        "ref_id": "FIGREF7"
+                    }
+                ],
+                "eq_spans": [],
+                "section": "VISUALIZATION AND ANALYSIS",
+                "sec_num": "6.4"
+            },
+            {
+                "text": "Failure modes. The first failure mode is over-segmentation (Zimmermann et al., 2023) , happening when the video scene's object count is much lower than the pre-allocated slot number. Without extra constraints or priors, VONet aims to use all available slots to encode the video scene for a reduced decoder loss. This causes some objects attended to by multiple slots or the background fragmented into parts (Figure 7 , MOVI-A). To address over-segmentation, the model needs to deactivate \"redundant\" slots. Extra losses may be needed to penalize the use of too many slots. The second failure mode is incomplete object understanding due to the absence of objectness priors. Although we use temporal information for object discovery in videos, the overall learning system remains under-constrained. When an object exhibits multiple texture regions, the model faces challenges in discerning whether it represents a single entity with visually distinct components in motion or multiple distinct objects moving closely together (Figure 7 , MOVI-D). Integrating pretrained knowledge about the appearances of everyday objects could help (Zadaianchuk et al., 2023) . Lastly, the enforcement of slot temporal consistency may occasionally prove unsuccessful. In certain instances, even when a slot appears to lose temporal consistency, upon closer examination, its KLD loss remains low (Figure 7 , the dark-green background slot in MOVI-B), simply because the VAE prior is accurately predicted. This suggests an opportunity for improving our KLD loss. The temporal consistency might also benefit from using a long-term memory model (Cheng & Schwing, 2022) as opposed to the current short-term GRU memory which might get expired under long-time occlusion.",
+                "cite_spans": [
+                    {
+                        "start": 59,
+                        "end": 84,
+                        "text": "(Zimmermann et al., 2023)",
+                        "ref_id": "BIBREF39"
+                    },
+                    {
+                        "start": 1130,
+                        "end": 1156,
+                        "text": "(Zadaianchuk et al., 2023)",
+                        "ref_id": "BIBREF37"
+                    }
+                ],
+                "ref_spans": [
+                    {
+                        "start": 415,
+                        "end": 416,
+                        "text": "7",
+                        "ref_id": null
+                    },
+                    {
+                        "start": 1031,
+                        "end": 1032,
+                        "text": "7",
+                        "ref_id": null
+                    },
+                    {
+                        "start": 1384,
+                        "end": 1385,
+                        "text": "7",
+                        "ref_id": null
+                    }
+                ],
+                "eq_spans": [],
+                "section": "VISUALIZATION AND ANALYSIS",
+                "sec_num": "6.4"
+            },
+            {
+                "text": "24.8\u00b10.1 22.0\u00b11.7 18.8\u00b10.9 34.8\u00b10.9 17.4\u00b12.0 13.6\u00b11.6 VONet 47.0\u00b12.8 51.0\u00b11.2 50.3\u00b13.6 36.2\u00b13.0 28.5\u00b10.6 18.1\u00b11.3",
+                "cite_spans": [],
+                "ref_spans": [],
+                "eq_spans": [],
+                "section": "Method Image FG-ARI Image mIoU MOVI-C MOVI-D MOVI-E MOVI-C MOVI-D MOVI-E MONet",
+                "sec_num": null
+            },
+            {
+                "text": "Table 2 : Results of VONet and MONet in the single-frame scenario.",
+                "cite_spans": [],
+                "ref_spans": [
+                    {
+                        "start": 6,
+                        "end": 7,
+                        "text": "2",
+                        "ref_id": null
+                    }
+                ],
+                "eq_spans": [],
+                "section": "Method Image FG-ARI Image mIoU MOVI-C MOVI-D MOVI-E MOVI-C MOVI-D MOVI-E MONet",
+                "sec_num": null
+            },
+            {
+                "text": "Figure 9 : Illustration of the unrolling process for VONet on a video sequence. Only slot k is depicted in the diagram, with the other slots following similar flows. Slot computations can be parallelized within each step, except when inter-slot interaction is required (e.g. initial slot transformer and parallel attention). For simplicity, we omit depicting the dependencies on the input frames x t .",
+                "cite_spans": [],
+                "ref_spans": [
+                    {
+                        "start": 7,
+                        "end": 8,
+                        "text": "9",
+                        "ref_id": null
+                    }
+                ],
+                "eq_spans": [],
+                "section": "Method Image FG-ARI Image mIoU MOVI-C MOVI-D MOVI-E MOVI-C MOVI-D MOVI-E MONet",
+                "sec_num": null
+            },
+            {
+                "text": "A.1 SINGLE-FRAME SCENARIO",
+                "cite_spans": [],
+                "ref_spans": [],
+                "eq_spans": [],
+                "section": "A APPENDIX",
+                "sec_num": null
+            },
+            {
+                "text": "We compared VONet with MONet in the single-frame scenario, as MONet was designed for object discovery in individual images only. We configured the U-Net architecture of MONet to match that of VONet, and set MONet's \u03b2 = 1 and \u03b3 = 2 after a brief exploration within a reasonable parameter range. VONet was modified to train with a sequence length of 1 and excluded training from past slot states. For the training and evaluation data, we utilized video frames from MOVI-{C,D,E}, treating them as independent images with no temporal relationship. FG-ARI and mIoU are calculated on individual frames, referred to as Image FG-ARI and Image mIoU. The results are shown in Table 2 . They suggest that VONet is not only more efficient than MONet, but also more competent to discover objects from complex images.",
+                "cite_spans": [],
+                "ref_spans": [
+                    {
+                        "start": 672,
+                        "end": 673,
+                        "text": "2",
+                        "ref_id": null
+                    }
+                ],
+                "eq_spans": [],
+                "section": "A APPENDIX",
+                "sec_num": null
+            },
+            {
+                "text": "Backbone for image features. We train a backbone based on a small ResNet (He et al., 2016) to extract a feature map from each input frame x t . The backbone architecture includes five residual blocks, each employing a 3\u00d73 kernel and a stride of 1, except for the first block which has a stride of 2. All the blocks have an output channel number of 64. Following the ResNet, there is a concluding convolution layer with a 1 \u00d7 1 kernel and a linear activation, with an output channel number of 128. Finally, a position embedding network (Kipf et al., 2021) is applied to provide 2D location information. With this backbone, the output feature map has a spatial shape that is half of that of the input frame. This feature map is shared by the parallel attention network and the slot encoder as the input.",
+                "cite_spans": [
+                    {
+                        "start": 73,
+                        "end": 90,
+                        "text": "(He et al., 2016)",
+                        "ref_id": "BIBREF18"
+                    },
+                    {
+                        "start": 535,
+                        "end": 554,
+                        "text": "(Kipf et al., 2021)",
+                        "ref_id": "BIBREF25"
+                    }
+                ],
+                "ref_spans": [],
+                "eq_spans": [],
+                "section": "A.2 MORE DETAILS OF VONET",
+                "sec_num": null
+            },
+            {
+                "text": "U-Net and mask transformer. The U-Net used by the parallel attention network follows a standard architecture closely resembling that of MONet (Burgess et al., 2019) . There are M blocks on either the upsampling or downsampling path, with M taking the value of 5 for datasets MOVI-{A,B} and 6 for datasets MOVI-{C,D,E}. Each block comprises the following layers in order: (a) a 3 \u00d7 3 biasfree convolution with a stride of 1 and a padding of 1, (b) an instance normalization (Ulyanov et al., 2016) layer with learnable affine parameters, (c) a ReLU activation, and finally (d) a max pooling layer of size 2 for the downsampling path and a nearest upsampling layer of factor 2 for the upsampling path. No max pooling (upsampling) is applied to the first (last) block of the downsampling (upsampling) path. A skip connection is established between the output of the m-th downsampling block and the output of the (M -m + 1)-th upsampling block, for each 2 \u2264 m \u2264 M . The non-skip bottleneck connection is an MLP with two layers of sizes (512, 512), both activated with ReLU. The output of this MLP will be projected and reshaped to match the output of the downsampling path, concatenated with it, and input to the upsampling path. After the upsampling path, a 1 \u00d7 1 convolution is applied with an output channels of 1. The final output is a 2D map that retains the same spatial dimensions as the input. The values within this map represent unnormalized attention logits. For the downsampling blocks, we set their output channels as {32, 64, 64, 128, 128} for MOVI-{A,B}, with an additional output channel number of 128 for MOVI-{C,D,E}.",
+                "cite_spans": [
+                    {
+                        "start": 136,
+                        "end": 164,
+                        "text": "MONet (Burgess et al., 2019)",
+                        "ref_id": "BIBREF2"
+                    },
+                    {
+                        "start": 473,
+                        "end": 495,
+                        "text": "(Ulyanov et al., 2016)",
+                        "ref_id": "BIBREF34"
+                    }
+                ],
+                "ref_spans": [],
+                "eq_spans": [],
+                "section": "A.2 MORE DETAILS OF VONET",
+                "sec_num": null
+            },
+            {
+                "text": "To prepare the input to the U-Net for a slot's attention mask, we first convolve its context vector across the backbone feature locations, yielding a roughly estimated attention mask for that slot.",
+                "cite_spans": [],
+                "ref_spans": [],
+                "eq_spans": [],
+                "section": "A.2 MORE DETAILS OF VONET",
+                "sec_num": null
+            },
+            {
+                "text": "Then its context vector is spatially broadcast to the feature locations, forming a location-invariant context map. Finally, the backbone feature map, the estimated attention mask, and the context map, are concatenated in the channel dimension to form the input to the U-Net.",
+                "cite_spans": [],
+                "ref_spans": [],
+                "eq_spans": [],
+                "section": "A.2 MORE DETAILS OF VONET",
+                "sec_num": null
+            },
+            {
+                "text": "When there are K slots whose attention masks are being computed in parallel, right after the U-Net bottleneck MLP, we use a mask transformer to model the interaction among the K masks in the latent space. The transformer consists of three decoder-only transformer blocks, and each block can be briefly described as:",
+                "cite_spans": [],
+                "ref_spans": [],
+                "eq_spans": [],
+                "section": "A.2 MORE DETAILS OF VONET",
+                "sec_num": null
+            },
+            {
+                "text": "u \u2032 = v + MLP(LayerNorm(v)), v = u + MultiHeadAttn(LayerNorm(u)).",
+                "cite_spans": [],
+                "ref_spans": [],
+                "eq_spans": [],
+                "section": "A.2 MORE DETAILS OF VONET",
+                "sec_num": null
+            },
+            {
+                "text": "where u represents the K mask latent vectors and u \u2032 are the updated latent vectors. We configure each block with three attention heads. To maintain permutation invariance for the slots, no position encoding is incorporated in any of the transformer blocks.",
+                "cite_spans": [],
+                "ref_spans": [],
+                "eq_spans": [],
+                "section": "A.2 MORE DETAILS OF VONET",
+                "sec_num": null
+            },
+            {
+                "text": "Initial slot latent. The initial slot latent transformer in Eq. 5 shares a similar architecture with the U-Net mask transformer, differing only in terms of layer sizes. It also has three decoder-only transformer blocks and three attention heads per block. We set both the per-trajectory slot latent size and the per-frame slot latent size to be 128.",
+                "cite_spans": [],
+                "ref_spans": [],
+                "eq_spans": [],
+                "section": "A.2 MORE DETAILS OF VONET",
+                "sec_num": null
+            },
+            {
+                "text": "VAE prior and posterior. To compute the prior, again we use a transformer (Eq. 7) that has a similar architecture with the U-Net mask transformer, except for different layer sizes. The transformer has only two blocks with three attention heads in each block. Its output r \u2032 t,k is independently projected (via an MLP of one hidden layer of size 128) to generate the mean and log variance of a Gaussian as the prior distribution. The posterior is obtained by projecting the updated per-trajectory slot latent r t,k to generate its mean and log variance with a similar MLP.",
+                "cite_spans": [],
+                "ref_spans": [],
+                "eq_spans": [],
+                "section": "A.2 MORE DETAILS OF VONET",
+                "sec_num": null
+            },
+            {
+                "text": "Decoder. Singh et al. (2022a) identified the mixture of components decoder in MONet as a weak decoder, pinpointing two primary limitations: the slot-decoding dilemma and pixel independence. These limitations pose challenges to the encoder's capacity to achieve effective scene decomposition. As a remedy, they proposed using a more powerful transformer-based decoder (Chen et al., 2020) instead. This decoder attends to all slots simultaneously and decodes the image in an autoregressive manner. At a high level, the decoder is formulated as:",
+                "cite_spans": [
+                    {
+                        "start": 9,
+                        "end": 29,
+                        "text": "Singh et al. (2022a)",
+                        "ref_id": null
+                    },
+                    {
+                        "start": 367,
+                        "end": 386,
+                        "text": "(Chen et al., 2020)",
+                        "ref_id": "BIBREF3"
+                    }
+                ],
+                "ref_spans": [],
+                "eq_spans": [],
+                "section": "A.2 MORE DETAILS OF VONET",
+                "sec_num": null
+            },
+            {
+                "text": "EQUATION",
+                "cite_spans": [],
+                "ref_spans": [],
+                "eq_spans": [
+                    {
+                        "start": 0,
+                        "end": 8,
+                        "text": "EQUATION",
+                        "ref_id": "EQREF",
+                        "raw_str": "P TransDec (x|z 1 , . . . , z K ) = m P (x(m)|z 1 , . . . , z K , x(1), . . . , x(m -1)).",
+                        "eq_num": "(11)"
+                    }
+                ],
+                "section": "A.2 MORE DETAILS OF VONET",
+                "sec_num": null
+            },
+            {
+                "text": "Here, x(m) represents the m-th patch on the image in the row-major order. Singh et al. (2022b) applied this decoder to learning objects from complex videos and achieved a notable performance enhancement.",
+                "cite_spans": [
+                    {
+                        "start": 74,
+                        "end": 94,
+                        "text": "Singh et al. (2022b)",
+                        "ref_id": null
+                    }
+                ],
+                "ref_spans": [],
+                "eq_spans": [],
+                "section": "A.2 MORE DETAILS OF VONET",
+                "sec_num": null
+            },
+            {
+                "text": "We directly reused the transformer decoder implementation from the official code2 of STEVE (Singh et al., 2022b) . For the discrete VAE model, we re-implemented our own, but closely following the official implementation. All the decoder-related hyperparameters used in our experiments kept the same with those of STEVE.",
+                "cite_spans": [
+                    {
+                        "start": 91,
+                        "end": 112,
+                        "text": "(Singh et al., 2022b)",
+                        "ref_id": null
+                    }
+                ],
+                "ref_spans": [],
+                "eq_spans": [],
+                "section": "A.2 MORE DETAILS OF VONET",
+                "sec_num": null
+            },
+            {
+                "text": "Segmentation mask. For FG-ARI and mIoU evaluation, an integer segmentation mask is generated by consolidating the K slot attention masks m t,k (Eq. 3), where each mask contains a floating-point value within the range of [0, 1] at each pixel location. This value represents the probability of the pixel being assigned to the corresponding slot. If the maximum probability at the pixel is smaller than 0.3 (no slot is confident enough), we assign that pixel to a special \"null\" slot. Otherwise, the pixel is assigned to the slot with the maximum probability. As a result, each segmentation mask contains at most K + 1 distinct integer values, where K is the number of pre-allocated slots. During training, we create a replay buffer with a length of 10k frames and a width of 16 videos. For each gradient update, we first unroll the same copy of VONet on each of 16 videos for 2 steps, store the unrolled states in the replay buffer, and randomly extract a mini-batch of size B with a length of 3 (in total 3B frames) from the buffer to compute the gradient. After the update, the unrolling continues until the videos are finished (after 24 2 = 12 updates), when we randomly select another 16 videos from the dataset to replace them. We set B = 32 for MOVI-{A,B,C} while B = 24 for MOVI-{D,E}.",
+                "cite_spans": [],
+                "ref_spans": [],
+                "eq_spans": [],
+                "section": "A.2 MORE DETAILS OF VONET",
+                "sec_num": null
+            },
+            {
+                "text": "We provide a brief description of the key hyperparameters used for VONet in our experiments. For the complete set of hyperparameters, we encourage the reader to refer to our code3 . The input video frame x t is resized to 128 \u00d7 128. Unlike some prior methods, we did not perform any data augmentation on the frames. We set the lengths of all the following vectors to 128: i) Noise vector \u03f5 k (Eq. 5); ii) Per-frame slot latent y t,k (Eq. 4); iii) Per-trajectory slot latent r t,k (Eq. 4); iv) Context vector c t,k (Eq. 4); v) VAE posterior embedding z t,k (Eq. 6).",
+                "cite_spans": [],
+                "ref_spans": [],
+                "eq_spans": [],
+                "section": "A.3 HYPERPARAMETERS",
+                "sec_num": null
+            },
+            {
+                "text": "(We also explored a smaller length of 64 for these vectors, but obtained slightly worse results.) For any transformer, its model size (d_model), key size (d_k), and value size (d_v) are all set to be equal to the query size, whereas its hidden size (d_ff) is twice the query size.",
+                "cite_spans": [],
+                "ref_spans": [],
+                "eq_spans": [],
+                "section": "A.3 HYPERPARAMETERS",
+                "sec_num": null
+            },
+            {
+                "text": "We rolled out 16 workers in parallel for collecting video data in the replay buffer. Each worker utilizes the most recent VONet model for inference on 2 consecutive video frames, stores the inputs and states in the replay buffer, pauses for the trainer to perform a gradient update, and then resumes data collection for another 2 frames, following this iterative process. The replay buffer length was set to 10k, resulting in a maximum number of time steps 16 \u00d7 10k = 160k in the buffer.",
+                "cite_spans": [],
+                "ref_spans": [],
+                "eq_spans": [],
+                "section": "A.3 HYPERPARAMETERS",
+                "sec_num": null
+            },
+            {
+                "text": "We trained 11 slots for MOVI-{A,B,C} while 16 slots for MOVI-{D,E}, reflecting the increased maximum number of objects in the latter two datasets. Accordingly, to ensure consistent GPU memory consumption across all training runs, we employed a mini-batch size4 of 32 for MOVI-{A,B,C} and 24 for MOVI-{D,E}. We sampled video segments of length 3 for training on all datasets. This training configuration ensures that any training job can be executed on a system equipped with 4 NVIDIA GeForce RTX 3090 GPUs or an equivalent amount of GPU memory.",
+                "cite_spans": [],
+                "ref_spans": [],
+                "eq_spans": [],
+                "section": "A.3 HYPERPARAMETERS",
+                "sec_num": null
+            },
+            {
+                "text": "For the optimization, we set the KL balancing coefficient \u03ba (Eq. 10) to 0.7. The KL loss weight \u03b2 (Eq. 8) was linearly increased from 0 to 20 D in the first 50k updates, where D = 128 is the posterior ",
+                "cite_spans": [],
+                "ref_spans": [],
+                "eq_spans": [],
+                "section": "A.3 HYPERPARAMETERS",
+                "sec_num": null
+            },
+            {
+                "text": "MONet included a third loss term to encourage the geometrical simplicity of the attention masks m k by having the decoder also reconstruct these masks. This loss is not discussed here.",
+                "cite_spans": [],
+                "ref_spans": [],
+                "eq_spans": [],
+                "section": "",
+                "sec_num": null
+            },
+            {
+                "text": "https://github.com/singhgautam/steve",
+                "cite_spans": [],
+                "ref_spans": [],
+                "eq_spans": [],
+                "section": "",
+                "sec_num": null
+            },
+            {
+                "text": "https://github.com/hnyu/vonet",
+                "cite_spans": [],
+                "ref_spans": [],
+                "eq_spans": [],
+                "section": "",
+                "sec_num": null
+            },
+            {
+                "text": "In our paper, when we refer to a sample within a mini-batch, we are referring to a video segment. Therefore, when we specify a mini-batch size of N , it indicates that the batch consists of N video segments.",
+                "cite_spans": [],
+                "ref_spans": [],
+                "eq_spans": [],
+                "section": "",
+                "sec_num": null
+            }
+        ],
+        "back_matter": [
+            {
+                "text": "We have presented VONet, a state-of-the-art approach for unsupervised video object learning. VONet incorporates a parallel attention process that simultaneously generates attention masks for all slots from a U-Net. The strong inductive bias of spatial locality in the U-Net leads to smoother and more compact object segmentation masks, compared to those derived from slot attention. Furthermore, VONet effectively tackles the challenge of temporal consistency in video object learning by propagating context vectors across time and adopting an object-wise sequential VAE framework. Across five datasets comprising videos of diverse complexities, VONet consistently demonstrates superior effectiveness compared to several strong baselines in generating high-quality object representations. We hope that our findings will offer valuable insights for future research in this field.",
+                "cite_spans": [],
+                "ref_spans": [],
+                "eq_spans": [],
+                "section": "CONCLUSION",
+                "sec_num": "7"
+            },
+            {
+                "text": "dimension. We used the Adam optimizer (Kingma & Ba, 2014) with a learning rate schedule as follows. The learning rate was increased linearly from 10 -5 to 10 -4 in the first 5k training updates, maintained the value until 100k updates, and finally was decreased linearly back to 10 -5 in another 50k updates. Thus in total, we trained each job for 150k gradient updates. In each update step, we normalized the global parameter norm to 0.1 if the norm exceeds this threshold.",
+                "cite_spans": [
+                    {
+                        "start": 38,
+                        "end": 57,
+                        "text": "(Kingma & Ba, 2014)",
+                        "ref_id": "BIBREF23"
+                    }
+                ],
+                "ref_spans": [],
+                "eq_spans": [],
+                "section": "annex",
+                "sec_num": null
+            },
+            {
+                "text": "All baseline methods except SIMONe (reason explained below), were trained with 11 slots for MOVI-{A,B,C} and 16 slots for MOVI-{C,D}. All baseline methods, with the exception of SCALOR, employed the same methodology for obtaining segmentation masks as was utilized in VONet. SCALOR, on the other hand, possesses its own robust method for deriving segmentation masks from attention maps, and thus we did not replace it. Below are their detailed training settings.SCALOR. We used the official implementation of SCALOR at https://github.com/ JindongJiang/SCALOR. We followed the suggestions in SAVI (Kipf et al., 2021) to configure its hyperparameters, with several exceptions as follows. The training video segment length was reduced from 10 to 6 to reduce memory consumption. We used an 8 \u00d7 8 grid instead of the 4 \u00d7 4 grid in SAVI as we found the former produced much better results on MOVI-{A,B}. We used a learning rate of 10 -4 to speed up the training convergence.ViMON. We used the official implementation of ViMON at https://github.com/ ecker-lab/object-centric-representation-benchmark. We made adjustments to its default hyperparameters to adapt its training to the MOVI datasets, by setting the VAE latent dim to 64 and the training video seq length to 6. We also explored different values for \u03b3, but found the default value 2 is already good enough. All other hyperparameters remain unchanged. SAVI. We made several changes to the official implementation of SAVI at https://github. com/google-research/slot-attention-video for our experiments. First, SAVI was trained in an entirely unsupervised manner to reconstruct RGB video frames only, without the object bounding box conditioning in the first video frame. The slots were initialized as unit Gaussian noises as in VONet. Second, to mitigate GPU memory usage, we halved the original training batch size, reducing it from 64 to 32. We also reduced the training video segment length from 6 to 3 on MOVI-{D,E}. Remarkably, these size adjustments did not yield any discernible impact on the training results according to our observations on several trial training jobs. Finally, we conducted training with a medium-sized SAVI model, featuring a 9-layer ResNet as the encoder backbone which has a comparable size to the backbone of VONet. Specifically, the ResNet architecture was created by assigning a size (number of residual blocks) of 1 to each of the four ResNet stages, employing the class ResNetWithBasicBlk implemented by SAVI.",
+                "cite_spans": [
+                    {
+                        "start": 596,
+                        "end": 615,
+                        "text": "(Kipf et al., 2021)",
+                        "ref_id": "BIBREF25"
+                    }
+                ],
+                "ref_spans": [],
+                "eq_spans": [],
+                "section": "A.4 BASELINE DETAILS",
+                "sec_num": null
+            },
+            {
+                "text": "We used the re-implementation of SIMONe at https://gitlab.com/ generally-intelligent/simone, which successfully reproduced the performance on CATER (Girdhar & Ramanan, 2019) . In contrast to other baseline methods and VONet, SIMONe imposes a strict requirement on the number of learnable slots. This number must be equal to the product of the height and width of the feature map resulting from its CNN encoder and transformer. Consequently, we employed a fixed slot number of 16 across all MOVI datasets for SIMONe. We set the mini-batch size to 40 and the video segment length to 24 (full length). All other hyperparameters remained unaltered. STEVE. Since STEVE has been extensively evaluated on MOVI-{D,E} by its authors, we largely retained its original hyperparameters. However, we explored one exception: experimenting with two different values for its slot size: 64 and 128. Our observation revealed that a larger slot size of 128 consistently yielded no better or even sometimes slightly inferior results across all five datasets. Consequently, we settled on a slot size of 64 for STEVE in our final configuration.",
+                "cite_spans": [
+                    {
+                        "start": 148,
+                        "end": 173,
+                        "text": "(Girdhar & Ramanan, 2019)",
+                        "ref_id": "BIBREF12"
+                    }
+                ],
+                "ref_spans": [],
+                "eq_spans": [],
+                "section": "SIMONe.",
+                "sec_num": null
+            },
+            {
+                "text": "We refer the reader to the official MOVI datasets website for details: https://github. com/google-research/kubric/tree/main/challenges/movi. We did not make any change to the five datasets. The official training/validation splits were used in our experiments.",
+                "cite_spans": [],
+                "ref_spans": [],
+                "eq_spans": [],
+                "section": "A.5 DATASET DETAILS",
+                "sec_num": null
+            }
+        ],
+        "bib_entries": {
+            "BIBREF1": {
+                "ref_id": "b1",
+                "title": "Discovering objects that can move",
+                "authors": [
+                    {
+                        "first": "Zhipeng",
+                        "middle": [],
+                        "last": "Bao",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "Pavel",
+                        "middle": [],
+                        "last": "Tokmakov",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "Allan",
+                        "middle": [],
+                        "last": "Jabri",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "Yu-Xiong",
+                        "middle": [],
+                        "last": "Wang",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "Adrien",
+                        "middle": [],
+                        "last": "Gaidon",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "Martial",
+                        "middle": [],
+                        "last": "Hebert",
+                        "suffix": ""
+                    }
+                ],
+                "year": 2022,
+                "venue": "Proceedings of the IEEE/CVF Conference on Computer Vision and Pattern Recognition",
+                "volume": "",
+                "issue": "",
+                "pages": "11789--11798",
+                "other_ids": {},
+                "num": null,
+                "urls": [],
+                "raw_text": "Zhipeng Bao, Pavel Tokmakov, Allan Jabri, Yu-Xiong Wang, Adrien Gaidon, and Martial Hebert. Discovering objects that can move. In Proceedings of the IEEE/CVF Conference on Computer Vision and Pattern Recognition, pp. 11789-11798, 2022.",
+                "links": null
+            },
+            "BIBREF2": {
+                "ref_id": "b2",
+                "title": "Unsupervised scene decomposition and representation",
+                "authors": [
+                    {
+                        "first": "Loic",
+                        "middle": [],
+                        "last": "Christopher P Burgess",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "Nicholas",
+                        "middle": [],
+                        "last": "Matthey",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "Rishabh",
+                        "middle": [],
+                        "last": "Watters",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "Irina",
+                        "middle": [],
+                        "last": "Kabra",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "Matt",
+                        "middle": [],
+                        "last": "Higgins",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "Alexander",
+                        "middle": [],
+                        "last": "Botvinick",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "",
+                        "middle": [],
+                        "last": "Lerchner",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "",
+                        "middle": [],
+                        "last": "Monet",
+                        "suffix": ""
+                    }
+                ],
+                "year": 2019,
+                "venue": "",
+                "volume": "",
+                "issue": "",
+                "pages": "",
+                "other_ids": {
+                    "arXiv": [
+                        "arXiv:1901.11390"
+                    ]
+                },
+                "num": null,
+                "urls": [],
+                "raw_text": "Christopher P Burgess, Loic Matthey, Nicholas Watters, Rishabh Kabra, Irina Higgins, Matt Botvinick, and Alexander Lerchner. Monet: Unsupervised scene decomposition and represen- tation. arXiv preprint arXiv:1901.11390, 2019.",
+                "links": null
+            },
+            "BIBREF3": {
+                "ref_id": "b3",
+                "title": "Generative pretraining from pixels",
+                "authors": [
+                    {
+                        "first": "Mark",
+                        "middle": [],
+                        "last": "Chen",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "Alec",
+                        "middle": [],
+                        "last": "Radford",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "Rewon",
+                        "middle": [],
+                        "last": "Child",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "Jeffrey",
+                        "middle": [],
+                        "last": "Wu",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "Heewoo",
+                        "middle": [],
+                        "last": "Jun",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "David",
+                        "middle": [],
+                        "last": "Luan",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "Ilya",
+                        "middle": [],
+                        "last": "Sutskever",
+                        "suffix": ""
+                    }
+                ],
+                "year": 2020,
+                "venue": "International conference on machine learning",
+                "volume": "",
+                "issue": "",
+                "pages": "1691--1703",
+                "other_ids": {},
+                "num": null,
+                "urls": [],
+                "raw_text": "Mark Chen, Alec Radford, Rewon Child, Jeffrey Wu, Heewoo Jun, David Luan, and Ilya Sutskever. Generative pretraining from pixels. In International conference on machine learning, pp. 1691- 1703. PMLR, 2020.",
+                "links": null
+            },
+            "BIBREF4": {
+                "ref_id": "b4",
+                "title": "Xmem: Long-term video object segmentation with an atkinson-shiffrin memory model",
+                "authors": [
+                    {
+                        "first": "Kei",
+                        "middle": [],
+                        "last": "Ho",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "Alexander",
+                        "middle": [
+                            "G"
+                        ],
+                        "last": "Cheng",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "",
+                        "middle": [],
+                        "last": "Schwing",
+                        "suffix": ""
+                    }
+                ],
+                "year": 2022,
+                "venue": "ECCV",
+                "volume": "",
+                "issue": "",
+                "pages": "",
+                "other_ids": {},
+                "num": null,
+                "urls": [],
+                "raw_text": "Ho Kei Cheng and Alexander G. Schwing. Xmem: Long-term video object segmentation with an atkinson-shiffrin memory model. In ECCV, 2022.",
+                "links": null
+            },
+            "BIBREF5": {
+                "ref_id": "b5",
+                "title": "Learning phrase representations using rnn encoder-decoder for statistical machine translation",
+                "authors": [
+                    {
+                        "first": "Kyunghyun",
+                        "middle": [],
+                        "last": "Cho",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "Bart",
+                        "middle": [],
+                        "last": "Van Merri\u00ebnboer",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "Caglar",
+                        "middle": [],
+                        "last": "Gulcehre",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "Dzmitry",
+                        "middle": [],
+                        "last": "Bahdanau",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "Fethi",
+                        "middle": [],
+                        "last": "Bougares",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "Holger",
+                        "middle": [],
+                        "last": "Schwenk",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "Yoshua",
+                        "middle": [],
+                        "last": "Bengio",
+                        "suffix": ""
+                    }
+                ],
+                "year": 2014,
+                "venue": "",
+                "volume": "",
+                "issue": "",
+                "pages": "",
+                "other_ids": {
+                    "arXiv": [
+                        "arXiv:1406.1078"
+                    ]
+                },
+                "num": null,
+                "urls": [],
+                "raw_text": "Kyunghyun Cho, Bart Van Merri\u00ebnboer, Caglar Gulcehre, Dzmitry Bahdanau, Fethi Bougares, Hol- ger Schwenk, and Yoshua Bengio. Learning phrase representations using rnn encoder-decoder for statistical machine translation. arXiv preprint arXiv:1406.1078, 2014.",
+                "links": null
+            },
+            "BIBREF6": {
+                "ref_id": "b6",
+                "title": "Deep learning in video multi-object tracking: A survey",
+                "authors": [
+                    {
+                        "first": "Gioele",
+                        "middle": [],
+                        "last": "Ciaparrone",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "Francisco",
+                        "middle": [
+                            "Luque"
+                        ],
+                        "last": "S\u00e1nchez",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "Siham",
+                        "middle": [],
+                        "last": "Tabik",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "Luigi",
+                        "middle": [],
+                        "last": "Troiano",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "Roberto",
+                        "middle": [],
+                        "last": "Tagliaferri",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "Francisco",
+                        "middle": [],
+                        "last": "Herrera",
+                        "suffix": ""
+                    }
+                ],
+                "year": 2020,
+                "venue": "Neurocomputing",
+                "volume": "381",
+                "issue": "",
+                "pages": "61--88",
+                "other_ids": {},
+                "num": null,
+                "urls": [],
+                "raw_text": "Gioele Ciaparrone, Francisco Luque S\u00e1nchez, Siham Tabik, Luigi Troiano, Roberto Tagliaferri, and Francisco Herrera. Deep learning in video multi-object tracking: A survey. Neurocomputing, 381:61-88, 2020.",
+                "links": null
+            },
+            "BIBREF7": {
+                "ref_id": "b7",
+                "title": "Unsupervised objectbased transition models for 3d partially observable environments",
+                "authors": [
+                    {
+                        "first": "Antonia",
+                        "middle": [],
+                        "last": "Creswell",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "Rishabh",
+                        "middle": [],
+                        "last": "Kabra",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "Chris",
+                        "middle": [],
+                        "last": "Burgess",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "Murray",
+                        "middle": [],
+                        "last": "Shanahan",
+                        "suffix": ""
+                    }
+                ],
+                "year": 2021,
+                "venue": "Advances in Neural Information Processing Systems",
+                "volume": "34",
+                "issue": "",
+                "pages": "27344--27355",
+                "other_ids": {},
+                "num": null,
+                "urls": [],
+                "raw_text": "Antonia Creswell, Rishabh Kabra, Chris Burgess, and Murray Shanahan. Unsupervised object- based transition models for 3d partially observable environments. Advances in Neural Information Processing Systems, 34:27344-27355, 2021.",
+                "links": null
+            },
+            "BIBREF8": {
+                "ref_id": "b8",
+                "title": "Savi++: Towards end-to-end object-centric learning from real-world videos",
+                "authors": [
+                    {
+                        "first": "Gamaleldin",
+                        "middle": [],
+                        "last": "Elsayed",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "Aravindh",
+                        "middle": [],
+                        "last": "Mahendran",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "Klaus",
+                        "middle": [],
+                        "last": "Sjoerd Van Steenkiste",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "",
+                        "middle": [],
+                        "last": "Greff",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "Thomas",
+                        "middle": [],
+                        "last": "Michael C Mozer",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "",
+                        "middle": [],
+                        "last": "Kipf",
+                        "suffix": ""
+                    }
+                ],
+                "year": 2022,
+                "venue": "Advances in Neural Information Processing Systems",
+                "volume": "35",
+                "issue": "",
+                "pages": "28940--28954",
+                "other_ids": {},
+                "num": null,
+                "urls": [],
+                "raw_text": "Gamaleldin Elsayed, Aravindh Mahendran, Sjoerd van Steenkiste, Klaus Greff, Michael C Mozer, and Thomas Kipf. Savi++: Towards end-to-end object-centric learning from real-world videos. Advances in Neural Information Processing Systems, 35:28940-28954, 2022.",
+                "links": null
+            },
+            "BIBREF9": {
+                "ref_id": "b9",
+                "title": "Efficient iterative amortized inference for learning symmetric and disentangled multi-object representations",
+                "authors": [
+                    {
+                        "first": "Patrick",
+                        "middle": [],
+                        "last": "Emami",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "Pan",
+                        "middle": [],
+                        "last": "He",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "Sanjay",
+                        "middle": [],
+                        "last": "Ranka",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "Anand",
+                        "middle": [],
+                        "last": "Rangarajan",
+                        "suffix": ""
+                    }
+                ],
+                "year": 2021,
+                "venue": "International Conference on Machine Learning",
+                "volume": "",
+                "issue": "",
+                "pages": "2970--2981",
+                "other_ids": {},
+                "num": null,
+                "urls": [],
+                "raw_text": "Patrick Emami, Pan He, Sanjay Ranka, and Anand Rangarajan. Efficient iterative amortized in- ference for learning symmetric and disentangled multi-object representations. In International Conference on Machine Learning, pp. 2970-2981. PMLR, 2021.",
+                "links": null
+            },
+            "BIBREF10": {
+                "ref_id": "b10",
+                "title": "Genesis-v2: Inferring unordered object representations without iterative refinement",
+                "authors": [
+                    {
+                        "first": "Martin",
+                        "middle": [],
+                        "last": "Engelcke",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "Oiwi",
+                        "middle": [
+                            "Parker"
+                        ],
+                        "last": "Jones",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "Ingmar",
+                        "middle": [],
+                        "last": "Posner",
+                        "suffix": ""
+                    }
+                ],
+                "year": 2021,
+                "venue": "Advances in Neural Information Processing Systems",
+                "volume": "34",
+                "issue": "",
+                "pages": "8085--8094",
+                "other_ids": {},
+                "num": null,
+                "urls": [],
+                "raw_text": "Martin Engelcke, Oiwi Parker Jones, and Ingmar Posner. Genesis-v2: Inferring unordered object representations without iterative refinement. Advances in Neural Information Processing Systems, 34:8085-8094, 2021.",
+                "links": null
+            },
+            "BIBREF11": {
+                "ref_id": "b11",
+                "title": "Attend, infer, repeat: Fast scene understanding with generative models",
+                "authors": [
+                    {
+                        "first": "Nicolas",
+                        "middle": [],
+                        "last": "Sm Eslami",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "Theophane",
+                        "middle": [],
+                        "last": "Heess",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "Yuval",
+                        "middle": [],
+                        "last": "Weber",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "David",
+                        "middle": [],
+                        "last": "Tassa",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "Geoffrey",
+                        "middle": [
+                            "E"
+                        ],
+                        "last": "Szepesvari",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "",
+                        "middle": [],
+                        "last": "Hinton",
+                        "suffix": ""
+                    }
+                ],
+                "year": 2016,
+                "venue": "Advances in neural information processing systems",
+                "volume": "29",
+                "issue": "",
+                "pages": "",
+                "other_ids": {},
+                "num": null,
+                "urls": [],
+                "raw_text": "SM Eslami, Nicolas Heess, Theophane Weber, Yuval Tassa, David Szepesvari, Geoffrey E Hinton, et al. Attend, infer, repeat: Fast scene understanding with generative models. Advances in neural information processing systems, 29, 2016.",
+                "links": null
+            },
+            "BIBREF12": {
+                "ref_id": "b12",
+                "title": "Cater: A diagnostic dataset for compositional actions and temporal reasoning",
+                "authors": [
+                    {
+                        "first": "Rohit",
+                        "middle": [],
+                        "last": "Girdhar",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "Deva",
+                        "middle": [],
+                        "last": "Ramanan",
+                        "suffix": ""
+                    }
+                ],
+                "year": 2019,
+                "venue": "",
+                "volume": "",
+                "issue": "",
+                "pages": "",
+                "other_ids": {
+                    "arXiv": [
+                        "arXiv:1910.04744"
+                    ]
+                },
+                "num": null,
+                "urls": [],
+                "raw_text": "Rohit Girdhar and Deva Ramanan. Cater: A diagnostic dataset for compositional actions and tem- poral reasoning. arXiv preprint arXiv:1910.04744, 2019.",
+                "links": null
+            },
+            "BIBREF13": {
+                "ref_id": "b13",
+                "title": "Multi-object representation learning with iterative variational inference",
+                "authors": [
+                    {
+                        "first": "Klaus",
+                        "middle": [],
+                        "last": "Greff",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "Rapha\u00ebl",
+                        "middle": [],
+                        "last": "Lopez Kaufman",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "Rishabh",
+                        "middle": [],
+                        "last": "Kabra",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "Nick",
+                        "middle": [],
+                        "last": "Watters",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "Christopher",
+                        "middle": [],
+                        "last": "Burgess",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "Daniel",
+                        "middle": [],
+                        "last": "Zoran",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "Loic",
+                        "middle": [],
+                        "last": "Matthey",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "Matthew",
+                        "middle": [],
+                        "last": "Botvinick",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "Alexander",
+                        "middle": [],
+                        "last": "Lerchner",
+                        "suffix": ""
+                    }
+                ],
+                "year": 2019,
+                "venue": "International Conference on Machine Learning",
+                "volume": "",
+                "issue": "",
+                "pages": "2424--2433",
+                "other_ids": {},
+                "num": null,
+                "urls": [],
+                "raw_text": "Klaus Greff, Rapha\u00ebl Lopez Kaufman, Rishabh Kabra, Nick Watters, Christopher Burgess, Daniel Zoran, Loic Matthey, Matthew Botvinick, and Alexander Lerchner. Multi-object representation learning with iterative variational inference. In International Conference on Machine Learning, pp. 2424-2433. PMLR, 2019.",
+                "links": null
+            },
+            "BIBREF14": {
+                "ref_id": "b14",
+                "title": "On the binding problem in artificial neural networks",
+                "authors": [
+                    {
+                        "first": "Klaus",
+                        "middle": [],
+                        "last": "Greff",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "Sjoerd",
+                        "middle": [],
+                        "last": "Van Steenkiste",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "J\u00fcrgen",
+                        "middle": [],
+                        "last": "Schmidhuber",
+                        "suffix": ""
+                    }
+                ],
+                "year": 2020,
+                "venue": "",
+                "volume": "",
+                "issue": "",
+                "pages": "",
+                "other_ids": {
+                    "arXiv": [
+                        "arXiv:2012.05208"
+                    ]
+                },
+                "num": null,
+                "urls": [],
+                "raw_text": "Klaus Greff, Sjoerd Van Steenkiste, and J\u00fcrgen Schmidhuber. On the binding problem in artificial neural networks. arXiv preprint arXiv:2012.05208, 2020.",
+                "links": null
+            },
+            "BIBREF15": {
+                "ref_id": "b15",
+                "title": "Kubric: a scalable dataset generator",
+                "authors": [
+                    {
+                        "first": "Klaus",
+                        "middle": [],
+                        "last": "Greff",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "Francois",
+                        "middle": [],
+                        "last": "Belletti",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "Lucas",
+                        "middle": [],
+                        "last": "Beyer",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "Carl",
+                        "middle": [],
+                        "last": "Doersch",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "Yilun",
+                        "middle": [],
+                        "last": "Du",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "Daniel",
+                        "middle": [],
+                        "last": "Duckworth",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "David",
+                        "middle": [
+                            "J"
+                        ],
+                        "last": "Fleet",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "Dan",
+                        "middle": [],
+                        "last": "Gnanapragasam",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "Florian",
+                        "middle": [],
+                        "last": "Golemo",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "Charles",
+                        "middle": [],
+                        "last": "Herrmann",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "Thomas",
+                        "middle": [],
+                        "last": "Kipf",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "Abhijit",
+                        "middle": [],
+                        "last": "Kundu",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "Dmitry",
+                        "middle": [],
+                        "last": "Lagun",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "Issam",
+                        "middle": [],
+                        "last": "Laradji",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "(",
+                        "middle": [],
+                        "last": "Hsueh-Ti",
+                        "suffix": ""
+                    },
+                    {
+                        "first": ")",
+                        "middle": [],
+                        "last": "Derek",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "Henning",
+                        "middle": [],
+                        "last": "Liu",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "Yishu",
+                        "middle": [],
+                        "last": "Meyer",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "Derek",
+                        "middle": [],
+                        "last": "Miao",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "Cengiz",
+                        "middle": [],
+                        "last": "Nowrouzezahrai",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "Etienne",
+                        "middle": [],
+                        "last": "Oztireli",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "Noha",
+                        "middle": [],
+                        "last": "Pot",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "Daniel",
+                        "middle": [],
+                        "last": "Radwan",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "Sara",
+                        "middle": [],
+                        "last": "Rebain",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "",
+                        "middle": [],
+                        "last": "Sabour",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "S",
+                        "middle": [
+                            "M"
+                        ],
+                        "last": "Mehdi",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "Matan",
+                        "middle": [],
+                        "last": "Sajjadi",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "Vincent",
+                        "middle": [],
+                        "last": "Sela",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "Austin",
+                        "middle": [],
+                        "last": "Sitzmann",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "Deqing",
+                        "middle": [],
+                        "last": "Stone",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "Suhani",
+                        "middle": [],
+                        "last": "Sun",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "Ziyu",
+                        "middle": [],
+                        "last": "Vora",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "Tianhao",
+                        "middle": [],
+                        "last": "Wang",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "Kwang",
+                        "middle": [
+                            "Moo"
+                        ],
+                        "last": "Wu",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "Fangcheng",
+                        "middle": [],
+                        "last": "Yi",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "Andrea",
+                        "middle": [],
+                        "last": "Zhong",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "",
+                        "middle": [],
+                        "last": "Tagliasacchi",
+                        "suffix": ""
+                    }
+                ],
+                "year": null,
+                "venue": "Proceedings of the IEEE Conference on Computer Vision and Pattern Recognition (CVPR)",
+                "volume": "",
+                "issue": "",
+                "pages": "",
+                "other_ids": {},
+                "num": null,
+                "urls": [],
+                "raw_text": "Klaus Greff, Francois Belletti, Lucas Beyer, Carl Doersch, Yilun Du, Daniel Duckworth, David J Fleet, Dan Gnanapragasam, Florian Golemo, Charles Herrmann, Thomas Kipf, Abhijit Kundu, Dmitry Lagun, Issam Laradji, Hsueh-Ti (Derek) Liu, Henning Meyer, Yishu Miao, Derek Nowrouzezahrai, Cengiz Oztireli, Etienne Pot, Noha Radwan, Daniel Rebain, Sara Sabour, Mehdi S. M. Sajjadi, Matan Sela, Vincent Sitzmann, Austin Stone, Deqing Sun, Suhani Vora, Ziyu Wang, Tianhao Wu, Kwang Moo Yi, Fangcheng Zhong, and Andrea Tagliasacchi. Kubric: a scalable dataset generator. In Proceedings of the IEEE Conference on Computer Vision and Pattern Recog- nition (CVPR), 2022.",
+                "links": null
+            },
+            "BIBREF16": {
+                "ref_id": "b16",
+                "title": "Dream to control: Learning behaviors by latent imagination",
+                "authors": [
+                    {
+                        "first": "Danijar",
+                        "middle": [],
+                        "last": "Hafner",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "Timothy",
+                        "middle": [],
+                        "last": "Lillicrap",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "Jimmy",
+                        "middle": [],
+                        "last": "Ba",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "Mohammad",
+                        "middle": [],
+                        "last": "Norouzi",
+                        "suffix": ""
+                    }
+                ],
+                "year": 2019,
+                "venue": "",
+                "volume": "",
+                "issue": "",
+                "pages": "",
+                "other_ids": {
+                    "arXiv": [
+                        "arXiv:1912.01603"
+                    ]
+                },
+                "num": null,
+                "urls": [],
+                "raw_text": "Danijar Hafner, Timothy Lillicrap, Jimmy Ba, and Mohammad Norouzi. Dream to control: Learning behaviors by latent imagination. arXiv preprint arXiv:1912.01603, 2019.",
+                "links": null
+            },
+            "BIBREF17": {
+                "ref_id": "b17",
+                "title": "Mastering atari with discrete world models",
+                "authors": [
+                    {
+                        "first": "Danijar",
+                        "middle": [],
+                        "last": "Hafner",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "Timothy",
+                        "middle": [],
+                        "last": "Lillicrap",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "Mohammad",
+                        "middle": [],
+                        "last": "Norouzi",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "Jimmy",
+                        "middle": [],
+                        "last": "Ba",
+                        "suffix": ""
+                    }
+                ],
+                "year": 2020,
+                "venue": "",
+                "volume": "",
+                "issue": "",
+                "pages": "",
+                "other_ids": {
+                    "arXiv": [
+                        "arXiv:2010.02193"
+                    ]
+                },
+                "num": null,
+                "urls": [],
+                "raw_text": "Danijar Hafner, Timothy Lillicrap, Mohammad Norouzi, and Jimmy Ba. Mastering atari with dis- crete world models. arXiv preprint arXiv:2010.02193, 2020.",
+                "links": null
+            },
+            "BIBREF18": {
+                "ref_id": "b18",
+                "title": "Deep residual learning for image recognition",
+                "authors": [
+                    {
+                        "first": "Kaiming",
+                        "middle": [],
+                        "last": "He",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "Xiangyu",
+                        "middle": [],
+                        "last": "Zhang",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "Shaoqing",
+                        "middle": [],
+                        "last": "Ren",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "Jian",
+                        "middle": [],
+                        "last": "Sun",
+                        "suffix": ""
+                    }
+                ],
+                "year": 2016,
+                "venue": "Proceedings of the IEEE conference on computer vision and pattern recognition",
+                "volume": "",
+                "issue": "",
+                "pages": "770--778",
+                "other_ids": {},
+                "num": null,
+                "urls": [],
+                "raw_text": "Kaiming He, Xiangyu Zhang, Shaoqing Ren, and Jian Sun. Deep residual learning for image recog- nition. In Proceedings of the IEEE conference on computer vision and pattern recognition, pp. 770-778, 2016.",
+                "links": null
+            },
+            "BIBREF19": {
+                "ref_id": "b19",
+                "title": "Tracking by animation: Unsupervised learning of multi-object attentive trackers",
+                "authors": [
+                    {
+                        "first": "Zhen",
+                        "middle": [],
+                        "last": "He",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "Jian",
+                        "middle": [],
+                        "last": "Li",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "Daxue",
+                        "middle": [],
+                        "last": "Liu",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "Hangen",
+                        "middle": [],
+                        "last": "He",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "David",
+                        "middle": [],
+                        "last": "Barber",
+                        "suffix": ""
+                    }
+                ],
+                "year": 2019,
+                "venue": "Proceedings of the IEEE/CVF Conference on Computer Vision and Pattern Recognition",
+                "volume": "",
+                "issue": "",
+                "pages": "1318--1327",
+                "other_ids": {},
+                "num": null,
+                "urls": [],
+                "raw_text": "Zhen He, Jian Li, Daxue Liu, Hangen He, and David Barber. Tracking by animation: Unsuper- vised learning of multi-object attentive trackers. In Proceedings of the IEEE/CVF Conference on Computer Vision and Pattern Recognition, pp. 1318-1327, 2019.",
+                "links": null
+            },
+            "BIBREF20": {
+                "ref_id": "b20",
+                "title": "Object discovery and representation networks",
+                "authors": [
+                    {
+                        "first": "J",
+                        "middle": [],
+                        "last": "Olivier",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "Skanda",
+                        "middle": [],
+                        "last": "H\u00e9naff",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "Evan",
+                        "middle": [],
+                        "last": "Koppula",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "Daniel",
+                        "middle": [],
+                        "last": "Shelhamer",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "Andrew",
+                        "middle": [],
+                        "last": "Zoran",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "Andrew",
+                        "middle": [],
+                        "last": "Jaegle",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "Jo\u00e3o",
+                        "middle": [],
+                        "last": "Zisserman",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "Relja",
+                        "middle": [],
+                        "last": "Carreira",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "",
+                        "middle": [],
+                        "last": "Arandjelovi\u0107",
+                        "suffix": ""
+                    }
+                ],
+                "year": 2022,
+                "venue": "European Conference on Computer Vision",
+                "volume": "",
+                "issue": "",
+                "pages": "123--143",
+                "other_ids": {},
+                "num": null,
+                "urls": [],
+                "raw_text": "Olivier J H\u00e9naff, Skanda Koppula, Evan Shelhamer, Daniel Zoran, Andrew Jaegle, Andrew Zisser- man, Jo\u00e3o Carreira, and Relja Arandjelovi\u0107. Object discovery and representation networks. In European Conference on Computer Vision, pp. 123-143. Springer, 2022.",
+                "links": null
+            },
+            "BIBREF21": {
+                "ref_id": "b21",
+                "title": "Generative world models with scalable object representations",
+                "authors": [
+                    {
+                        "first": "Jindong",
+                        "middle": [],
+                        "last": "Jiang",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "Sepehr",
+                        "middle": [],
+                        "last": "Janghorbani",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "Gerard",
+                        "middle": [],
+                        "last": "De Melo",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "Sungjin",
+                        "middle": [],
+                        "last": "Ahn",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "",
+                        "middle": [],
+                        "last": "Scalor",
+                        "suffix": ""
+                    }
+                ],
+                "year": 2019,
+                "venue": "",
+                "volume": "",
+                "issue": "",
+                "pages": "",
+                "other_ids": {
+                    "arXiv": [
+                        "arXiv:1910.02384"
+                    ]
+                },
+                "num": null,
+                "urls": [],
+                "raw_text": "Jindong Jiang, Sepehr Janghorbani, Gerard De Melo, and Sungjin Ahn. Scalor: Generative world models with scalable object representations. arXiv preprint arXiv:1910.02384, 2019.",
+                "links": null
+            },
+            "BIBREF22": {
+                "ref_id": "b22",
+                "title": "Simone: View-invariant, temporally-abstracted object representations via unsupervised video decomposition",
+                "authors": [
+                    {
+                        "first": "Rishabh",
+                        "middle": [],
+                        "last": "Kabra",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "Daniel",
+                        "middle": [],
+                        "last": "Zoran",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "Goker",
+                        "middle": [],
+                        "last": "Erdogan",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "Loic",
+                        "middle": [],
+                        "last": "Matthey",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "Antonia",
+                        "middle": [],
+                        "last": "Creswell",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "Matt",
+                        "middle": [],
+                        "last": "Botvinick",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "Alexander",
+                        "middle": [],
+                        "last": "Lerchner",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "Chris",
+                        "middle": [],
+                        "last": "Burgess",
+                        "suffix": ""
+                    }
+                ],
+                "year": 2021,
+                "venue": "Advances in Neural Information Processing Systems",
+                "volume": "34",
+                "issue": "",
+                "pages": "",
+                "other_ids": {},
+                "num": null,
+                "urls": [],
+                "raw_text": "Rishabh Kabra, Daniel Zoran, Goker Erdogan, Loic Matthey, Antonia Creswell, Matt Botvinick, Alexander Lerchner, and Chris Burgess. Simone: View-invariant, temporally-abstracted object representations via unsupervised video decomposition. Advances in Neural Information Process- ing Systems, 34:20146-20159, 2021.",
+                "links": null
+            },
+            "BIBREF23": {
+                "ref_id": "b23",
+                "title": "Adam: A method for stochastic optimization",
+                "authors": [
+                    {
+                        "first": "P",
+                        "middle": [],
+                        "last": "Diederik",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "Jimmy",
+                        "middle": [],
+                        "last": "Kingma",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "",
+                        "middle": [],
+                        "last": "Ba",
+                        "suffix": ""
+                    }
+                ],
+                "year": 2014,
+                "venue": "",
+                "volume": "",
+                "issue": "",
+                "pages": "",
+                "other_ids": {
+                    "arXiv": [
+                        "arXiv:1412.6980"
+                    ]
+                },
+                "num": null,
+                "urls": [],
+                "raw_text": "Diederik P Kingma and Jimmy Ba. Adam: A method for stochastic optimization. arXiv preprint arXiv:1412.6980, 2014.",
+                "links": null
+            },
+            "BIBREF24": {
+                "ref_id": "b24",
+                "title": "Auto-encoding variational bayes",
+                "authors": [
+                    {
+                        "first": "P",
+                        "middle": [],
+                        "last": "Diederik",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "Max",
+                        "middle": [],
+                        "last": "Kingma",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "",
+                        "middle": [],
+                        "last": "Welling",
+                        "suffix": ""
+                    }
+                ],
+                "year": 2013,
+                "venue": "",
+                "volume": "",
+                "issue": "",
+                "pages": "",
+                "other_ids": {
+                    "arXiv": [
+                        "arXiv:1312.6114"
+                    ]
+                },
+                "num": null,
+                "urls": [],
+                "raw_text": "Diederik P Kingma and Max Welling. Auto-encoding variational bayes. arXiv preprint arXiv:1312.6114, 2013.",
+                "links": null
+            },
+            "BIBREF25": {
+                "ref_id": "b25",
+                "title": "Conditional object-centric learning from video",
+                "authors": [
+                    {
+                        "first": "Thomas",
+                        "middle": [],
+                        "last": "Kipf",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "F",
+                        "middle": [],
+                        "last": "Gamaleldin",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "Aravindh",
+                        "middle": [],
+                        "last": "Elsayed",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "Austin",
+                        "middle": [],
+                        "last": "Mahendran",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "Sara",
+                        "middle": [],
+                        "last": "Stone",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "Georg",
+                        "middle": [],
+                        "last": "Sabour",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "Rico",
+                        "middle": [],
+                        "last": "Heigold",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "Alexey",
+                        "middle": [],
+                        "last": "Jonschkowski",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "Klaus",
+                        "middle": [],
+                        "last": "Dosovitskiy",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "",
+                        "middle": [],
+                        "last": "Greff",
+                        "suffix": ""
+                    }
+                ],
+                "year": 2021,
+                "venue": "",
+                "volume": "",
+                "issue": "",
+                "pages": "",
+                "other_ids": {
+                    "arXiv": [
+                        "arXiv:2111.12594"
+                    ]
+                },
+                "num": null,
+                "urls": [],
+                "raw_text": "Thomas Kipf, Gamaleldin F Elsayed, Aravindh Mahendran, Austin Stone, Sara Sabour, Georg Heigold, Rico Jonschkowski, Alexey Dosovitskiy, and Klaus Greff. Conditional object-centric learning from video. arXiv preprint arXiv:2111.12594, 2021.",
+                "links": null
+            },
+            "BIBREF26": {
+                "ref_id": "b26",
+                "title": "Sequential attend, infer, repeat: Generative modelling of moving objects",
+                "authors": [
+                    {
+                        "first": "Adam",
+                        "middle": [],
+                        "last": "Kosiorek",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "Hyunjik",
+                        "middle": [],
+                        "last": "Kim",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "Yee",
+                        "middle": [
+                            "Whye"
+                        ],
+                        "last": "Teh",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "Ingmar",
+                        "middle": [],
+                        "last": "Posner",
+                        "suffix": ""
+                    }
+                ],
+                "year": 2018,
+                "venue": "Advances in Neural Information Processing Systems",
+                "volume": "",
+                "issue": "",
+                "pages": "",
+                "other_ids": {},
+                "num": null,
+                "urls": [],
+                "raw_text": "Adam Kosiorek, Hyunjik Kim, Yee Whye Teh, and Ingmar Posner. Sequential attend, infer, repeat: Generative modelling of moving objects. Advances in Neural Information Processing Systems, 31, 2018.",
+                "links": null
+            },
+            "BIBREF27": {
+                "ref_id": "b27",
+                "title": "Structured object-aware physics prediction for video modeling and planning",
+                "authors": [
+                    {
+                        "first": "Jannik",
+                        "middle": [],
+                        "last": "Kossen",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "Karl",
+                        "middle": [],
+                        "last": "Stelzner",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "Marcel",
+                        "middle": [],
+                        "last": "Hussing",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "Claas",
+                        "middle": [],
+                        "last": "Voelcker",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "Kristian",
+                        "middle": [],
+                        "last": "Kersting",
+                        "suffix": ""
+                    }
+                ],
+                "year": 2019,
+                "venue": "",
+                "volume": "",
+                "issue": "",
+                "pages": "",
+                "other_ids": {
+                    "arXiv": [
+                        "arXiv:1910.02425"
+                    ]
+                },
+                "num": null,
+                "urls": [],
+                "raw_text": "Jannik Kossen, Karl Stelzner, Marcel Hussing, Claas Voelcker, and Kristian Kersting. Struc- tured object-aware physics prediction for video modeling and planning. arXiv preprint arXiv:1910.02425, 2019.",
+                "links": null
+            },
+            "BIBREF28": {
+                "ref_id": "b28",
+                "title": "Object-centric learning with slot attention",
+                "authors": [
+                    {
+                        "first": "Francesco",
+                        "middle": [],
+                        "last": "Locatello",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "Dirk",
+                        "middle": [],
+                        "last": "Weissenborn",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "Thomas",
+                        "middle": [],
+                        "last": "Unterthiner",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "Aravindh",
+                        "middle": [],
+                        "last": "Mahendran",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "Georg",
+                        "middle": [],
+                        "last": "Heigold",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "Jakob",
+                        "middle": [],
+                        "last": "Uszkoreit",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "Alexey",
+                        "middle": [],
+                        "last": "Dosovitskiy",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "Thomas",
+                        "middle": [],
+                        "last": "Kipf",
+                        "suffix": ""
+                    }
+                ],
+                "year": 2020,
+                "venue": "Advances in Neural Information Processing Systems",
+                "volume": "33",
+                "issue": "",
+                "pages": "11525--11538",
+                "other_ids": {},
+                "num": null,
+                "urls": [],
+                "raw_text": "Francesco Locatello, Dirk Weissenborn, Thomas Unterthiner, Aravindh Mahendran, Georg Heigold, Jakob Uszkoreit, Alexey Dosovitskiy, and Thomas Kipf. Object-centric learning with slot atten- tion. Advances in Neural Information Processing Systems, 33:11525-11538, 2020.",
+                "links": null
+            },
+            "BIBREF29": {
+                "ref_id": "b29",
+                "title": "Reusable slotwise mechanisms",
+                "authors": [
+                    {
+                        "first": "Trang",
+                        "middle": [],
+                        "last": "Nguyen",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "Amin",
+                        "middle": [],
+                        "last": "Mansouri",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "Kanika",
+                        "middle": [],
+                        "last": "Madan",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "Khuong",
+                        "middle": [],
+                        "last": "Duy Nguyen",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "Kartik",
+                        "middle": [],
+                        "last": "Ahuja",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "Dianbo",
+                        "middle": [],
+                        "last": "Liu",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "Yoshua",
+                        "middle": [],
+                        "last": "Bengio",
+                        "suffix": ""
+                    }
+                ],
+                "year": 2024,
+                "venue": "Advances in Neural Information Processing Systems",
+                "volume": "36",
+                "issue": "",
+                "pages": "",
+                "other_ids": {},
+                "num": null,
+                "urls": [],
+                "raw_text": "Trang Nguyen, Amin Mansouri, Kanika Madan, Khuong Duy Nguyen, Kartik Ahuja, Dianbo Liu, and Yoshua Bengio. Reusable slotwise mechanisms. Advances in Neural Information Processing Systems, 36, 2024.",
+                "links": null
+            },
+            "BIBREF30": {
+                "ref_id": "b30",
+                "title": "U-net: Convolutional networks for biomedical image segmentation",
+                "authors": [
+                    {
+                        "first": "Olaf",
+                        "middle": [],
+                        "last": "Ronneberger",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "Philipp",
+                        "middle": [],
+                        "last": "Fischer",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "Thomas",
+                        "middle": [],
+                        "last": "Brox",
+                        "suffix": ""
+                    }
+                ],
+                "year": 2015,
+                "venue": "18th International Conference",
+                "volume": "",
+                "issue": "",
+                "pages": "234--241",
+                "other_ids": {},
+                "num": null,
+                "urls": [],
+                "raw_text": "Olaf Ronneberger, Philipp Fischer, and Thomas Brox. U-net: Convolutional networks for biomed- ical image segmentation. In Medical Image Computing and Computer-Assisted Intervention- MICCAI 2015: 18th International Conference, Munich, Germany, October 5-9, 2015, Proceed- ings, Part III 18, pp. 234-241. Springer, 2015.",
+                "links": null
+            },
+            "BIBREF31": {
+                "ref_id": "b31",
+                "title": "Bridging the gap to real-world object-centric learning",
+                "authors": [
+                    {
+                        "first": "Maximilian",
+                        "middle": [],
+                        "last": "Seitzer",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "Max",
+                        "middle": [],
+                        "last": "Horn",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "Andrii",
+                        "middle": [],
+                        "last": "Zadaianchuk",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "Dominik",
+                        "middle": [],
+                        "last": "Zietlow",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "Tianjun",
+                        "middle": [],
+                        "last": "Xiao",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "Carl-Johann",
+                        "middle": [],
+                        "last": "Simon-Gabriel",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "Tong",
+                        "middle": [],
+                        "last": "He",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "Zheng",
+                        "middle": [],
+                        "last": "Zhang",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "Bernhard",
+                        "middle": [],
+                        "last": "Sch\u00f6lkopf",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "Thomas",
+                        "middle": [],
+                        "last": "Brox",
+                        "suffix": ""
+                    }
+                ],
+                "year": 2022,
+                "venue": "",
+                "volume": "",
+                "issue": "",
+                "pages": "",
+                "other_ids": {
+                    "arXiv": [
+                        "arXiv:2209.14860"
+                    ]
+                },
+                "num": null,
+                "urls": [],
+                "raw_text": "Maximilian Seitzer, Max Horn, Andrii Zadaianchuk, Dominik Zietlow, Tianjun Xiao, Carl-Johann Simon-Gabriel, Tong He, Zheng Zhang, Bernhard Sch\u00f6lkopf, Thomas Brox, et al. Bridging the gap to real-world object-centric learning. arXiv preprint arXiv:2209.14860, 2022.",
+                "links": null
+            },
+            "BIBREF33": {
+                "ref_id": "b33",
+                "title": "Simple unsupervised object-centric learning for complex and naturalistic videos",
+                "authors": [
+                    {
+                        "first": "Gautam",
+                        "middle": [],
+                        "last": "Singh",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "Yi-Fu",
+                        "middle": [],
+                        "last": "Wu",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "Sungjin",
+                        "middle": [],
+                        "last": "Ahn",
+                        "suffix": ""
+                    }
+                ],
+                "year": 2022,
+                "venue": "Advances in Neural Information Processing Systems",
+                "volume": "35",
+                "issue": "",
+                "pages": "18181--18196",
+                "other_ids": {},
+                "num": null,
+                "urls": [],
+                "raw_text": "Gautam Singh, Yi-Fu Wu, and Sungjin Ahn. Simple unsupervised object-centric learning for com- plex and naturalistic videos. Advances in Neural Information Processing Systems, 35:18181- 18196, 2022b.",
+                "links": null
+            },
+            "BIBREF34": {
+                "ref_id": "b34",
+                "title": "Instance normalization: The missing ingredient for fast stylization",
+                "authors": [
+                    {
+                        "first": "Dmitry",
+                        "middle": [],
+                        "last": "Ulyanov",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "Andrea",
+                        "middle": [],
+                        "last": "Vedaldi",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "Victor",
+                        "middle": [],
+                        "last": "Lempitsky",
+                        "suffix": ""
+                    }
+                ],
+                "year": 2016,
+                "venue": "",
+                "volume": "",
+                "issue": "",
+                "pages": "",
+                "other_ids": {
+                    "arXiv": [
+                        "arXiv:1607.08022"
+                    ]
+                },
+                "num": null,
+                "urls": [],
+                "raw_text": "Dmitry Ulyanov, Andrea Vedaldi, and Victor Lempitsky. Instance normalization: The missing in- gredient for fast stylization. arXiv preprint arXiv:1607.08022, 2016.",
+                "links": null
+            },
+            "BIBREF35": {
+                "ref_id": "b35",
+                "title": "Entity abstraction in visual model-based reinforcement learning",
+                "authors": [
+                    {
+                        "first": "Rishi",
+                        "middle": [],
+                        "last": "Veerapaneni",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "John",
+                        "middle": [
+                            "D"
+                        ],
+                        "last": "Co-Reyes",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "Michael",
+                        "middle": [],
+                        "last": "Chang",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "Michael",
+                        "middle": [],
+                        "last": "Janner",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "Chelsea",
+                        "middle": [],
+                        "last": "Finn",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "Jiajun",
+                        "middle": [],
+                        "last": "Wu",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "Joshua",
+                        "middle": [],
+                        "last": "Tenenbaum",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "Sergey",
+                        "middle": [],
+                        "last": "Levine",
+                        "suffix": ""
+                    }
+                ],
+                "year": 2020,
+                "venue": "Conference on Robot Learning",
+                "volume": "",
+                "issue": "",
+                "pages": "1439--1456",
+                "other_ids": {},
+                "num": null,
+                "urls": [],
+                "raw_text": "Rishi Veerapaneni, John D Co-Reyes, Michael Chang, Michael Janner, Chelsea Finn, Jiajun Wu, Joshua Tenenbaum, and Sergey Levine. Entity abstraction in visual model-based reinforcement learning. In Conference on Robot Learning, pp. 1439-1456. PMLR, 2020.",
+                "links": null
+            },
+            "BIBREF36": {
+                "ref_id": "b36",
+                "title": "Benchmarking unsupervised object representations for video sequences",
+                "authors": [
+                    {
+                        "first": "Marissa",
+                        "middle": [
+                            "A"
+                        ],
+                        "last": "Weis",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "Kashyap",
+                        "middle": [],
+                        "last": "Chitta",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "Yash",
+                        "middle": [],
+                        "last": "Sharma",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "Wieland",
+                        "middle": [],
+                        "last": "Brendel",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "Matthias",
+                        "middle": [],
+                        "last": "Bethge",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "Andreas",
+                        "middle": [],
+                        "last": "Geiger",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "Alexander",
+                        "middle": [
+                            "S"
+                        ],
+                        "last": "Ecker",
+                        "suffix": ""
+                    }
+                ],
+                "year": 2021,
+                "venue": "The Journal of Machine Learning Research",
+                "volume": "22",
+                "issue": "1",
+                "pages": "8253--8313",
+                "other_ids": {},
+                "num": null,
+                "urls": [],
+                "raw_text": "Marissa A Weis, Kashyap Chitta, Yash Sharma, Wieland Brendel, Matthias Bethge, Andreas Geiger, and Alexander S Ecker. Benchmarking unsupervised object representations for video sequences. The Journal of Machine Learning Research, 22(1):8253-8313, 2021.",
+                "links": null
+            },
+            "BIBREF37": {
+                "ref_id": "b37",
+                "title": "Object-centric learning for real-world videos by predicting temporal feature similarities",
+                "authors": [
+                    {
+                        "first": "Andrii",
+                        "middle": [],
+                        "last": "Zadaianchuk",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "Maximilian",
+                        "middle": [],
+                        "last": "Seitzer",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "Georg",
+                        "middle": [],
+                        "last": "Martius",
+                        "suffix": ""
+                    }
+                ],
+                "year": 2023,
+                "venue": "",
+                "volume": "",
+                "issue": "",
+                "pages": "",
+                "other_ids": {
+                    "arXiv": [
+                        "arXiv:2306.04829"
+                    ]
+                },
+                "num": null,
+                "urls": [],
+                "raw_text": "Andrii Zadaianchuk, Maximilian Seitzer, and Georg Martius. Object-centric learning for real-world videos by predicting temporal feature similarities. arXiv preprint arXiv:2306.04829, 2023.",
+                "links": null
+            },
+            "BIBREF38": {
+                "ref_id": "b38",
+                "title": "A survey on deep learning technique for video segmentation",
+                "authors": [
+                    {
+                        "first": "Tianfei",
+                        "middle": [],
+                        "last": "Zhou",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "Fatih",
+                        "middle": [],
+                        "last": "Porikli",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "David",
+                        "middle": [
+                            "J"
+                        ],
+                        "last": "Crandall",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "Luc",
+                        "middle": [],
+                        "last": "Van Gool",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "Wenguan",
+                        "middle": [],
+                        "last": "Wang",
+                        "suffix": ""
+                    }
+                ],
+                "year": 2022,
+                "venue": "IEEE Transactions on Pattern Analysis and Machine Intelligence",
+                "volume": "45",
+                "issue": "6",
+                "pages": "7099--7122",
+                "other_ids": {},
+                "num": null,
+                "urls": [],
+                "raw_text": "Tianfei Zhou, Fatih Porikli, David J Crandall, Luc Van Gool, and Wenguan Wang. A survey on deep learning technique for video segmentation. IEEE Transactions on Pattern Analysis and Machine Intelligence, 45(6):7099-7122, 2022.",
+                "links": null
+            },
+            "BIBREF39": {
+                "ref_id": "b39",
+                "title": "Sensitivity of slot-based object-centric models to their number of slots",
+                "authors": [
+                    {
+                        "first": "Sjoerd",
+                        "middle": [],
+                        "last": "Roland S Zimmermann",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "",
+                        "middle": [],
+                        "last": "Van Steenkiste",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "S",
+                        "middle": [
+                            "M"
+                        ],
+                        "last": "Mehdi",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "Thomas",
+                        "middle": [],
+                        "last": "Sajjadi",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "Klaus",
+                        "middle": [],
+                        "last": "Kipf",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "",
+                        "middle": [],
+                        "last": "Greff",
+                        "suffix": ""
+                    }
+                ],
+                "year": 2023,
+                "venue": "",
+                "volume": "",
+                "issue": "",
+                "pages": "",
+                "other_ids": {
+                    "arXiv": [
+                        "arXiv:2305.18890"
+                    ]
+                },
+                "num": null,
+                "urls": [],
+                "raw_text": "Roland S Zimmermann, Sjoerd van Steenkiste, Mehdi SM Sajjadi, Thomas Kipf, and Klaus Gr- eff. Sensitivity of slot-based object-centric models to their number of slots. arXiv preprint arXiv:2305.18890, 2023.",
+                "links": null
+            },
+            "BIBREF40": {
+                "ref_id": "b40",
+                "title": "Parts: Unsupervised segmentation with slots, attention and independence maximization",
+                "authors": [
+                    {
+                        "first": "Rishabh",
+                        "middle": [],
+                        "last": "Daniel Zoran",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "Alexander",
+                        "middle": [],
+                        "last": "Kabra",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "Danilo",
+                        "middle": [
+                            "J"
+                        ],
+                        "last": "Lerchner",
+                        "suffix": ""
+                    },
+                    {
+                        "first": "",
+                        "middle": [],
+                        "last": "Rezende",
+                        "suffix": ""
+                    }
+                ],
+                "year": 2021,
+                "venue": "Proceedings of the IEEE/CVF International Conference on Computer Vision",
+                "volume": "",
+                "issue": "",
+                "pages": "10439--10447",
+                "other_ids": {},
+                "num": null,
+                "urls": [],
+                "raw_text": "Daniel Zoran, Rishabh Kabra, Alexander Lerchner, and Danilo J Rezende. Parts: Unsupervised seg- mentation with slots, attention and independence maximization. In Proceedings of the IEEE/CVF International Conference on Computer Vision, pp. 10439-10447, 2021.",
+                "links": null
+            }
+        },
+        "ref_entries": {
+            "FIGREF0": {
+                "type_str": "figure",
+                "uris": null,
+                "num": null,
+                "text": ", such as Burgess et al. (2019); Greff et al. (2019); Locatello et al. (2020); Engelcke et al. (2021); Singh et al. (2022a); Zoran et al. (2021); Emami et al. (2021); H\u00e9naff et al. (2022); Seitzer et al. (",
+                "fig_num": null
+            },
+            "FIGREF1": {
+                "type_str": "figure",
+                "uris": null,
+                "num": null,
+                "text": "Figure 1: Attention processes of MONet (a) and VONet (b) on a single image. Red arrows represent sequential operations (\"scp\" stands for the MONet scope), while blue arrows at the same horizontal level represent parallel operations. The dependency on the input image has been omitted for clarity.",
+                "fig_num": "1"
+            },
+            "FIGREF2": {
+                "type_str": "figure",
+                "uris": null,
+                "num": null,
+                "text": "Figure 2: Diagram of the parallel attention network. Except for the transformer and softmax operator, it is possible to parallelize the executions related to the U-Net components. The skip connections between the U-Net downsampling and upsampling layers have been omitted for clarity.",
+                "fig_num": "2"
+            },
+            "FIGREF3": {
+                "type_str": "figure",
+                "uris": null,
+                "num": null,
+                "text": "Figure 3: VONet's architecture. The dependency on the input image x t has been omitted for clarity. * in the subscripts represents the collection of K (K = 2 here) slots in parallel.",
+                "fig_num": "3"
+            },
+            "FIGREF4": {
+                "type_str": "figure",
+                "uris": null,
+                "num": null,
+                "text": "Figure 4: Example video frames of the MOVI datasets. A,B,C contain up to 10 objects while D,E contain up to 23 objects in each video.",
+                "fig_num": "4"
+            },
+            "FIGREF5": {
+                "type_str": "figure",
+                "uris": null,
+                "num": null,
+                "text": "Figure 5: Comparison of the attention inference efficiencies.",
+                "fig_num": null
+            },
+            "FIGREF6": {
+                "type_str": "figure",
+                "uris": null,
+                "num": null,
+                "text": "Figure 6: Ablation study results. Each error bar represents the std of three random seeds. MOVI-A MOVI-B MOVI-C MOVI-D MOVI-E",
+                "fig_num": "67"
+            },
+            "FIGREF7": {
+                "type_str": "figure",
+                "uris": null,
+                "num": null,
+                "text": "Figure 8: Left: Reconstruction results from the posterior and prior. Right: KLD curves of slot 0 on two example videos. The KLD value has been divided by the slot embedding dimension (128). arises partially from the strong inductive bias of spatial locality of VONet's U-Net architecture for attention masks. This bias is absent in slot-attention methods like STEVE.",
+                "fig_num": "8"
+            },
+            "FIGREF8": {
+                "type_str": "figure",
+                "uris": null,
+                "num": null,
+                "text": "Figure 10: Additional segmentation results of VONet. In these results, each video is presented with every other frame displayed. The boundaries of object segments are marked with white curves. No post-processing was performed on the masks.",
+                "fig_num": "6"
+            },
+            "FIGREF9": {
+                "type_str": "figure",
+                "uris": null,
+                "num": null,
+                "text": "Figure 12: Additional segmentation results of VONet. In these results, each video is presented with every other frame displayed. The boundaries of object segments are marked with white curves. No post-processing was performed on the masks.",
+                "fig_num": "12"
+            },
+            "TABREF0": {
+                "type_str": "table",
+                "num": null,
+                "text": "H\u00d7W \u00d7C , MONet utilizes a recurrent procedure to sequentially generate K attention masks m k \u2208 [0, 1] H\u00d7W , with K representing the predefined number of slots.",
+                "html": null,
+                "content": "<table><tr><td>in that both extend MONet (Burgess et al.,</td></tr><tr><td>2019) from images to video. However, several major differences exist between the two: i) VONet</td></tr><tr><td>parallelizes the original MONet architecture for efficient inference while ViMON still generates</td></tr><tr><td>slots recurrently. ii) VONet seeds the attention network with context vectors while ViMON does this</td></tr><tr><td>using previous attention masks. iii) VONet formulates an object-wise sequential VAE to promote</td></tr><tr><td>temporal consistency, whereas ViMON ignores this by using a typical intra-step VAE.</td></tr><tr><td>3 PRELIMINARIES</td></tr><tr><td>MONet for unsupervised image object learning. The Multi-Object network (MONet) (Burgess</td></tr><tr><td>et al., 2019) is a scene decomposition model designed for single images. A forward pass of MONet</td></tr><tr><td>generally consists of two stages: mask generation and image reconstruction with a component VAE.</td></tr><tr><td>Given an input RGB image x \u2208 R</td></tr></table>"
+            },
+            "TABREF1": {
+                "type_str": "table",
+                "num": null,
+                "text": "General training setup. VONet learns 11 slots on MOVI-{A,B,C} and 16 slots on MOVI-{D,E}. Results of VONet and the five baselines, in an unsupervised learning setting.",
+                "html": null,
+                "content": "<table><tr><td>Method</td><td colspan=\"11\">FG-ARI MOVI-A MOVI-B MOVI-C MOVI-D MOVI-E MOVI-A MOVI-B MOVI-C MOVI-D MOVI-E mIoU</td></tr><tr><td>SAVI</td><td>45.1\u00b11.3</td><td>31.8\u00b11.2</td><td>22.9\u00b11.3</td><td>29.4\u00b10.5</td><td>36.0\u00b13.3</td><td>32.2\u00b11.7</td><td>31.2\u00b14.3</td><td colspan=\"2\">15.9\u00b10.7</td><td>15.6\u00b10.3</td><td>15.8\u00b12.2</td></tr><tr><td>SIMONe</td><td>50.2\u00b16.2</td><td>36.5\u00b10.5</td><td>19.5\u00b10.1</td><td>34.8\u00b10.2</td><td>41.3\u00b10.3</td><td>37.6\u00b11.0</td><td>35.5\u00b10.8</td><td colspan=\"2\">20.2\u00b10.1</td><td>22.7\u00b10.1</td><td>20.8\u00b10.2</td></tr><tr><td colspan=\"2\">SCALOR 68.1\u00b11.4</td><td>45.3\u00b10.6</td><td>21.3\u00b12.3</td><td>33.5\u00b12.8</td><td>39.6\u00b10.5</td><td>59.8\u00b10.9</td><td>46.6\u00b10.1</td><td colspan=\"2\">14.3\u00b10.8</td><td>14.2\u00b11.1</td><td>12.1\u00b10.2</td></tr><tr><td>ViMON</td><td>62.8\u00b12.3</td><td>26.2\u00b14.4</td><td>18.0\u00b12.1</td><td>22.5\u00b15.7</td><td>17.7\u00b11.5</td><td>50.0\u00b11.5</td><td>34.4\u00b15.0</td><td colspan=\"2\">27.1\u00b10.9</td><td>19.6\u00b11.5</td><td>17.8\u00b11.2</td></tr><tr><td>STEVE</td><td>47.8\u00b18.2</td><td>29.6\u00b10.3</td><td>38.1\u00b10.3</td><td>42.9\u00b12.8</td><td>49.7\u00b11.0</td><td>53.3\u00b13.1</td><td>42.7\u00b10.1</td><td colspan=\"2\">30.5\u00b10.2</td><td>23.8\u00b13.7</td><td>26.2\u00b11.3</td></tr><tr><td>VONet</td><td colspan=\"11\">91.0\u00b11.5 60.6\u00b10.8 45.3\u00b10.4 50.7\u00b11.1 56.3\u00b10.5 60.5\u00b12.0 59.7\u00b12.9 42.8\u00b10.5 37.7\u00b10.3 36.4\u00b10.7</td></tr><tr><td colspan=\"12\">values. Additional architectural specifics and hyperparameter details are provided in Appendix A.3</td></tr><tr><td colspan=\"12\">for reference. It takes about 36 hours to train VONet on 4x 3090 GPUs on each of the five datasets,</td></tr><tr><td colspan=\"5\">for a total number of 150k gradient updates.</td><td/><td/><td/><td/><td/><td/></tr><tr><td colspan=\"6\">6.1 EFFICIENCY OF THE PARALLEL ATTENTION</td><td/><td/><td>Attn inference time (sec)</td><td>0.00 0.01 0.04 0.07</td><td colspan=\"2\">Number of Slots 5 11 16 24 MONet VONet</td></tr></table>"
+            },
+            "TABREF2": {
+                "type_str": "table",
+                "num": null,
+                "text": "Training from replayed video segments. Training VONet on entire videos is impractical due to high memory usage caused by the large computational graph unrolled over time. Traditional video object learning methods, likeJiang et al. (2019);Kipf et al. (2021);Singh et al. (2022b), train models on short video segments, assuming that each mini-batch is initialized with fresh slots. During testing, they expect models to generalize to longer videos. VONet is also trained on short video segments, but it stores past states in a replay buffer, where each state includes per-trajectory slot latents {r t,k } K k=1 and a boolean flag indicating the initial frame of a video. When sampling a video segment from the replay buffer, we initiate the training of VONet with the state of the first step of that segment, and only reset the state if the flag is true. Despite potential state obsolescence, this replay-based training approach proves effective if a small replay buffer length is used. Using a replay buffer allows training short video segments from past slot states, while still preserving the i.i.d. assumption with a random replay strategy. Without it, online training from previous slot states requires sequential training through entire videos, introducing temporal correlation in the training data.",
+                "html": null,
+                "content": "<table/>"
+            }
+        }
+    }
+}

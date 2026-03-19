@@ -1,0 +1,32 @@
+{
+  "paper_benchmark_name": "7D speed reducer design",
+  "paper_research_field": "Constrained Bayesian Optimization",
+  "matched_benchmark_name": "7D speed reducer design",
+  "matched_research_field": "Engineering Design Optimization",
+  "name_match_type": "exact",
+  "field_match_status": "same_field",
+  "match_reason": "Exact match with a standard speed reducer design problem with seven design variables used in optimization benchmarks.",
+  "status": "well_established_formula",
+  "materialization_strategy": "generate_definition",
+  "source_type": "literature_formula",
+  "source_url": "",
+  "download_subdir": "benchmark_9",
+  "materialization_commands": [],
+  "definition_summary": "A seven-dimensional design optimization benchmark for a speed reducer, important for testing algorithms on mechanical constraint satisfaction.",
+  "equations_or_components": [
+    "Objective and constraint equations covering bending stress, contact stress, and other performance measures."
+  ],
+  "variables_or_inputs": [
+    "Design variables including gear dimensions, face width, and other parameters"
+  ],
+  "constraints_or_bounds": [
+    "Mechanical constraints such as stress limits and deflection criteria."
+  ],
+  "expected_artifacts": [
+    "benchmark_definition.txt"
+  ],
+  "license_or_access_notes": [
+    "Commonly used benchmark with open academic usage."
+  ],
+  "failure_reason": ""
+}

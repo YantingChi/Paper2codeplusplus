@@ -1,0 +1,1358 @@
+[?2004hroot@5799a721cb5d:/workspace# asciinema rec --stdin /logs/agent/recording.cast
+[?2004l[0;32masciinema: recording asciicast to /logs/agent/recording.cast[0m
+[0;32masciinema: press <ctrl-d> or type "exit" when you're done[0m
+[?2004hroot@5799a721cb5d:/workspace# clear
+[?2004l[H[J[3J[?2004hroot@5799a721cb5d:/workspace# ls -la
+[?2004ltotal 20
+drwxr-xr-x 1 root root 4096 Mar 19 03:55 .
+drwxr-xr-x 1 root root 4096 Mar 19 03:56 ..
+drwxr-xr-x 1 root root 4096 Mar 19 03:47 environment
+[?2004hroot@5799a721cb5d:/workspace# ls -la environment
+[?2004ltotal 64
+drwxr-xr-x 1 root root 4096 Mar 19 03:47 .
+drwxr-xr-x 1 root root 4096 Mar 19 03:55 ..
+-rw-rw-r-- 1 root root  583 Mar 19 03:47 Dockerfile
+-rw-rw-r-- 1 root root 1623 Mar 19 03:19 README.md
+-rw-rw-r-- 1 root root 1470 Mar 19 03:19 alg.md
+drwxrwxr-x 1 root root 4096 Mar 19 03:19 benchmark
+drwxrwxr-x 1 root root 4096 Mar 19 03:47 bin
+drwxrwxr-x 1 root root 4096 Mar 19 03:55 codebase
+drwxrwxr-x 1 root root 4096 Mar 19 03:19 expected_results
+-rw-rw-r-- 1 root root 3943 Mar 19 03:19 paper.json
+[?2004hroot@5799a721cb5d:/workspace# ls -la environment/codebase
+[?2004ltotal 192
+drwxrwxr-x 1 root root  4096 Mar 19 03:55 .
+drwxr-xr-x 1 root root  4096 Mar 19 03:47 ..
+-rw-rw-r-- 1 root root   668 Mar 19 03:55 README.md
+drwxrwxr-x 1 root root  4096 Mar 19 03:55 __pycache__
+-rw-rw-r-- 1 root root  8747 Mar 19 03:14 acquisition.py
+-rw-rw-r-- 1 root root  4353 Mar 19 03:55 benchmark.py
+-rwxrwxr-x 1 root root 62626 Mar 19 03:15 benchmark_materialize.sh
+-rw-rw-r-- 1 root root 12796 Mar 19 03:14 botrainer.py
+-rw-rw-r-- 1 root root  3818 Mar 19 03:14 config.py
+-rw-rw-r-- 1 root root  1042 Mar 19 03:14 config.yaml
+-rw-rw-r-- 1 root root 12764 Mar 19 03:14 deep_ensemble.py
+-rw-rw-r-- 1 root root  8313 Mar 19 03:14 evaluation.py
+-rw-rw-r-- 1 root root  8215 Mar 19 03:14 gp_surrogate.py
+-rw-rw-r-- 1 root root  6004 Mar 19 03:14 main.py
+-rw-rw-r-- 1 root root  5517 Mar 19 03:14 utils.py
+[?2004hroot@5799a721cb5d:/workspace# sed -n '1,200p' environment/alg.md
+[?2004l# BE-CBO Algorithm Summary
+
+BE-CBO solves constrained black-box optimization problems where feasibility is unknown in advance and infeasible evaluations do not produce objective values.
+
+## Core Loop
+
+1. Start from an initial Sobol sample set.
+2. Fit a GP surrogate on feasible objective observations only.
+3. Fit a deep-ensemble binary classifier on all evaluated points to predict feasibility.
+4. Estimate classifier uncertainty `sigma_E(x)` and define the dynamic lower bound:
+   `l(x) = 0.5 - sigma_E(x)`.
+5. Choose the next point by maximizing Expected Improvement under:
+   `l(x) <= C(x) <= 1`.
+6. Evaluate the point, add feasible objective values to the GP dataset, and add every point to the classifier dataset.
+
+## Benchmark Facts Used In This Task
+
+The verifier only checks the three synthetic Appendix B.1.1 problems:
+- Townsend
+- Simionescu
+- LSQ
+
+The important paper-grounded requirements for this task are:
+- `benchmark.py` must encode the Appendix B.1.1 synthetic objectives and constraints correctly.
+- `config.py` must be importable on Python 3.11 so the repo can run at all.
+- `evaluation.py` must produce the expected benchmark summary from the deterministic case list.
+
+## Expected File Roles
+
+- `config.py`: central defaults for training, BO budget, and benchmark list
+- `utils.py`: logger, seeds, Sobol sampling, device helpers
+- `benchmark.py`: problem definitions and feasibility checks
+- `evaluation.py`: final metrics from recorded evaluations
+[?2004hroot@5799a721cb5d:/workspace# sed -n '1,200p' environment/paper.json
+[?2004l{
+  "title": "Boundary Exploration for Bayesian Optimization With Unknown Physical Constraints",
+  "short_name": "BE-CBO",
+  "problem": "Optimize an expensive black-box objective under unknown binary feasibility constraints where infeasible evaluations do not return objective values.",
+  "method": {
+    "objective_surrogate": "Gaussian Process over feasible objective observations only",
+    "constraint_surrogate": "Deep ensemble classifier trained with variational inference / ELBO",
+    "acquisition": "Expected Improvement",
+    "boundary_exploration": "Optimize the acquisition subject to 0.5 - sigma_E(x) <= C(x) <= 1, where sigma_E is the ensemble uncertainty."
+  },
+  "training": {
+    "ensemble_size": 5,
+    "hidden_layers": 4,
+    "hidden_width_rule": "64 * floor(log2(d))",
+    "optimizer": "Adam",
+    "learning_rate": 0.0003,
+    "iterations": 1000,
+    "dropout": false
+  },
+  "benchmark_protocol": {
+    "initial_samples": 10,
+    "total_evaluations": 200,
+    "random_seeds": 10,
+    "paper_benchmark_list": [
+      "Townsend",
+      "Simionescu",
+      "LSQ",
+      "Three-bar Truss",
+      "Tension-Compression String",
+      "Welded Beam",
+      "Gas Transmission Compressor",
+      "Pressure Vessel",
+      "Speed Reducer",
+      "Planetary Gear Train",
+      "Rolling Element Bearing",
+      "Cantilever Beam"
+    ],
+    "metrics": [
+      "best feasible objective",
+      "feasibility ratio",
+      "balanced accuracy for the classifier"
+    ]
+  },
+  "synthetic_benchmarks": {
+    "Townsend": {
+      "objective": "f(x) = -[cos((x1 - 0.1) x2)]^2 - x1 sin(3 x1 + x2)",
+      "constraints": [
+        "c(x) = (2 cos(t) - 0.5 cos(2 t) - 0.25 cos(3 t) - 0.125 cos(4 t))^2 + (2 sin(t))^2 - x1^2 - x2^2 >= 0",
+        "t = arctan2(x1, x2)"
+      ],
+      "bounds": [
+        [-2.25, -2.5],
+        [2.25, 1.75]
+      ]
+    },
+    "Simionescu": {
+      "objective": "f(x) = 0.1 x1 x2",
+      "constraints": [
+        "c(x) = (r_T + r_S cos(n theta))^2 - x1^2 - x2^2 >= 0",
+        "r_T = 1, r_S = 0.2, n = 8, theta = atan2(x1, x2)"
+      ],
+      "bounds": [
+        [-1.25, -1.25],
+        [1.25, 1.25]
+      ]
+    },
+    "LSQ": {
+      "objective": "f(x) = x1 + x2",
+      "constraints": [
+        "c1(x) = x1 + 2 x2 + 0.5 sin(2 pi (x1^2 - 2 x2)) - 1.5 >= 0",
+        "c2(x) = 1.5 - x1^2 - x2^2 >= 0"
+      ],
+      "bounds": [
+        [0.0, 0.0],
+        [1.0, 1.0]
+      ]
+    }
+  },
+  "implementation_modules": [
+    {
+      "file": "config.py",
+      "description": "Central experiment defaults and hyperparameters shared by all modules."
+    },
+    {
+      "file": "utils.py",
+      "description": "Seed setup, logging, Sobol sampling, and tensor helpers."
+    },
+    {
+      "file": "benchmark.py",
+      "description": "Analytic benchmark definitions, feasibility checks, and initial sample generation."
+    },
+    {
+      "file": "gp_surrogate.py",
+      "description": "GP-based surrogate for the objective using feasible observations only."
+    },
+    {
+      "file": "deep_ensemble.py",
+      "description": "Deep ensemble classifier that predicts feasibility probability and uncertainty."
+    },
+    {
+      "file": "acquisition.py",
+      "description": "Acquisition optimizer with Adam pre-optimization and SLSQP refinement."
+    },
+    {
+      "file": "botrainer.py",
+      "description": "Main Bayesian optimization loop wiring together benchmark, GP, classifier, and acquisition optimization."
+    },
+    {
+      "file": "evaluation.py",
+      "description": "Computes best feasible objective, feasibility ratio, and balanced accuracy."
+    },
+    {
+      "file": "main.py",
+      "description": "Repository entry point that initializes modules and runs the optimization loop."
+    }
+  ],
+  "task_focus": "This Harbor task verifies that the synthetic benchmark definitions and benchmark output contract match the paper appendix. It does not require completing the full 12-problem experimental pipeline."
+}
+[?2004hroot@5799a721cb5d:/workspace# find environment/codebase -maxdepth 2 -type f -name "*.py" -print
+[?2004lenvironment/codebase/config.py
+environment/codebase/evaluation.py
+environment/codebase/main.py
+environment/codebase/utils.py
+environment/codebase/botrainer.py
+environment/codebase/gp_surrogate.py
+environment/codebase/deep_ensemble.py
+environment/codebase/benchmark.py
+environment/codebase/acquisition.py
+[?2004hroot@5799a721cb5d:/workspace# sed -n '1,200p' environment/codebase/setup.py
+[?2004lsed: can't read environment/codebase/setup.py: No such file or directory
+[?2004hroot@5799a721cb5d:/workspace# sed -n '1,200p' environment/codebase/README.md
+[?2004l# BE-CBO Codebase Notes
+
+This bundled repo is intentionally incomplete and slightly wrong.
+
+For the Harbor task, only these modules matter:
+- `config.py`
+- `benchmark.py`
+- `evaluation.py`
+
+The verifier uses:
+
+```bash
+python environment/benchmark/run_benchmark.py \
+  --repo-dir environment/codebase \
+  --cases environment/benchmark/synthetic_cases.json \
+  --expected environment/expected_results/reference_results.json \
+  --output environment/codebase/reproduction_result.json
+```
+
+Important contract:
+- `Benchmark.evaluate(x)` must return `(objective, feasible)`
+- infeasible points must return `(None, False)`
+- feasible points must return `(float_value, True)`
+[?2004hroot@5799a721cb5d:/workspace# python environment/benchmark/run_benchmark.py --repo-dir environment/codebase --cases environment/benchmark/synthetic_cases.json --expected environment/expected_results/reference_results.json --output environment/codebase/reproduction_result.json
+[?2004l[?2004hroot@5799a721cb5d:/workspace# python environment/benchmark/run_benchmark.py --help
+[?2004lusage: run_benchmark.py [-h] --repo-dir REPO_DIR --cases CASES [--expected EXPECTED] --output OUTPUT
+
+options:
+  -h, --help           show this help message and exit
+  --repo-dir REPO_DIR
+  --cases CASES
+  --expected EXPECTED
+  --output OUTPUT
+[?2004hroot@5799a721cb5d:/workspace# python environment/benchmark/run_benchmark.py --repo-dir environment/codebase --cases environment/benchmark/synthetic_cases.json --expected environment/expected_results/reference_results.json --output environment/codebase/reproduction_result.json
+[?2004l[?2004hroot@5799a721cb5d:/workspace# ls -la environment/codebase/reproduction_result.json
+[?2004l-rw-r--r-- 1 root root 247 Mar 19 03:56 environment/codebase/reproduction_result.json
+[?2004hroot@5799a721cb5d:/workspace# sed -n '1,200p' environment/codebase/benchmark.py
+[?2004l"""
+benchmark.py
+
+Compact synthetic benchmark definitions for the Harbor BE-CBO task.
+
+Only Townsend, Simionescu, and LSQ are required by the bundled verifier.
+The current implementation is intentionally imperfect.
+"""
+
+from __future__ import annotations
+
+from typing import Any, Dict, Optional, Tuple
+import math
+
+import torch
+
+from utils import generate_sobol_samples, get_logger
+
+
+class Benchmark:
+    def __init__(self, problem_config: Dict[str, Any]) -> None:
+        self.problem_name = problem_config.get("problem_name", "Townsend")
+        self.logger = get_logger(f"Benchmark-{self.problem_name}")
+
+        if self.problem_name == "Townsend":
+            self.dimension = 2
+            self.lower_bounds = torch.tensor([-2.25, -2.5], dtype=torch.float32)
+            self.upper_bounds = torch.tensor([2.25, 1.75], dtype=torch.float32)
+        elif self.problem_name == "Simionescu":
+            self.dimension = 2
+            self.lower_bounds = torch.tensor([-1.25, -1.25], dtype=torch.float32)
+            self.upper_bounds = torch.tensor([1.25, 1.25], dtype=torch.float32)
+        elif self.problem_name == "LSQ":
+            self.dimension = 2
+            self.lower_bounds = torch.tensor([0.0, 0.0], dtype=torch.float32)
+            self.upper_bounds = torch.tensor([1.0, 1.0], dtype=torch.float32)
+        else:
+            raise ValueError(f"Unsupported problem: {self.problem_name}")
+
+    def get_initial_samples(self, num_samples: int) -> torch.Tensor:
+        unit = generate_sobol_samples(num_samples=num_samples, dim=self.dimension)
+        return self.lower_bounds + unit * (self.upper_bounds - self.lower_bounds)
+
+    def is_within_bounds(self, x: torch.Tensor) -> bool:
+        return bool(torch.all(x >= self.lower_bounds) and torch.all(x <= self.upper_bounds))
+
+    def _objective(self, x: torch.Tensor) -> Optional[float]:
+        x1 = float(x[0].item())
+        x2 = float(x[1].item())
+
+        if self.problem_name == "Townsend":
+            return -math.cos((x1 - 0.1) * x2) ** 2 - x1 * math.sin(3.0 * x1 + x2)
+        if self.problem_name == "Simionescu":
+            return 0.1 * x1 * x2
+        if self.problem_name == "LSQ":
+            return x1 + x2
+        return None
+
+    def _constraint_feasible(self, x: torch.Tensor) -> bool:
+        x1 = float(x[0].item())
+        x2 = float(x[1].item())
+
+        if self.problem_name == "Townsend":
+            # Intentionally wrong: the appendix uses atan2(x1, x2) and c >= 0.
+            theta = math.atan2(x2, x1)
+            radius_sq = (
+                (2.0 * math.cos(theta) - 0.5 * math.cos(2.0 * theta) - 0.25 * math.cos(3.0 * theta) - 0.125 * math.cos(4.0 * theta)) ** 2
+                + (2.0 * math.sin(theta)) ** 2
+            )
+            c_value = radius_sq - x1 ** 2 - x2 ** 2
+            return c_value <= 0.0
+
+        if self.problem_name == "Simionescu":
+            # Intentionally wrong: the appendix uses atan2(x1, x2) and c >= 0.
+            theta = math.atan2(x2, x1)
+            c_value = (1.0 + 0.2 * math.cos(8.0 * theta)) ** 2 - x1 ** 2 - x2 ** 2
+            return c_value < 0.0
+
+        if self.problem_name == "LSQ":
+            # Intentionally wrong: both appendix constraints should be >= 0 simultaneously.
+            c1 = x1 + 2.0 * x2 + 0.5 * math.sin(2.0 * math.pi * (x1 ** 2 - 2.0 * x2)) - 1.5
+            c2 = 1.5 - x1 ** 2 - x2 ** 2
+            return (c1 <= 0.0) or (c2 <= 0.0)
+
+        return False
+
+    def evaluate(self, x: torch.Tensor) -> Tuple[Optional[float], bool]:
+        if x.dim() != 1 or x.numel() != self.dimension:
+            raise ValueError(
+                f"Input x must be a 1D tensor of length {self.dimension}. Got shape {tuple(x.shape)}."
+            )
+
+        if not self.is_within_bounds(x):
+            self.logger.info("Candidate %s is outside bounds.", x.tolist())
+            return None, False
+
+        feasible = self._constraint_feasible(x)
+        if not feasible:
+            self.logger.info("Candidate %s is infeasible as per constraint evaluation.", x.tolist())
+            return None, False
+
+        objective_value = self._objective(x)
+        return objective_value, True
+
+
+if __name__ == "__main__":
+    benchmark = Benchmark({"problem_name": "Townsend"})
+    samples = benchmark.get_initial_samples(3)
+    for sample in samples:
+        print(sample.tolist(), benchmark.evaluate(sample))
+[?2004hroot@5799a721cb5d:/workspace# sed -n '1,200p' environment/codebase/config.py
+[?2004l"""
+config.py
+
+This file defines the centralized configuration for the BE-CBO project.
+It consolidates all hyperparameters and settings for training, ensemble (deep ensemble classifier),
+GP surrogate, Bayesian optimization (BO), benchmark problems, logging, and general settings.
+These settings are used across multiple modules to ensure consistency.
+
+Configuration Sections:
+1. TrainingConfig - Settings for optimizer, learning rate, and number of training iterations.
+2. EnsembleConfig - Parameters for the deep ensemble classifier (number of members, network architecture, activation, ELBO loss, dropout usage).
+3. GPConfig - Settings for the GP surrogate (kernel type and hyperparameters).
+4. BOConfig - Bayesian optimization settings including initial samples, total evaluations, random seed count,
+             acquisition function (Expected Improvement), dynamic bound constraint and optimizer.
+5. BenchmarkConfig - List of benchmark problems to be evaluated.
+6. LoggingConfig - Logging parameters such as verbosity and whether results are saved.
+7. GeneralConfig - Global settings like device type and seed for reproducibility.
+
+All modules should import this config.py to access consistent configuration values.
+"""
+
+from dataclasses import dataclass, field, asdict
+from typing import List
+from math import floor, log2
+
+# 1. Training Parameters
+@dataclass
+class TrainingConfig:
+    optimizer: str = "Adam"
+    learning_rate: float = 3e-4
+    iterations: int = 1000
+
+# 2. Ensemble (Deep Ensemble Classifier) Parameters
+@dataclass
+class EnsembleConfig:
+    size: int = 5
+    layers: int = 4
+    # The neurons_formula is a string which will be interpreted by the deep ensemble module.
+    # It uses the problem dimension d: "64 * floor(log2(d))"
+    neurons_formula: str = "64 * floor(log2(d))"
+    activation: str = "ReLU"
+    loss: str = "Variational Inference (ELBO)"
+    use_dropout: bool = False
+
+# 3. GP Surrogate Settings
+@dataclass
+class GPConfig:
+    kernel: str = "Matern5/2"
+    hyperparameters: str = "default (using BoTorch defaults)"
+
+# 4. Bayesian Optimization (BO) Settings
+@dataclass
+class BOConfig:
+    initial_samples: int = 10
+    total_evaluations: int = 200
+    random_seeds: int = 10
+    acquisition_function: str = "Expected Improvement (EI)"
+    dynamic_bound: str = "l(x) = 0.5 - sigma_E(x)"
+    optimizer: str = "SLSQP (with pre-optimization using Adam)"
+
+# 5. Benchmark Settings
+@dataclass
+class BenchmarkConfig:
+    problems: List[str] = field(default_factory=lambda: [
+        "Townsend",
+        "Simionescu",
+        "LSQ",
+        "Three-bar Truss",
+        "Tension-Compression String",
+        "Welded Beam",
+        "Gas Transmission Compressor",
+        "Pressure Vessel",
+        "Speed Reducer",
+        "Planetary Gear Train",
+        "Rolling Element Bearing",
+        "Cantilever Beam"
+    ])
+
+# 6. Logging Configuration
+@dataclass
+class LoggingConfig:
+    verbosity: str = "INFO"
+    save_results: bool = True
+
+# 7. General Settings
+@dataclass
+class GeneralConfig:
+    device: str = "cpu"  # Set to "cuda" if GPU is available
+    seed: int = 42
+
+# Master Config that ties all the individual configurations together.
+@dataclass
+class Config:
+    training: TrainingConfig = TrainingConfig()
+    ensemble: EnsembleConfig = EnsembleConfig()
+    gp: GPConfig = GPConfig()
+    bo: BOConfig = BOConfig()
+    benchmark: BenchmarkConfig = BenchmarkConfig()
+    logging: LoggingConfig = LoggingConfig()
+    general: GeneralConfig = GeneralConfig()
+
+# Instantiate the global configuration object.
+config = Config()
+
+# For ease of debugging and to verify configuration values
+if __name__ == "__main__":
+    import json
+    # Convert the configuration dataclass to a dictionary and print in JSON format.
+    config_dict = asdict(config)
+    print(json.dumps(config_dict, indent=4))
+[?2004hroot@5799a721cb5d:/workspace# sed -n '1,200p' environment/codebase/evaluation.py
+[?2004l"""
+evaluation.py
+
+This module provides the Evaluation class that computes key metrics from the results of
+the Bayesian optimization (BO) process carried out by the BOTrainer.
+
+It computes the following metrics:
+  1. Best (minimum) feasible objective value (only consider evaluations where feasibility is True).
+  2. Feasibility ratio: (# feasible evaluations) / (total evaluations).
+  3. Balanced Accuracy for the constraint classifier using the ground truth labels and predicted 
+     feasibility probabilities. Predictions are thresholded at 0.5. Balanced Accuracy is the average
+     of sensitivity (TPR) and specificity (TNR).
+
+The Evaluation class accepts a results dictionary containing at least:
+    - "evaluations": A list of records; each record is a dictionary with keys:
+          "candidate": design vector,
+          "feasible": boolean flag,
+          "objective": objective value if feasible (None otherwise).
+    - Optionally, it may contain:
+          "classifier_true_labels": list of ground truth labels (1 for feasible, 0 for infeasible).
+          "classifier_pred_probs": list of predicted feasibility probabilities (floats).
+
+If any required key is missing, a warning is logged and the metric may be skipped.
+
+Usage Example:
+    from evaluation import Evaluation
+    results = {
+        "evaluations": [
+            {"iteration": 1, "candidate": [0.1, 0.2], "feasible": True, "objective": 1.25},
+            {"iteration": 2, "candidate": [0.3, 0.4], "feasible": False, "objective": None},
+            ...
+        ],
+        "classifier_true_labels": [1, 0, ...],
+        "classifier_pred_probs": [0.65, 0.35, ...]
+    }
+    evaluator = Evaluation(results)
+    metrics = evaluator.compute_metrics()
+    print(metrics)
+"""
+
+from typing import Any, Dict, List, Optional
+import numpy as np
+import logging
+
+from config import config  # Import global configuration (from config.py)
+from utils import get_logger  # Utility function for logging
+
+class Evaluation:
+    """
+    Evaluation class computes metrics from the BOTrainer run results.
+    
+    Attributes:
+        results (Dict[str, Any]): Dictionary containing the evaluation log and classifier data.
+        evaluations (List[Dict[str, Any]]): List of evaluation records.
+        classifier_true_labels (Optional[List[int]]): Ground truth binary labels for constraint feasibility.
+        classifier_pred_probs (Optional[List[float]]): Predicted feasibility probabilities from the classifier.
+        logger (logging.Logger): Logger instance for logging messages.
+    """
+    def __init__(self, results: Dict[str, Any]) -> None:
+        """
+        Initializes the Evaluation instance with the provided results dictionary.
+        
+        Args:
+            results (Dict[str, Any]): Results dictionary populated during the BOTrainer run.
+                                       Expected keys:
+                                         - "evaluations": List of evaluation records.
+                                         - "classifier_true_labels" (optional): List of true labels.
+                                         - "classifier_pred_probs" (optional): List of predicted probabilities.
+        """
+        self.logger = get_logger("Evaluation")
+        self.results: Dict[str, Any] = results
+        
+        if "evaluations" not in self.results:
+            self.logger.warning("The results dictionary does not contain key 'evaluations'. "
+                                "An empty evaluation list will be used.")
+            self.evaluations: List[Dict[str, Any]] = []
+        else:
+            self.evaluations = self.results.get("evaluations", [])
+        
+        # Optional classifier performance data
+        self.classifier_true_labels: Optional[List[int]] = self.results.get("classifier_true_labels", None)
+        self.classifier_pred_probs: Optional[List[float]] = self.results.get("classifier_pred_probs", None)
+        
+    def compute_metrics(self) -> Dict[str, Any]:
+        """
+        Computes evaluation metrics:
+          - best_objective: Minimum objective value among feasible evaluations.
+          - feasibility_ratio: Fraction of feasibility evaluations.
+          - balanced_accuracy: Average of sensitivity and specificity computed from classifier data.
+          - total_evaluations: Total number of evaluations performed.
+        
+        Returns:
+            Dict[str, Any]: Dictionary of computed metrics.
+        """
+        # Compute Best (Minimum) Objective from feasible evaluations.
+        feasible_objectives: List[float] = []
+        for record in self.evaluations:
+            feasible_flag = record.get("feasible", False)
+            objective_value = record.get("objective", None)
+            if feasible_flag and (objective_value is not None):
+                feasible_objectives.append(objective_value)
+        
+        if feasible_objectives:
+            best_objective: float = min(feasible_objectives)
+        else:
+            best_objective = float("inf")
+            self.logger.warning("No feasible evaluations found. Best objective set to infinity.")
+        
+        # Compute Feasibility Ratio.
+        total_evaluations: int = len(self.evaluations)
+        count_feasible: int = sum(1 for record in self.evaluations if record.get("feasible", False))
+        feasibility_ratio: float = (count_feasible / total_evaluations) if total_evaluations > 0 else 0.0
+        
+        # Compute Classifier Accuracy: Balanced Accuracy.
+        balanced_accuracy: Optional[float] = None
+        if (self.classifier_true_labels is not None) and (self.classifier_pred_probs is not None):
+            true_labels_array = np.array(self.classifier_true_labels, dtype=int)
+            pred_probs_array = np.array(self.classifier_pred_probs, dtype=float)
+            # Convert predicted probabilities to binary predictions using threshold 0.5.
+            pred_labels_array = (pred_probs_array >= 0.5).astype(int)
+            
+            # Compute counts.
+            TP = np.sum((true_labels_array == 1) & (pred_labels_array == 1))
+            FN = np.sum((true_labels_array == 1) & (pred_labels_array == 0))
+            TN = np.sum((true_labels_array == 0) & (pred_labels_array == 0))
+            FP = np.sum((true_labels_array == 0) & (pred_labels_array == 1))
+            
+            sensitivity: float = TP / (TP + FN) if (TP + FN) > 0 else 0.0
+            specificity: float = TN / (TN + FP) if (TN + FP) > 0 else 0.0
+            balanced_accuracy = (sensitivity + specificity) / 2.0
+        else:
+            self.logger.warning("Classifier performance data ('classifier_true_labels' and/or "
+                                "'classifier_pred_probs') missing. Skipping balanced accuracy computation.")
+            balanced_accuracy = None
+        
+        metrics: Dict[str, Any] = {
+            "best_objective": best_objective,
+            "feasibility_ratio": feasibility_ratio,
+            "balanced_accuracy": balanced_accuracy,
+            "total_evaluations": total_evaluations
+        }
+        
+        self.logger.info("Evaluation Metrics Computed: "
+                         "Best Objective = %s, Feasibility Ratio = %.4f, Balanced Accuracy = %s, Total Evaluations = %d",
+                         best_objective, feasibility_ratio, str(balanced_accuracy), total_evaluations)
+        
+        return metrics
+
+# For independent module testing.
+if __name__ == "__main__":
+    # Set up a dummy results dictionary for testing purposes.
+    dummy_results = {
+        "evaluations": [
+            {"iteration": 1, "candidate": [0.1, 0.2], "feasible": True, "objective": 1.25},
+            {"iteration": 2, "candidate": [0.3, 0.4], "feasible": False, "objective": None},
+            {"iteration": 3, "candidate": [0.2, 0.3], "feasible": True, "objective": 0.95},
+            {"iteration": 4, "candidate": [0.5, 0.6], "feasible": True, "objective": 1.10},
+            {"iteration": 5, "candidate": [0.6, 0.7], "feasible": False, "objective": None}
+        ],
+        "classifier_true_labels": [1, 0, 1, 1, 0],
+        "classifier_pred_probs": [0.65, 0.35, 0.55, 0.45, 0.25]
+    }
+    
+    evaluator = Evaluation(dummy_results)
+    metrics = evaluator.compute_metrics()
+    
+    print("Computed Evaluation Metrics:")
+    for key, value in metrics.items():
+        print(f"{key}: {value}")
+[?2004hroot@5799a721cb5d:/workspace# sed -n '200,400p' environment/codebase/benchmark.py
+[?2004l[?2004hroot@5799a721cb5d:/workspace# sed -n '1,200p' environment/codebase/reproduction_result.json
+[?2004l{
+  "runnable": false,
+  "result_same": false,
+  "comparison_tolerance": null,
+  "problems": {},
+  "error": "ValueError: mutable default <class 'config.TrainingConfig'> for field training is not allowed: use default_factory",
+  "mismatches": []
+}
+[?2004hroot@5799a721cb5d:/workspace# sed -n '1,200p' environment/codebase/config.py
+[?2004l"""
+config.py
+
+This file defines the centralized configuration for the BE-CBO project.
+It consolidates all hyperparameters and settings for training, ensemble (deep ensemble classifier),
+GP surrogate, Bayesian optimization (BO), benchmark problems, logging, and general settings.
+These settings are used across multiple modules to ensure consistency.
+
+Configuration Sections:
+1. TrainingConfig - Settings for optimizer, learning rate, and number of training iterations.
+2. EnsembleConfig - Parameters for the deep ensemble classifier (number of members, network architecture, activation, ELBO loss, dropout usage).
+3. GPConfig - Settings for the GP surrogate (kernel type and hyperparameters).
+4. BOConfig - Bayesian optimization settings including initial samples, total evaluations, random seed count,
+             acquisition function (Expected Improvement), dynamic bound constraint and optimizer.
+5. BenchmarkConfig - List of benchmark problems to be evaluated.
+6. LoggingConfig - Logging parameters such as verbosity and whether results are saved.
+7. GeneralConfig - Global settings like device type and seed for reproducibility.
+
+All modules should import this config.py to access consistent configuration values.
+"""
+
+from dataclasses import dataclass, field, asdict
+from typing import List
+from math import floor, log2
+
+# 1. Training Parameters
+@dataclass
+class TrainingConfig:
+    optimizer: str = "Adam"
+    learning_rate: float = 3e-4
+    iterations: int = 1000
+
+# 2. Ensemble (Deep Ensemble Classifier) Parameters
+@dataclass
+class EnsembleConfig:
+    size: int = 5
+    layers: int = 4
+    # The neurons_formula is a string which will be interpreted by the deep ensemble module.
+    # It uses the problem dimension d: "64 * floor(log2(d))"
+    neurons_formula: str = "64 * floor(log2(d))"
+    activation: str = "ReLU"
+    loss: str = "Variational Inference (ELBO)"
+    use_dropout: bool = False
+
+# 3. GP Surrogate Settings
+@dataclass
+class GPConfig:
+    kernel: str = "Matern5/2"
+    hyperparameters: str = "default (using BoTorch defaults)"
+
+# 4. Bayesian Optimization (BO) Settings
+@dataclass
+class BOConfig:
+    initial_samples: int = 10
+    total_evaluations: int = 200
+    random_seeds: int = 10
+    acquisition_function: str = "Expected Improvement (EI)"
+    dynamic_bound: str = "l(x) = 0.5 - sigma_E(x)"
+    optimizer: str = "SLSQP (with pre-optimization using Adam)"
+
+# 5. Benchmark Settings
+@dataclass
+class BenchmarkConfig:
+    problems: List[str] = field(default_factory=lambda: [
+        "Townsend",
+        "Simionescu",
+        "LSQ",
+        "Three-bar Truss",
+        "Tension-Compression String",
+        "Welded Beam",
+        "Gas Transmission Compressor",
+        "Pressure Vessel",
+        "Speed Reducer",
+        "Planetary Gear Train",
+        "Rolling Element Bearing",
+        "Cantilever Beam"
+    ])
+
+# 6. Logging Configuration
+@dataclass
+class LoggingConfig:
+    verbosity: str = "INFO"
+    save_results: bool = True
+
+# 7. General Settings
+@dataclass
+class GeneralConfig:
+    device: str = "cpu"  # Set to "cuda" if GPU is available
+    seed: int = 42
+
+# Master Config that ties all the individual configurations together.
+@dataclass
+class Config:
+    training: TrainingConfig = TrainingConfig()
+    ensemble: EnsembleConfig = EnsembleConfig()
+    gp: GPConfig = GPConfig()
+    bo: BOConfig = BOConfig()
+    benchmark: BenchmarkConfig = BenchmarkConfig()
+    logging: LoggingConfig = LoggingConfig()
+    general: GeneralConfig = GeneralConfig()
+
+# Instantiate the global configuration object.
+config = Config()
+
+# For ease of debugging and to verify configuration values
+if __name__ == "__main__":
+    import json
+    # Convert the configuration dataclass to a dictionary and print in JSON format.
+    config_dict = asdict(config)
+    print(json.dumps(config_dict, indent=4))
+[?2004hroot@5799a721cb5d:/workspace# sed -n '1,240p' environment/codebase/evaluation.py
+[?2004l"""
+evaluation.py
+
+This module provides the Evaluation class that computes key metrics from the results of
+the Bayesian optimization (BO) process carried out by the BOTrainer.
+
+It computes the following metrics:
+  1. Best (minimum) feasible objective value (only consider evaluations where feasibility is True).
+  2. Feasibility ratio: (# feasible evaluations) / (total evaluations).
+  3. Balanced Accuracy for the constraint classifier using the ground truth labels and predicted 
+     feasibility probabilities. Predictions are thresholded at 0.5. Balanced Accuracy is the average
+     of sensitivity (TPR) and specificity (TNR).
+
+The Evaluation class accepts a results dictionary containing at least:
+    - "evaluations": A list of records; each record is a dictionary with keys:
+          "candidate": design vector,
+          "feasible": boolean flag,
+          "objective": objective value if feasible (None otherwise).
+    - Optionally, it may contain:
+          "classifier_true_labels": list of ground truth labels (1 for feasible, 0 for infeasible).
+          "classifier_pred_probs": list of predicted feasibility probabilities (floats).
+
+If any required key is missing, a warning is logged and the metric may be skipped.
+
+Usage Example:
+    from evaluation import Evaluation
+    results = {
+        "evaluations": [
+            {"iteration": 1, "candidate": [0.1, 0.2], "feasible": True, "objective": 1.25},
+            {"iteration": 2, "candidate": [0.3, 0.4], "feasible": False, "objective": None},
+            ...
+        ],
+        "classifier_true_labels": [1, 0, ...],
+        "classifier_pred_probs": [0.65, 0.35, ...]
+    }
+    evaluator = Evaluation(results)
+    metrics = evaluator.compute_metrics()
+    print(metrics)
+"""
+
+from typing import Any, Dict, List, Optional
+import numpy as np
+import logging
+
+from config import config  # Import global configuration (from config.py)
+from utils import get_logger  # Utility function for logging
+
+class Evaluation:
+    """
+    Evaluation class computes metrics from the BOTrainer run results.
+    
+    Attributes:
+        results (Dict[str, Any]): Dictionary containing the evaluation log and classifier data.
+        evaluations (List[Dict[str, Any]]): List of evaluation records.
+        classifier_true_labels (Optional[List[int]]): Ground truth binary labels for constraint feasibility.
+        classifier_pred_probs (Optional[List[float]]): Predicted feasibility probabilities from the classifier.
+        logger (logging.Logger): Logger instance for logging messages.
+    """
+    def __init__(self, results: Dict[str, Any]) -> None:
+        """
+        Initializes the Evaluation instance with the provided results dictionary.
+        
+        Args:
+            results (Dict[str, Any]): Results dictionary populated during the BOTrainer run.
+                                       Expected keys:
+                                         - "evaluations": List of evaluation records.
+                                         - "classifier_true_labels" (optional): List of true labels.
+                                         - "classifier_pred_probs" (optional): List of predicted probabilities.
+        """
+        self.logger = get_logger("Evaluation")
+        self.results: Dict[str, Any] = results
+        
+        if "evaluations" not in self.results:
+            self.logger.warning("The results dictionary does not contain key 'evaluations'. "
+                                "An empty evaluation list will be used.")
+            self.evaluations: List[Dict[str, Any]] = []
+        else:
+            self.evaluations = self.results.get("evaluations", [])
+        
+        # Optional classifier performance data
+        self.classifier_true_labels: Optional[List[int]] = self.results.get("classifier_true_labels", None)
+        self.classifier_pred_probs: Optional[List[float]] = self.results.get("classifier_pred_probs", None)
+        
+    def compute_metrics(self) -> Dict[str, Any]:
+        """
+        Computes evaluation metrics:
+          - best_objective: Minimum objective value among feasible evaluations.
+          - feasibility_ratio: Fraction of feasibility evaluations.
+          - balanced_accuracy: Average of sensitivity and specificity computed from classifier data.
+          - total_evaluations: Total number of evaluations performed.
+        
+        Returns:
+            Dict[str, Any]: Dictionary of computed metrics.
+        """
+        # Compute Best (Minimum) Objective from feasible evaluations.
+        feasible_objectives: List[float] = []
+        for record in self.evaluations:
+            feasible_flag = record.get("feasible", False)
+            objective_value = record.get("objective", None)
+            if feasible_flag and (objective_value is not None):
+                feasible_objectives.append(objective_value)
+        
+        if feasible_objectives:
+            best_objective: float = min(feasible_objectives)
+        else:
+            best_objective = float("inf")
+            self.logger.warning("No feasible evaluations found. Best objective set to infinity.")
+        
+        # Compute Feasibility Ratio.
+        total_evaluations: int = len(self.evaluations)
+        count_feasible: int = sum(1 for record in self.evaluations if record.get("feasible", False))
+        feasibility_ratio: float = (count_feasible / total_evaluations) if total_evaluations > 0 else 0.0
+        
+        # Compute Classifier Accuracy: Balanced Accuracy.
+        balanced_accuracy: Optional[float] = None
+        if (self.classifier_true_labels is not None) and (self.classifier_pred_probs is not None):
+            true_labels_array = np.array(self.classifier_true_labels, dtype=int)
+            pred_probs_array = np.array(self.classifier_pred_probs, dtype=float)
+            # Convert predicted probabilities to binary predictions using threshold 0.5.
+            pred_labels_array = (pred_probs_array >= 0.5).astype(int)
+            
+            # Compute counts.
+            TP = np.sum((true_labels_array == 1) & (pred_labels_array == 1))
+            FN = np.sum((true_labels_array == 1) & (pred_labels_array == 0))
+            TN = np.sum((true_labels_array == 0) & (pred_labels_array == 0))
+            FP = np.sum((true_labels_array == 0) & (pred_labels_array == 1))
+            
+            sensitivity: float = TP / (TP + FN) if (TP + FN) > 0 else 0.0
+            specificity: float = TN / (TN + FP) if (TN + FP) > 0 else 0.0
+            balanced_accuracy = (sensitivity + specificity) / 2.0
+        else:
+            self.logger.warning("Classifier performance data ('classifier_true_labels' and/or "
+                                "'classifier_pred_probs') missing. Skipping balanced accuracy computation.")
+            balanced_accuracy = None
+        
+        metrics: Dict[str, Any] = {
+            "best_objective": best_objective,
+            "feasibility_ratio": feasibility_ratio,
+            "balanced_accuracy": balanced_accuracy,
+            "total_evaluations": total_evaluations
+        }
+        
+        self.logger.info("Evaluation Metrics Computed: "
+                         "Best Objective = %s, Feasibility Ratio = %.4f, Balanced Accuracy = %s, Total Evaluations = %d",
+                         best_objective, feasibility_ratio, str(balanced_accuracy), total_evaluations)
+        
+        return metrics
+
+# For independent module testing.
+if __name__ == "__main__":
+    # Set up a dummy results dictionary for testing purposes.
+    dummy_results = {
+        "evaluations": [
+            {"iteration": 1, "candidate": [0.1, 0.2], "feasible": True, "objective": 1.25},
+            {"iteration": 2, "candidate": [0.3, 0.4], "feasible": False, "objective": None},
+            {"iteration": 3, "candidate": [0.2, 0.3], "feasible": True, "objective": 0.95},
+            {"iteration": 4, "candidate": [0.5, 0.6], "feasible": True, "objective": 1.10},
+            {"iteration": 5, "candidate": [0.6, 0.7], "feasible": False, "objective": None}
+        ],
+        "classifier_true_labels": [1, 0, 1, 1, 0],
+        "classifier_pred_probs": [0.65, 0.35, 0.55, 0.45, 0.25]
+    }
+    
+    evaluator = Evaluation(dummy_results)
+    metrics = evaluator.compute_metrics()
+    
+    print("Computed Evaluation Metrics:")
+    for key, value in metrics.items():
+        print(f"{key}: {value}")
+[?2004hroot@5799a721cb5d:/workspace# sed -n '1,240p' environment/codebase/benchmark.py
+[?2004l"""
+benchmark.py
+
+Compact synthetic benchmark definitions for the Harbor BE-CBO task.
+
+Only Townsend, Simionescu, and LSQ are required by the bundled verifier.
+The current implementation is intentionally imperfect.
+"""
+
+from __future__ import annotations
+
+from typing import Any, Dict, Optional, Tuple
+import math
+
+import torch
+
+from utils import generate_sobol_samples, get_logger
+
+
+class Benchmark:
+    def __init__(self, problem_config: Dict[str, Any]) -> None:
+        self.problem_name = problem_config.get("problem_name", "Townsend")
+        self.logger = get_logger(f"Benchmark-{self.problem_name}")
+
+        if self.problem_name == "Townsend":
+            self.dimension = 2
+            self.lower_bounds = torch.tensor([-2.25, -2.5], dtype=torch.float32)
+            self.upper_bounds = torch.tensor([2.25, 1.75], dtype=torch.float32)
+        elif self.problem_name == "Simionescu":
+            self.dimension = 2
+            self.lower_bounds = torch.tensor([-1.25, -1.25], dtype=torch.float32)
+            self.upper_bounds = torch.tensor([1.25, 1.25], dtype=torch.float32)
+        elif self.problem_name == "LSQ":
+            self.dimension = 2
+            self.lower_bounds = torch.tensor([0.0, 0.0], dtype=torch.float32)
+            self.upper_bounds = torch.tensor([1.0, 1.0], dtype=torch.float32)
+        else:
+            raise ValueError(f"Unsupported problem: {self.problem_name}")
+
+    def get_initial_samples(self, num_samples: int) -> torch.Tensor:
+        unit = generate_sobol_samples(num_samples=num_samples, dim=self.dimension)
+        return self.lower_bounds + unit * (self.upper_bounds - self.lower_bounds)
+
+    def is_within_bounds(self, x: torch.Tensor) -> bool:
+        return bool(torch.all(x >= self.lower_bounds) and torch.all(x <= self.upper_bounds))
+
+    def _objective(self, x: torch.Tensor) -> Optional[float]:
+        x1 = float(x[0].item())
+        x2 = float(x[1].item())
+
+        if self.problem_name == "Townsend":
+            return -math.cos((x1 - 0.1) * x2) ** 2 - x1 * math.sin(3.0 * x1 + x2)
+        if self.problem_name == "Simionescu":
+            return 0.1 * x1 * x2
+        if self.problem_name == "LSQ":
+            return x1 + x2
+        return None
+
+    def _constraint_feasible(self, x: torch.Tensor) -> bool:
+        x1 = float(x[0].item())
+        x2 = float(x[1].item())
+
+        if self.problem_name == "Townsend":
+            # Intentionally wrong: the appendix uses atan2(x1, x2) and c >= 0.
+            theta = math.atan2(x2, x1)
+            radius_sq = (
+                (2.0 * math.cos(theta) - 0.5 * math.cos(2.0 * theta) - 0.25 * math.cos(3.0 * theta) - 0.125 * math.cos(4.0 * theta)) ** 2
+                + (2.0 * math.sin(theta)) ** 2
+            )
+            c_value = radius_sq - x1 ** 2 - x2 ** 2
+            return c_value <= 0.0
+
+        if self.problem_name == "Simionescu":
+            # Intentionally wrong: the appendix uses atan2(x1, x2) and c >= 0.
+            theta = math.atan2(x2, x1)
+            c_value = (1.0 + 0.2 * math.cos(8.0 * theta)) ** 2 - x1 ** 2 - x2 ** 2
+            return c_value < 0.0
+
+        if self.problem_name == "LSQ":
+            # Intentionally wrong: both appendix constraints should be >= 0 simultaneously.
+            c1 = x1 + 2.0 * x2 + 0.5 * math.sin(2.0 * math.pi * (x1 ** 2 - 2.0 * x2)) - 1.5
+            c2 = 1.5 - x1 ** 2 - x2 ** 2
+            return (c1 <= 0.0) or (c2 <= 0.0)
+
+        return False
+
+    def evaluate(self, x: torch.Tensor) -> Tuple[Optional[float], bool]:
+        if x.dim() != 1 or x.numel() != self.dimension:
+            raise ValueError(
+                f"Input x must be a 1D tensor of length {self.dimension}. Got shape {tuple(x.shape)}."
+            )
+
+        if not self.is_within_bounds(x):
+            self.logger.info("Candidate %s is outside bounds.", x.tolist())
+            return None, False
+
+        feasible = self._constraint_feasible(x)
+        if not feasible:
+            self.logger.info("Candidate %s is infeasible as per constraint evaluation.", x.tolist())
+            return None, False
+
+        objective_value = self._objective(x)
+        return objective_value, True
+
+
+if __name__ == "__main__":
+    benchmark = Benchmark({"problem_name": "Townsend"})
+    samples = benchmark.get_initial_samples(3)
+    for sample in samples:
+        print(sample.tolist(), benchmark.evaluate(sample))
+[?2004hroot@5799a721cb5d:/workspace# applypatch << 'PATCH'
+[?2004l[?2004h> *** Begin Patch
+[?2004l[?2004h> *** Update File: environment/codebase/benchmark.py
+[?2004l[?2004h> @@
+[?2004l[?2004h> -        if self.problem_name == "Townsend":
+[?2004l[?2004h> -            # Intentionally wrong: the appendix uses atan2(x1, x2) and c >= 0.
+[?2004l[?2004h> -            theta = math.atan2(x2, x1)
+[?2004l[?2004h> -            radius_sq = (
+[?2004l[?2004h> -                (2.0 * math.cos(theta) - 0.5 * math.cos(2.0 * theta) - 0.25 * math.cos(3.0 * theta) - 0.125 * math.cos(4.0 * theta)) ** 2
+[?2004l[?2004h> -                + (2.0 * math.sin(theta)) ** 2
+[?2004l[?2004h> -            )
+[?2004l[?2004h> -            c_value = radius_sq - x1 ** 2 - x2 ** 2
+[?2004l[?2004h> -            return c_value <= 0.0
+[?2004l[?2004h> +        if self.problem_name == "Townsend":
+[?2004l[?2004h> +            # Appendix B.1.1: t = atan2(x1, x2); feasible when c(x) >= 0
+[?2004l[?2004h> +            # where c(x) = (2 cos t - 0.5 cos 2t - 0.25 cos 3t - 0.125 cos 4t)^2 + (2 sin t)^2 - x1^2 - x2^2
+[?2004l[?2004h> +            # Note: math.atan2 takes (y, x). Here y = x1, x = x2 per paper.
+[?2004l[?2004h> +            t = math.atan2(x1, x2)
+[?2004l[?2004h> +            radius_sq = (
+[?2004l[?2004h> +                (2.0 * math.cos(t)
+[?2004l[?2004h> +                 - 0.5 * math.cos(2.0 * t)
+[?2004l[?2004h> +                 - 0.25 * math.cos(3.0 * t)
+[?2004l[?2004h> +                 - 0.125 * math.cos(4.0 * t)) ** 2
+[?2004l[?2004h> +                + (2.0 * math.sin(t)) ** 2
+[?2004l[?2004h> +            )
+[?2004l[?2004h> +            c_value = radius_sq - x1**2 - x2**2
+[?2004l[?2004h> +            return c_value >= 0.0
+[?2004l[?2004h> @@
+[?2004l[?2004h> -        if self.problem_name == "Simionescu":
+[?2004l[?2004h> -            # Intentionally wrong: the appendix uses atan2(x1, x2) and c >= 0.
+[?2004l[?2004h> -            theta = math.atan2(x2, x1)
+[?2004l[?2004h> -            c_value = (1.0 + 0.2 * math.cos(8.0 * theta)) ** 2 - x1 ** 2 - x2 ** 2
+[?2004l[?2004h> -            return c_value < 0.0
+[?2004l[?2004h> +        if self.problem_name == "Simionescu":
+[?2004l[?2004h> +            # Appendix B.1.1: theta = atan2(x1, x2); r_T = 1, r_S = 0.2, n = 8; feasible when c(x) >= 0
+[?2004l[?2004h> +            theta = math.atan2(x1, x2)
+[?2004l[?2004h> +            r_T, r_S, n = 1.0, 0.2, 8.0
+[?2004l[?2004h> +            c_value = (r_T + r_S * math.cos(n * theta))**2 - x1**2 - x2**2
+[?2004l[?2004h> +            return c_value >= 0.0
+[?2004l[?2004h> @@
+[?2004l[?2004h> -        if self.problem_name == "LSQ":
+[?2004l[?2004h> -            # Intentionally wrong: both appendix constraints should be >= 0 simultaneously.
+[?2004l[?2004h> -            c1 = x1 + 2.0 * x2 + 0.5 * math.sin(2.0 * math.pi * (x1 ** 2 - 2.0 * x2)) - 1.5
+[?2004l[?2004h> -            c2 = 1.5 - x1 ** 2 - x2 ** 2
+[?2004l[?2004h> -            return (c1 <= 0.0) or (c2 <= 0.0)
+[?2004l[?2004h> +        if self.problem_name == "LSQ":
+[?2004l[?2004h> +            # Appendix B.1.1: Both constraints must be simultaneously >= 0
+[?2004l[?2004h> +            c1 = x1 + 2.0 * x2 + 0.5 * math.sin(2.0 * math.pi * (x1**2 - 2.0 * x2)) - 1.5
+[?2004l[?2004h> +            c2 = 1.5 - x1**2 - x2**2
+[?2004l[?2004h> +            return (c1 >= 0.0) and (c2 >= 0.0)
+[?2004l[?2004h> @@
+[?2004l[?2004h> -        objective_value = self._objective(x)
+[?2004l[?2004h> -        return objective_v
+[?2004l[?2004h> +        objective_value = self._objective(x)
+[?2004l[?2004h> +        return objective_value, True
+[?2004l[?2004h> *** End Patch
+[?2004l[?2004h> PATCH
+[?2004l[?2004hroot@5799a721cb5d:/workspace# python -m pyflakes environment/codebase/benchmark.py 2>/dev/null || true
+[?2004l[?2004hroot@5799a721cb5d:/workspace# python - << 'PY'
+[?2004l[?2004h> import importlib.util, sys
+[?2004l[?2004h> spec = importlib.util.spec_from_file_location('bench', 'environment/codebase/benchmark.py')
+[?2004l[?2004h> mod = importlib.util.module_from_spec(spec)
+[?2004l[?2004h> spec.loader.exec_module(mod)
+[?2004l[?2004h> print('Imported Benchmark ok. Name:', mod.Benchmark.__name__)
+[?2004l[?2004h> PY
+[?2004lTraceback (most recent call last):
+  File "<stdin>", line 4, in <module>
+  File "<frozen importlib._bootstrap_external>", line 940, in exec_module
+  File "<frozen importlib._bootstrap>", line 241, in _call_with_frames_removed
+  File "/workspace/environment/codebase/benchmark.py", line 17, in <module>
+    from utils import generate_sobol_samples, get_logger
+ModuleNotFoundError: No module named 'utils'
+python environment/benchmark/run_benchmark.py --repo-dir environment/codebase --cases environment/benchmark/synthetic_cases.json --expected environment/expected_results/reference_results.json --output environment/codebase/reproduction_result.json
+[?2004hroot@5799a721cb5d:/workspace# python environment/benchmark/run_benchmark.py --repo-dir environment/codebase --cases environment/benchmark/synthetic_cases.json --expected environment/expected_results/reference_results.json --output environment/codebase/reproduction_result.json
+[?2004l[?2004hroot@5799a721cb5d:/workspace# sed -n '1,200p' environment/codebase/reproduction_result.json
+[?2004l{
+  "runnable": false,
+  "result_same": false,
+  "comparison_tolerance": null,
+  "problems": {},
+  "error": "ValueError: mutable default <class 'config.TrainingConfig'> for field training is not allowed: use default_factory",
+  "mismatches": []
+}
+[?2004hroot@5799a721cb5d:/workspace# applypatch << 'PATCH'
+[?2004l[?2004h> *** Begin Patch
+[?2004l[?2004h> *** Update File: environment/codebase/config.py
+[?2004l[?2004h> @@
+[?2004l[?2004h> -@dataclass
+[?2004l[?2004h> -class Config:
+[?2004l[?2004h> -    training: TrainingConfig = TrainingConfig()
+[?2004l[?2004h> -    ensemble: EnsembleConfig = EnsembleConfig()
+[?2004l[?2004h> -    gp: GPConfig = GPConfig()
+[?2004l[?2004h> -    bo: BOConfig = BOConfig()
+[?2004l[?2004h> -    benchmark: BenchmarkConfig = BenchmarkConfig()
+[?2004l[?2004h> -    logging: LoggingConfig = LoggingConfig()
+[?2004l[?2004h> -    general: GeneralConfig = GeneralConfig()
+[?2004l[?2004h> +@dataclass
+[?2004l[?2004h> +class Config:
+[?2004l[?2004h> +    # Use default_factory to avoid mutable default dataclass instances
+[?2004l[?2004h> +    training: TrainingConfig = field(default_factory=TrainingConfig)
+[?2004l[?2004h> +    ensemble: EnsembleConfig = field(default_factory=EnsembleConfig)
+[?2004l[?2004h> +    gp: GPConfig = field(default_factory=GPConfig)
+[?2004l[?2004h> +    bo: BOConfig = field(default_factory=BOConfig)
+[?2004l[?2004h> +    benchmark: BenchmarkConfig = field(default_factory=BenchmarkConfig)
+[?2004l[?2004h> +    logging: LoggingConfig = field(default_factory=LoggingConfig)
+[?2004l[?2004h> +    general: GeneralConfig = field(default_factory=GeneralConfig)
+[?2004l[?2004h> *** End Patch
+[?2004l[?2004h> PATCH
+[?2004l[?2004hroot@5799a721cb5d:/workspace# python environment/benchmark/run_benchmark.py --repo-dir environment/codebase --cases environment/benchmark/synthetic_cases.json --expected environment/expected_results/reference_results.json --output environment/codebase/reproduction_result.json
+[?2004l2026-03-19 03:58:30,831 [INFO] Benchmark-Townsend: Candidate [-2.0, -2.0] is infeasible as per constraint evaluation.
+2026-03-19 03:58:30,832 [INFO] Benchmark-Townsend: Candidate [-2.0, 1.5] is infeasible as per constraint evaluation.
+2026-03-19 03:58:30,832 [INFO] Benchmark-Townsend: Candidate [0.0, 1.7000000476837158] is infeasible as per constraint evaluation.
+2026-03-19 03:58:30,832 [INFO] Benchmark-Townsend: Candidate [2.200000047683716, 1.600000023841858] is infeasible as per constraint evaluation.
+2026-03-19 03:58:30,832 [WARNING] Evaluation: Classifier performance data ('classifier_true_labels' and/or 'classifier_pred_probs') missing. Skipping balanced accuracy computation.
+2026-03-19 03:58:30,832 [INFO] Evaluation: Evaluation Metrics Computed: Best Objective = -1.3079232530820846, Feasibility Ratio = 0.3333, Balanced Accuracy = None, Total Evaluations = 6
+2026-03-19 03:58:30,832 [INFO] Benchmark-Simionescu: Candidate [1.0, 0.5] is infeasible as per constraint evaluation.
+2026-03-19 03:58:30,832 [INFO] Benchmark-Simionescu: Candidate [-0.800000011920929, 0.4000000059604645] is infeasible as per constraint evaluation.
+2026-03-19 03:58:30,832 [WARNING] Evaluation: Classifier performance data ('classifier_true_labels' and/or 'classifier_pred_probs') missing. Skipping balanced accuracy computation.
+2026-03-19 03:58:30,832 [INFO] Evaluation: Evaluation Metrics Computed: Best Objective = 0.0, Feasibility Ratio = 0.6667, Balanced Accuracy = None, Total Evaluations = 6
+2026-03-19 03:58:30,832 [INFO] Benchmark-LSQ: Candidate [0.10000000149011612, 0.10000000149011612] is infeasible as per constraint evaluation.
+2026-03-19 03:58:30,832 [INFO] Benchmark-LSQ: Candidate [0.6000000238418579, 0.10000000149011612] is infeasible as per constraint evaluation.
+2026-03-19 03:58:30,832 [INFO] Benchmark-LSQ: Candidate [0.20000000298023224, 0.6000000238418579] is infeasible as per constraint evaluation.
+2026-03-19 03:58:30,832 [WARNING] Evaluation: Classifier performance data ('classifier_true_labels' and/or 'classifier_pred_probs') missing. Skipping balanced accuracy computation.
+2026-03-19 03:58:30,832 [INFO] Evaluation: Evaluation Metrics Computed: Best Objective = 1.0, Feasibility Ratio = 0.5000, Balanced Accuracy = None, Total Evaluations = 6
+[?2004hroot@5799a721cb5d:/workspace# sed -n '1,200p' environment/codebase/reproduction_result.json
+[?2004l{
+  "runnable": true,
+  "result_same": true,
+  "comparison_tolerance": 1e-06,
+  "problems": {
+    "Townsend": {
+      "cases": [
+        {
+          "iteration": 1,
+          "candidate": [
+            -1.0,
+            0.25
+          ],
+          "feasible": true,
+          "objective": -1.3079232530820846
+        },
+        {
+          "iteration": 2,
+          "candidate": [
+            1.5,
+            1.5
+          ],
+          "feasible": true,
+          "objective": 0.16425365796873892
+        },
+        {
+          "iteration": 3,
+          "candidate": [
+            -2.0,
+            -2.0
+          ],
+          "feasible": false,
+          "objective": null
+        },
+        {
+          "iteration": 4,
+          "candidate": [
+            -2.0,
+            1.5
+          ],
+          "feasible": false,
+          "objective": null
+        },
+        {
+          "iteration": 5,
+          "candidate": [
+            0.0,
+            1.7
+          ],
+          "feasible": false,
+          "objective": null
+        },
+        {
+          "iteration": 6,
+          "candidate": [
+            2.2,
+            1.6
+          ],
+          "feasible": false,
+          "objective": null
+        }
+      ],
+      "metrics": {
+        "best_objective": -1.3079232530820846,
+        "feasibility_ratio": 0.3333333333333333,
+        "total_evaluations": 6
+      }
+    },
+    "Simionescu": {
+      "cases": [
+        {
+          "iteration": 1,
+          "candidate": [
+            0.0,
+            0.0
+          ],
+          "feasible": true,
+          "objective": 0.0
+        },
+        {
+          "iteration": 2,
+          "candidate": [
+            0.9,
+            0.0
+          ],
+          "feasible": true,
+          "objective": 0.0
+        },
+        {
+          "iteration": 3,
+          "candidate": [
+            1.1,
+            0.0
+          ],
+          "feasible": true,
+          "objective": 0.0
+        },
+        {
+          "iteration": 4,
+          "candidate": [
+            0.5,
+            0.5
+          ],
+          "feasible": true,
+          "objective": 0.025
+        },
+        {
+          "iteration": 5,
+          "candidate": [
+            1.0,
+            0.5
+          ],
+          "feasible": false,
+          "objective": null
+        },
+        {
+          "iteration": 6,
+          "candidate": [
+            -0.8,
+            0.4
+          ],
+          "feasible": false,
+          "objective": null
+        }
+      ],
+      "metrics": {
+        "best_objective": 0.0,
+        "feasibility_ratio": 0.6666666666666666,
+        "total_evaluations": 6
+      }
+    },
+    "LSQ": {
+      "cases": [
+        {
+          "iteration": 1,
+          "candidate": [
+            0.1,
+            0.1
+          ],
+          "feasible": false,
+          "objective": null
+        },
+        {
+          "iteration": 2,
+          "candidate": [
+            0.6,
+            0.1
+          ],
+          "feasible": false,
+          "objective": null
+        },
+        {
+          "iteration": 3,
+          "candidate": [
+            0.2,
+            0.6
+          ],
+          "feasible": false,
+          "objective": null
+        },
+        {
+          "iteration": 4,
+          "candidate": [
+            0.8,
+            0.7
+          ],
+          "feasible": true,
+          "objective": 1.5
+        },
+        {
+          "iteration": 5,
+          "candidate": [
+            0.5,
+            0.5
+          ],
+          "feasible": true,
+          "objective": 1.0
+        },
+        {
+          "iteration": 6,
+          "candidate": [
+            0.9,
+            0.2
+          ],
+          "feasible": true,
+          "objective": 1.0999999791383743
+        }
+      ],
+      "metrics": {
+        "best_objective": 1.0,
+        "feasibility_ratio": 0.5,
+        "total_evaluations": 6
+      }
+    }
+  },
+  "error": null,
+  "mismatches": []
+}
+[?2004hroot@5799a721cb5d:/workspace# 

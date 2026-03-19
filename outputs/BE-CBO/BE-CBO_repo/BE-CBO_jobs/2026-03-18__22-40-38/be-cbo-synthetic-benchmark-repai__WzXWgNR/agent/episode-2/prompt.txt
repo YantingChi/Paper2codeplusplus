@@ -1,0 +1,204 @@
+New Terminal Output:
+
+root@56f881c739bc:/workspace# ls -la environment/codebase
+total 196
+drwxrwxr-x 1 root root  4096 Mar 19 03:40 .
+drwxr-xr-x 1 root root  4096 Mar 19 03:19 ..
+drwxrwxr-x 1 root root  4096 Mar 19 03:19 __pycache__
+-rw-rw-r-- 1 root root  8747 Mar 19 03:14 acquisition.py
+-rw-rw-r-- 1 root root 13529 Mar 19 03:14 benchmark.py
+-rwxrwxr-x 1 root root 62626 Mar 19 03:15 benchmark_materialize.sh
+-rw-rw-r-- 1 root root 12796 Mar 19 03:14 botrainer.py
+-rw-rw-r-- 1 root root  3818 Mar 19 03:14 config.py
+-rw-rw-r-- 1 root root  1042 Mar 19 03:14 config.yaml
+-rw-rw-r-- 1 root root 12764 Mar 19 03:14 deep_ensemble.py
+-rw-rw-r-- 1 root root  8313 Mar 19 03:14 evaluation.py
+-rw-rw-r-- 1 root root  8215 Mar 19 03:14 gp_surrogate.py
+-rw-rw-r-- 1 root root  6004 Mar 19 03:14 main.py
+-rw-r--r-- 1 root root   247 Mar 19 03:40 reproduction_result.json
+-rw-rw-r-- 1 root root  5517 Mar 19 03:14 utils.py
+root@56f881c739bc:/workspace# sed -n '1,220p' environment/codebase/benchmark.py
+"""
+benchmark.py
+
+This module defines the Benchmark class which encapsulates the definitions of
+synthetic and real‐world benchmark problems for the BE-CBO project.
+It provides methods for:
+  - Evaluating a candidate design point (compute objective value and feasibility flag).
+  - Generating initial samples using a Sobol sequence (scaled to the problem domain).
+
+The Benchmark class supports several benchmark problems including:
+  "Townsend", "Simionescu", "LSQ", "Three-bar Truss",
+  "Tension-Compression String", "Welded Beam",
+  "Gas Transmission Compressor", "Pressure Vessel",
+  "Speed Reducer", "Planetary Gear Train", "Rolling Element Bearing",
+  and "Cantilever Beam".
+
+Each problem is characterized by its dimension, design space bounds, an objective function,
+and a (hidden) binary constraint function. Infeasible designs (e.g., out-of-bound or failing constraints)
+return a None objective value and a feasibility flag of False.
+
+Authors: BE-CBO Research Team
+Date: 2024
+"""
+
+from typing import Tuple, Optional, Dict, Any
+import torch
+import math
+from utils import generate_sobol_samples, to_device, get_logger
+from config import config  # Access global configuration if needed
+
+
+class Benchmark:
+    """
+    The Benchmark class encapsulates the objective function,
+    binary constraint function, and domain information for a specific benchmark problem.
+    It provides functionality to evaluate candidate designs and generate initial samples.
+    """
+
+    def __init__(self, problem_config: Dict[str, Any]) -> None:
+        """
+        Initialize the Benchmark instance with a given problem configuration.
+
+        Args:
+            problem_config (Dict[str, Any]): Dictionary containing keys such as:
+                - "problem_name": Name of the benchmark problem.
+                - "dimension": (Optional) The problem dimensionality.
+                - "bounds": (Optional) A tuple [lower_bounds, upper_bounds] as lists.
+
+        If "dimension" and "bounds" are not provided, default values for each supported problem are used.
+        """
+        self.logger = get_logger(f"Benchmark-{problem_config.get('problem_name', 'Unknown')}")
+        self.problem_name: str = problem_config.get("problem_name", "Townsend")
+
+        if "dimension" in problem_config and "bounds" in problem_config:
+            self.dimension: int = int(problem_config["dimension"])
+            bounds = problem_config["bounds"]
+            self.lower_bounds: torch.Tensor = torch.tensor(bounds[0], dtype=torch.float32)
+            self.upper_bounds: torch.Tensor = torch.tensor(bounds[1], dtype=torch.float32)
+        else:
+            # Set default dimensions and bounds for known problems
+            if self.problem_name == "Townsend":
+                self.dimension = 2
+                self.lower_bounds = torch.tensor([-2.25, -2.5], dtype=torch.float32)
+                self.upper_bounds = torch.tensor([2.25, 1.75], dtype=torch.float32)
+            elif self.problem_name == "Simionescu":
+                self.dimension = 2
+                self.lower_bounds = torch.tensor([-1.25, -1.25], dtype=torch.float32)
+                self.upper_bounds = torch.tensor([1.25, 1.25], dtype=torch.float32)
+            elif self.problem_name == "LSQ":
+                self.dimension = 2
+                self.lower_bounds = torch.tensor([0.0, 0.0], dtype=torch.float32)
+                self.upper_bounds = torch.tensor([1.0, 1.0], dtype=torch.float32)
+            elif self.problem_name == "Three-bar Truss":
+                self.dimension = 2
+                self.lower_bounds = torch.tensor([0.0, 0.0], dtype=torch.float32)
+                self.upper_bounds = torch.tensor([1.0, 1.0], dtype=torch.float32)
+            elif self.problem_name == "Tension-Compression String":
+                self.dimension = 3
+                self.lower_bounds = torch.tensor([2.0, 0.25, 0.05], dtype=torch.float32)
+                self.upper_bounds = torch.tensor([15.0, 1.3, 2.0], dtype=torch.float32)
+            elif self.problem_name
+[... output limited to 10000 bytes; 71 interior bytes omitted ...]
+self.evaluations = self.results.get("evaluations", [])
+
+        # Optional classifier performance data
+        self.classifier_true_labels: Optional[List[int]] = self.results.get("classifier_true_labels", None)
+        self.classifier_pred_probs: Optional[List[float]] = self.results.get("classifier_pred_probs", None)
+
+    def compute_metrics(self) -> Dict[str, Any]:
+        """
+        Computes evaluation metrics:
+          - best_objective: Minimum objective value among feasible evaluations.
+          - feasibility_ratio: Fraction of feasibility evaluations.
+          - balanced_accuracy: Average of sensitivity and specificity computed from classifier data.
+          - total_evaluations: Total number of evaluations performed.
+
+        Returns:
+            Dict[str, Any]: Dictionary of computed metrics.
+        """
+        # Compute Best (Minimum) Objective from feasible evaluations.
+        feasible_objectives: List[float] = []
+        for record in self.evaluations:
+            feasible_flag = record.get("feasible", False)
+            objective_value = record.get("objective", None)
+            if feasible_flag and (objective_value is not None):
+                feasible_objectives.append(objective_value)
+
+        if feasible_objectives:
+            best_objective: float = min(feasible_objectives)
+        else:
+            best_objective = float("inf")
+            self.logger.warning("No feasible evaluations found. Best objective set to infinity.")
+
+        # Compute Feasibility Ratio.
+        total_evaluations: int = len(self.evaluations)
+        count_feasible: int = sum(1 for record in self.evaluations if record.get("feasible", False))
+        feasibility_ratio: float = (count_feasible / total_evaluations) if total_evaluations > 0 else 0.0
+
+        # Compute Classifier Accuracy: Balanced Accuracy.
+        balanced_accuracy: Optional[float] = None
+        if (self.classifier_true_labels is not None) and (self.classifier_pred_probs is not None):
+            true_labels_array = np.array(self.classifier_true_labels, dtype=int)
+            pred_probs_array = np.array(self.classifier_pred_probs, dtype=float)
+            # Convert predicted probabilities to binary predictions using threshold 0.5.
+            pred_labels_array = (pred_probs_array >= 0.5).astype(int)
+
+            # Compute counts.
+            TP = np.sum((true_labels_array == 1) & (pred_labels_array == 1))
+            FN = np.sum((true_labels_array == 1) & (pred_labels_array == 0))
+            TN = np.sum((true_labels_array == 0) & (pred_labels_array == 0))
+            FP = np.sum((true_labels_array == 0) & (pred_labels_array == 1))
+
+            sensitivity: float = TP / (TP + FN) if (TP + FN) > 0 else 0.0
+            specificity: float = TN / (TN + FP) if (TN + FP) > 0 else 0.0
+            balanced_accuracy = (sensitivity + specificity) / 2.0
+        else:
+            self.logger.warning("Classifier performance data ('classifier_true_labels' and/or "
+                                "'classifier_pred_probs') missing. Skipping balanced accuracy computation.")
+            balanced_accuracy = None
+
+        metrics: Dict[str, Any] = {
+            "best_objective": best_objective,
+            "feasibility_ratio": feasibility_ratio,
+            "balanced_accuracy": balanced_accuracy,
+            "total_evaluations": total_evaluations
+        }
+
+        self.logger.info("Evaluation Metrics Computed: "
+                         "Best Objective = %s, Feasibility Ratio = %.4f, Balanced Accuracy = %s, Total Evaluations = %d",
+                         best_objective, feasibility_ratio, str(balanced_accuracy), total_evaluations)
+
+        return metrics
+
+# For independent module testing.
+if __name__ == "__main__":
+    # Set up a dummy results dictionary for testing purposes.
+    dummy_results = {
+        "evaluations": [
+            {"iteration": 1, "candidate": [0.1, 0.2], "feasible": True, "objective": 1.25},
+            {"iteration": 2, "candidate": [0.3, 0.4], "feasible": False, "objective": None},
+            {"iteration": 3, "candidate": [0.2, 0.3], "feasible": True, "objective": 0.95},
+            {"iteration": 4, "candidate": [0.5, 0.6], "feasible": True, "objective": 1.10},
+            {"iteration": 5, "candidate": [0.6, 0.7], "feasible": False, "objective": None}
+        ],
+        "classifier_true_labels": [1, 0, 1, 1, 0],
+        "classifier_pred_probs": [0.65, 0.35, 0.55, 0.45, 0.25]
+    }
+
+    evaluator = Evaluation(dummy_results)
+    metrics = evaluator.compute_metrics()
+
+    print("Computed Evaluation Metrics:")
+    for key, value in metrics.items():
+        print(f"{key}: {value}")
+root@56f881c739bc:/workspace# sed -n '1,240p' environment/codebase/reproduction_result.json
+{
+  "runnable": false,
+  "result_same": false,
+  "comparison_tolerance": null,
+  "problems": {},
+  "error": "ValueError: mutable default <class 'config.TrainingConfig'> for field training is not allowed: use default_factory",
+  "mismatches": []
+}
+root@56f881c739bc:/workspace#

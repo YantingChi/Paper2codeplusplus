@@ -1,0 +1,41 @@
+Current Terminal Screen:
+          "iteration": 4,
+          "candidate": [
+            0.8,
+            0.7
+          ],
+          "feasible": false,
+          "objective": null
+        },
+        {
+          "iteration": 5,
+          "candidate": [
+            0.5,
+            0.5
+          ],
+          "feasible": true,
+          "objective": 1.0
+        },
+        {
+          "iteration": 6,
+          "candidate": [
+            0.9,
+            0.2
+          ],
+          "feasible": true,
+          "objective": 1.100000023841858
+        }
+      ],
+      "metrics": {
+        "best_objective": 0.20000000298023224,
+        "feasibility_ratio": 0.8333333333333334,
+        "total_evaluations": 6
+      }
+    }
+  },
+  "error": null,
+  "mismatches": [
+    "Townsend: feasibility mismatch at case 1",
+    "Townsend: objective mismatch at case 1",
+    "Townsend: feasibility mismatch at case 5",
+root@a34599d32d5e:/workspace#

@@ -1,0 +1,32 @@
+{
+  "paper_benchmark_name": "2D three-bar truss design",
+  "paper_research_field": "Constrained Bayesian Optimization",
+  "matched_benchmark_name": "2D three-bar truss design",
+  "matched_research_field": "Structural Design Optimization",
+  "name_match_type": "exact",
+  "field_match_status": "same_field",
+  "match_reason": "The name directly matches a standard structural design optimization problem used in constrained optimization literature.",
+  "status": "well_established_formula",
+  "materialization_strategy": "generate_definition",
+  "source_type": "literature_formula",
+  "source_url": "",
+  "download_subdir": "benchmark_4",
+  "materialization_commands": [],
+  "definition_summary": "A two-dimensional structural design problem for a three-bar truss, focusing on weight minimization under mechanical stress and displacement constraints.",
+  "equations_or_components": [
+    "Objective function for weight and constraint equations for stress and displacement (as per standard truss design formulations)"
+  ],
+  "variables_or_inputs": [
+    "Cross-sectional areas of the three truss bars"
+  ],
+  "constraints_or_bounds": [
+    "Stress, displacement, and stability constraints defined in classical structural optimization literature."
+  ],
+  "expected_artifacts": [
+    "benchmark_definition.txt"
+  ],
+  "license_or_access_notes": [
+    "Common academic benchmark with no licensing issues."
+  ],
+  "failure_reason": ""
+}

@@ -1,0 +1,16 @@
+[?2004hroot@0f2c32789e9a:/app# bash /tests/run-tests.sh; tmux wait -S done
+[?2004l[1m===================================================================== test session starts ======================================================================[0m
+platform linux -- Python 3.11.15, pytest-8.4.1, pluggy-1.6.0
+rootdir: /tests
+[1mcollecting ... [0m[1mcollected 4 items                                                                                                                                              [0m
+
+../tests/test_outputs.py [32m.[0m[32m.[0m[32m.[0m[32m.[0m[32m                                                                                                                            [100%][0m
+
+============================================================================ PASSES ============================================================================
+[36m[1m=================================================================== short test summary info ====================================================================[0m
+[32mPASSED[0m ../tests/test_outputs.py::[1mtest_required_output_files_exist[0m
+[32mPASSED[0m ../tests/test_outputs.py::[1mtest_summary_matches_expected_job_shape[0m
+[32mPASSED[0m ../tests/test_outputs.py::[1mtest_run_matrix_outputs_are_complete[0m
+[32mPASSED[0m ../tests/test_outputs.py::[1mtest_machine_check_is_preserved[0m
+[32m====================================================================== [32m[1m4 passed[0m[32m in 0.05s[0m[32m =======================================================================[0m
+[?2004hroot@0f2c32789e9a:/app# 

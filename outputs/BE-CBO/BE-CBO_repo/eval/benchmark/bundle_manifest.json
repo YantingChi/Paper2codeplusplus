@@ -1,0 +1,39 @@
+{
+  "generated_at": "20260317_231814",
+  "paper_name": "BE-CBO",
+  "task_id": "benchmark",
+  "gpt_version": "o3-mini",
+  "input_paths": {
+    "target_repo_dir": "/home/yantingchi/Desktop/DK/Paper2Code/outputs/BE-CBO_repo",
+    "eval_metrics_path": "/home/yantingchi/Desktop/DK/Paper2Code/outputs/BE-CBO_repo/eval/BE-CBO_paper_only_eval_info_o3-mini_20260316_113056.json",
+    "paper_json_path": "/home/yantingchi/Desktop/DK/Paper2Code/data/lightweight/BE-CBO/BE-CBO.json"
+  },
+  "machine_check_enabled": true,
+  "machine_warning_required": false,
+  "asset_mode": "analytic_benchmarks",
+  "repo_runtime_defaults": {
+    "seed": 42,
+    "initial_samples": 10,
+    "total_evaluations": 200,
+    "random_seeds": 10,
+    "device": "cpu"
+  },
+  "asset_files": [
+    "assets/benchmark_manifest.json",
+    "assets/problem_list.json",
+    "assets/seeds.json",
+    "assets/run_matrix.json",
+    "assets/paper_eval_facts.json",
+    "assets/paper_source.json",
+    "assets/run_be_cbo_bundle.py"
+  ],
+  "prompt_path": "instructions/terminal_bench_prompt.txt",
+  "expected_schema_path": "expected_outputs/schema.json",
+  "workspace_repo_path": "workspace/repo",
+  "validation": {
+    "status": "ok",
+    "required_paths_checked": 18,
+    "expected_job_count": 120,
+    "task_id": "benchmark"
+  }
+}

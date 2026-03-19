@@ -1,0 +1,22 @@
+paper_benchmark_name: 30D cantilever beam design
+paper_research_field: Constrained Bayesian Optimization
+matched_benchmark_name: 30D cantilever beam design
+matched_research_field: Constrained Bayesian Optimization
+name_match_type: exact
+field_match_status: same_field
+status: well_established_formula
+materialization_strategy: generate_definition
+source_type: literature_formula
+source_url: Not provided
+match_reason: Benchmark is referenced from Cheng et al. (2018) and defined by complex analytic expressions.
+definition_summary: A high-dimensional cantilever beam design problem aimed at minimizing tip deflection, with a complex set of constraints as detailed in the original paper.
+equations_or_components:
+- Full analytic formulation available in Cheng et al. (2018)
+variables_or_inputs:
+- 30-dimensional design vector
+constraints_or_bounds:
+- Complex bounds and constraints as detailed in Cheng et al. (2018)
+license_or_access_notes:
+- Refer to the original publication for licensing details; generally no restrictions for analytic benchmarks
+expected_artifacts:
+- spec.txt

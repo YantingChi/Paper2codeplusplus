@@ -1,0 +1,28 @@
+{
+    "id": "1dd358f2-0745-44b7-876a-aa7a4b86144b",
+    "started_at": "2026-03-18T22:48:15.095764",
+    "finished_at": null,
+    "n_total_trials": 1,
+    "stats": {
+        "n_trials": 1,
+        "n_errors": 1,
+        "evals": {
+            "terminus-2__gpt-5__adhoc": {
+                "n_trials": 0,
+                "n_errors": 1,
+                "metrics": [
+                    {
+                        "mean": 0.0
+                    }
+                ],
+                "reward_stats": {},
+                "exception_stats": {
+                    "CancelledError": [
+                        "be-cbo-synthetic-benchmark-repai__oHc6ifx"
+                    ]
+                }
+            }
+        }
+    },
+    "trial_results": []
+}

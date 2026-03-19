@@ -1,0 +1,542 @@
+{
+  "paper_name": "BE-CBO",
+  "model": "o3-mini",
+  "paper_meta": {
+    "source_path": "/home/yantingchi/Desktop/DK/Paper2Code/data/lightweight/BE-CBO/BE-CBO_cleaned.json",
+    "paper_format": "JSON",
+    "original_chars": 36875,
+    "used_chars": 36875,
+    "truncated": false,
+    "benchmark_names_used_for_context": [
+      "2D Townsend function",
+      "2D Simionescu function",
+      "2D LSQ function",
+      "2D three-bar truss design",
+      "3D tension-compression string design",
+      "4D welded beam design",
+      "4D gas transmission compressor design",
+      "4D pressure vessel design",
+      "7D speed reducer design",
+      "9D planetary gear train design",
+      "10D rolling element bearing design",
+      "30D cantilever beam design"
+    ]
+  },
+  "benchmark_meta": {
+    "source_path": "/home/yantingchi/Desktop/DK/Paper2Code/outputs/BE-CBO_repo/eval/BE-CBO_paper_only_eval_info_o3-mini_20260316_113056.json",
+    "original_chars": 3061,
+    "used_chars": 3061,
+    "truncated": false
+  },
+  "prompt_token_estimate": 11739,
+  "benchmark_dir": "/home/yantingchi/Desktop/DK/Paper2Code/outputs/BE-CBO_repo/benchmark",
+  "output_script_path": "/home/yantingchi/Desktop/DK/Paper2Code/outputs/BE-CBO_repo/benchmark_materialize.sh",
+  "output_csv_path": "/home/yantingchi/Desktop/DK/Paper2Code/outputs/BE-CBO_repo/benchmark/benchmark_materialization_mapping.csv",
+  "status_summary": {
+    "self_generated": 0,
+    "well_established_formula": 12,
+    "open_source_downloadable": 0,
+    "manual_access_required": 0,
+    "not_open_source": 0,
+    "unclear_or_not_found": 0
+  },
+  "generated_plan": {
+    "paper_research_field": "Constrained Bayesian Optimization",
+    "paper_summary": "The paper introduces BE-CBO, a Bayesian optimization method for expensive black‐box functions with unknown physical constraints. By focusing on the exploration of the boundary between feasible and infeasible regions, BE-CBO is evaluated on a set of synthetic and real-world engineering design problems defined by analytic formulas.",
+    "benchmark_downloads": [
+      {
+        "paper_benchmark_name": "2D Townsend function",
+        "paper_research_field": "Constrained Bayesian Optimization",
+        "matched_benchmark_name": "2D Townsend function",
+        "matched_research_field": "Constrained Bayesian Optimization",
+        "name_match_type": "exact",
+        "field_match_status": "same_field",
+        "match_reason": "Benchmark is directly referenced in the paper and based on Townsend (2014).",
+        "status": "well_established_formula",
+        "materialization_strategy": "generate_definition",
+        "source_type": "literature_formula",
+        "source_url": "",
+        "download_subdir": "2d_townsend_function",
+        "materialization_commands": [],
+        "definition_summary": "A 2-dimensional trigonometric synthetic function with a nonlinear constraint, defined by analytic expressions.",
+        "equations_or_components": [
+          "f(x) = -[cos((x1 - 0.1)*x2)]^2 - x1*sin(3*x1 + x2)",
+          "c(x) = (2*cos(t) - 1/2*cos(2*t) - 1/4*cos(3*t) - 1/8*cos(4*t))^2 + (2*sin(t))^2 - x2",
+          "t = arctan2(x1, x2)"
+        ],
+        "variables_or_inputs": [
+          "x1",
+          "x2"
+        ],
+        "constraints_or_bounds": [
+          "x1 ∈ [-2.25, 2.25]",
+          "x2 ∈ [-2.5, 1.75]"
+        ],
+        "expected_artifacts": [
+          "spec.txt"
+        ],
+        "license_or_access_notes": [
+          "Analytic benchmark based on published literature; no license restrictions"
+        ],
+        "failure_reason": ""
+      },
+      {
+        "paper_benchmark_name": "2D Simionescu function",
+        "paper_research_field": "Constrained Bayesian Optimization",
+        "matched_benchmark_name": "2D Simionescu function",
+        "matched_research_field": "Constrained Bayesian Optimization",
+        "name_match_type": "exact",
+        "field_match_status": "same_field",
+        "match_reason": "Directly referenced in the paper with its analytic definition (Simionescu, 2014).",
+        "status": "well_established_formula",
+        "materialization_strategy": "generate_definition",
+        "source_type": "literature_formula",
+        "source_url": "",
+        "download_subdir": "2d_simionescu_function",
+        "materialization_commands": [],
+        "definition_summary": "A 2D hyperbolic paraboloid function with a sinusoidal constraint, defined over the square domain [-1.25, 1.25]^2.",
+        "equations_or_components": [
+          "f(x) = 0.1 * x1 * x2",
+          "c(x) = (1 + 0.2*cos(8*arctan(x1/x2)))^2 - (x1 + x2)",
+          "Parameters: rT = 1, rS = 0.2, n = 8"
+        ],
+        "variables_or_inputs": [
+          "x1",
+          "x2"
+        ],
+        "constraints_or_bounds": [
+          "x1 ∈ [-1.25, 1.25]",
+          "x2 ∈ [-1.25, 1.25]"
+        ],
+        "expected_artifacts": [
+          "spec.txt"
+        ],
+        "license_or_access_notes": [
+          "Analytic benchmark from literature; no license restrictions"
+        ],
+        "failure_reason": ""
+      },
+      {
+        "paper_benchmark_name": "2D LSQ function",
+        "paper_research_field": "Constrained Bayesian Optimization",
+        "matched_benchmark_name": "2D LSQ function",
+        "matched_research_field": "Constrained Bayesian Optimization",
+        "name_match_type": "exact",
+        "field_match_status": "same_field",
+        "match_reason": "Referenced with explicit analytic formulas (Gramacy et al., 2016).",
+        "status": "well_established_formula",
+        "materialization_strategy": "generate_definition",
+        "source_type": "literature_formula",
+        "source_url": "",
+        "download_subdir": "2d_lsq_function",
+        "materialization_commands": [],
+        "definition_summary": "A linear objective function defined on [0,1]^2 with sinusoidal and quadratic constraints.",
+        "equations_or_components": [
+          "f(x) = x1 + x2",
+          "c1(x) = x1 + 2*x2 + 0.5*sin(2π*(x1 - 2*x2)) - 1.5",
+          "c2(x) = 1.5 - x1 - x2^2"
+        ],
+        "variables_or_inputs": [
+          "x1",
+          "x2"
+        ],
+        "constraints_or_bounds": [
+          "x1 ∈ [0, 1]",
+          "x2 ∈ [0, 1]"
+        ],
+        "expected_artifacts": [
+          "spec.txt"
+        ],
+        "license_or_access_notes": [
+          "Based on published formulations; no license restrictions"
+        ],
+        "failure_reason": ""
+      },
+      {
+        "paper_benchmark_name": "2D three-bar truss design",
+        "paper_research_field": "Constrained Bayesian Optimization",
+        "matched_benchmark_name": "2D three-bar truss design",
+        "matched_research_field": "Constrained Bayesian Optimization",
+        "name_match_type": "exact",
+        "field_match_status": "same_field",
+        "match_reason": "The benchmark is taken directly from Ray & Saini (2001) with an analytic formulation.",
+        "status": "well_established_formula",
+        "materialization_strategy": "generate_definition",
+        "source_type": "literature_formula",
+        "source_url": "",
+        "download_subdir": "2d_three_bar_truss_design",
+        "materialization_commands": [],
+        "definition_summary": "A two-variable truss design problem that minimizes the structure's volume subject to stress constraints.",
+        "equations_or_components": [
+          "f(x) = l*(2*√2*x1 + x2)",
+          "c1(x) = 2 - (√(2*x1 + x2))/(√(2*x2 + 1 + 2*x1*x2))",
+          "c2(x) = 2 - (1/x1 + √(2*x2))",
+          "c3(x) = 2 - x2/(√(2*x2 + 1 + 2*x1*x2))"
+        ],
+        "variables_or_inputs": [
+          "x1",
+          "x2"
+        ],
+        "constraints_or_bounds": [
+          "x1 ∈ [0, 1]",
+          "x2 ∈ [0, 1]"
+        ],
+        "expected_artifacts": [
+          "spec.txt"
+        ],
+        "license_or_access_notes": [
+          "Formulation from literature; no license restrictions"
+        ],
+        "failure_reason": ""
+      },
+      {
+        "paper_benchmark_name": "3D tension-compression string design",
+        "paper_research_field": "Constrained Bayesian Optimization",
+        "matched_benchmark_name": "3D tension-compression string design",
+        "matched_research_field": "Constrained Bayesian Optimization",
+        "name_match_type": "exact",
+        "field_match_status": "same_field",
+        "match_reason": "The benchmark is directly cited from Hedar et al. (2006) with analytic definitions.",
+        "status": "well_established_formula",
+        "materialization_strategy": "generate_definition",
+        "source_type": "literature_formula",
+        "source_url": "",
+        "download_subdir": "3d_tension_compression_string_design",
+        "materialization_commands": [],
+        "definition_summary": "A three-dimensional design problem minimizing the weight of a tension-compression string subject to multiple engineering constraints.",
+        "equations_or_components": [
+          "f(x) = (x1 + 2) * x2 * x3^3",
+          "c1(x): Constraint related to deflection and shear stress",
+          "c2(x): Constraint related to material limits",
+          "c3(x): Constraint related to surge frequency",
+          "c4(x) = 1 - x2 + x3^1.5"
+        ],
+        "variables_or_inputs": [
+          "x1",
+          "x2",
+          "x3"
+        ],
+        "constraints_or_bounds": [
+          "x1 ∈ [2,15] (integer)",
+          "x2 ∈ [0.25, 1.3]",
+          "x3 ∈ [0.05, 2]"
+        ],
+        "expected_artifacts": [
+          "spec.txt"
+        ],
+        "license_or_access_notes": [
+          "Based on published work; no license restrictions"
+        ],
+        "failure_reason": ""
+      },
+      {
+        "paper_benchmark_name": "4D welded beam design",
+        "paper_research_field": "Constrained Bayesian Optimization",
+        "matched_benchmark_name": "4D welded beam design",
+        "matched_research_field": "Constrained Bayesian Optimization",
+        "name_match_type": "exact",
+        "field_match_status": "same_field",
+        "match_reason": "Direct analytic formulation from Belegundu & Arora (1985) is used.",
+        "status": "well_established_formula",
+        "materialization_strategy": "generate_definition",
+        "source_type": "literature_formula",
+        "source_url": "",
+        "download_subdir": "4d_welded_beam_design",
+        "materialization_commands": [],
+        "definition_summary": "A four-dimensional welded beam design problem minimizing cost with multiple mechanical constraints.",
+        "equations_or_components": [
+          "f(x) = 1.10471*x1^2*x2 + 0.04811*x3*x4*(14 + x2)",
+          "c1(x) = 13000 - τ(x)",
+          "c2(x) = 30000 - σ(x)",
+          "c3(x) = P_c(x) - 6000",
+          "c4(x) = 0.25 - δ(x)",
+          "c5(x) = x4 - x1"
+        ],
+        "variables_or_inputs": [
+          "x1",
+          "x2",
+          "x3",
+          "x4"
+        ],
+        "constraints_or_bounds": [
+          "x1 ∈ [0.125, 10]",
+          "x2, x3, x4 ∈ [0.1, 10]"
+        ],
+        "expected_artifacts": [
+          "spec.txt"
+        ],
+        "license_or_access_notes": [
+          "Formulation from literature; no license issues"
+        ],
+        "failure_reason": ""
+      },
+      {
+        "paper_benchmark_name": "4D gas transmission compressor design",
+        "paper_research_field": "Constrained Bayesian Optimization",
+        "matched_benchmark_name": "4D gas transmission compressor design",
+        "matched_research_field": "Constrained Bayesian Optimization",
+        "name_match_type": "exact",
+        "field_match_status": "same_field",
+        "match_reason": "The benchmark is taken directly from Pant et al. (2009) with published analytic expressions.",
+        "status": "well_established_formula",
+        "materialization_strategy": "generate_definition",
+        "source_type": "literature_formula",
+        "source_url": "",
+        "download_subdir": "4d_gas_transmission_compressor_design",
+        "materialization_commands": [],
+        "definition_summary": "A four-dimensional design problem for minimizing the annual cost of a gas transmission system, with complex expressions and one engineering constraint.",
+        "equations_or_components": [
+          "f(x) = (8.61e5)*sqrt(x1)*x2^(-2/3)*x3^(-1/2)*x4 + (3.69e4)*x3 + (7.72e8)*... - (765.43e6)*...",
+          "c(x) = 1 - (expression involving x4)",
+          "Refer to Pant et al. (2009) for full details"
+        ],
+        "variables_or_inputs": [
+          "x1",
+          "x2",
+          "x3",
+          "x4"
+        ],
+        "constraints_or_bounds": [
+          "x1 ∈ [20, 50]",
+          "x2 ∈ [1, 10]",
+          "x3 ∈ [20, 50]",
+          "x4 ∈ [0.1, 60]"
+        ],
+        "expected_artifacts": [
+          "spec.txt"
+        ],
+        "license_or_access_notes": [
+          "Based on literature; refer to original publication for any licensing details"
+        ],
+        "failure_reason": ""
+      },
+      {
+        "paper_benchmark_name": "4D pressure vessel design",
+        "paper_research_field": "Constrained Bayesian Optimization",
+        "matched_benchmark_name": "4D pressure vessel design",
+        "matched_research_field": "Constrained Bayesian Optimization",
+        "name_match_type": "exact",
+        "field_match_status": "same_field",
+        "match_reason": "Analytic formulation directly referenced from Coello & Montes (2002).",
+        "status": "well_established_formula",
+        "materialization_strategy": "generate_definition",
+        "source_type": "literature_formula",
+        "source_url": "",
+        "download_subdir": "4d_pressure_vessel_design",
+        "materialization_commands": [],
+        "definition_summary": "A four-dimensional pressure vessel design problem that minimizes total cost with four design constraints.",
+        "equations_or_components": [
+          "f(x) = 0.6224*x1*x3*x4 + 1.7781*x2^3 + 3.1661*x2*x1*x4 + 19.84*x2*x1*x3",
+          "c1(x) = x1 - 0.0193*x3",
+          "c2(x) = x2 - 0.00954*x3",
+          "c3(x) = π*x2^3*x4 + (4/3)*π*x3^3 - 1296000",
+          "c4(x) = 240 - x4"
+        ],
+        "variables_or_inputs": [
+          "x1",
+          "x2",
+          "x3",
+          "x4"
+        ],
+        "constraints_or_bounds": [
+          "Design-specific bounds (see Coello & Montes, 2002)"
+        ],
+        "expected_artifacts": [
+          "spec.txt"
+        ],
+        "license_or_access_notes": [
+          "Literature-based benchmark; no known license restrictions"
+        ],
+        "failure_reason": ""
+      },
+      {
+        "paper_benchmark_name": "7D speed reducer design",
+        "paper_research_field": "Constrained Bayesian Optimization",
+        "matched_benchmark_name": "7D speed reducer design",
+        "matched_research_field": "Constrained Bayesian Optimization",
+        "name_match_type": "exact",
+        "field_match_status": "same_field",
+        "match_reason": "Benchmark is taken from Lemonge et al. (2010) with explicit analytic formulations.",
+        "status": "well_established_formula",
+        "materialization_strategy": "generate_definition",
+        "source_type": "literature_formula",
+        "source_url": "",
+        "download_subdir": "7d_speed_reducer_design",
+        "materialization_commands": [],
+        "definition_summary": "A seven-dimensional design problem for a speed reducer, minimizing weight subject to multiple mechanical constraints.",
+        "equations_or_components": [
+          "f(x) = 0.7854*x1*x2^2*(3.3333*x2^3 + 14.9334*x3 - 43.0934) - 1.508*x1*(x2^6 + x7^2) + 7.4777*(x3^6 + x3^7) + 0.7854*(x4*x2^6 + x5*x2^7)",
+          "c7(x) = 40 - x2*x3",
+          "c8(x) = x1/x2 - 5",
+          "c9(x) = 12 - x1/x2",
+          "c10(x) = 1 - (1.5*x6 + 1.9)/x4",
+          "c11(x) = 1 - (1.1*x7 + 1.9)/x5"
+        ],
+        "variables_or_inputs": [
+          "x1",
+          "x2",
+          "x3",
+          "x4",
+          "x5",
+          "x6",
+          "x7"
+        ],
+        "constraints_or_bounds": [
+          "x1 ∈ [2.6,3.6]",
+          "x2 ∈ [0.7,0.8]",
+          "x3 ∈ [17,28]",
+          "x4, x5 ∈ [7.3,8.3]",
+          "x6 ∈ [2.9,3.9]",
+          "x7 ∈ [5,5.5]"
+        ],
+        "expected_artifacts": [
+          "spec.txt"
+        ],
+        "license_or_access_notes": [
+          "Published benchmark; no license restrictions"
+        ],
+        "failure_reason": ""
+      },
+      {
+        "paper_benchmark_name": "9D planetary gear train design",
+        "paper_research_field": "Constrained Bayesian Optimization",
+        "matched_benchmark_name": "9D planetary gear train design",
+        "matched_research_field": "Constrained Bayesian Optimization",
+        "name_match_type": "exact",
+        "field_match_status": "same_field",
+        "match_reason": "The formulation is directly taken from Rao et al. (2012) with detailed analytic expressions.",
+        "status": "well_established_formula",
+        "materialization_strategy": "generate_definition",
+        "source_type": "literature_formula",
+        "source_url": "",
+        "download_subdir": "9d_planetary_gear_train_design",
+        "materialization_commands": [],
+        "definition_summary": "A nine-dimensional planetary gear train design problem that minimizes gear ratio errors under complex constraints.",
+        "equations_or_components": [
+          "f(x) = max{|i_k - i^0_k|} for k ∈ {1,2,R}",
+          "i1 = N6/N4, i^0_1 = 3.11",
+          "i2 = (N6*(N1*N3 + N2*N4))/(N1*N3*(N6-N4)), i^0_2 = 1.84",
+          "i_R = N2*N6/(N1*N3), i^0_R = -3.11",
+          "Additional constraints as per Rao et al. (2012)"
+        ],
+        "variables_or_inputs": [
+          "ρ",
+          "N6",
+          "N5",
+          "N4",
+          "N3",
+          "N2",
+          "N1",
+          "m2",
+          "m1"
+        ],
+        "constraints_or_bounds": [
+          "N1 ∈ [17,96]",
+          "N2 ∈ [14,54]",
+          "N3 ∈ [14,51]",
+          "N4 ∈ [17,46]",
+          "N5 ∈ [14,51]",
+          "N6 ∈ [48,124]",
+          "p ∈ {3,4,5}",
+          "m1, m3 ∈ {1.75,2.0,2.25,2.5,2.75,3.0}"
+        ],
+        "expected_artifacts": [
+          "spec.txt"
+        ],
+        "license_or_access_notes": [
+          "Standard benchmark from literature; no license restrictions"
+        ],
+        "failure_reason": ""
+      },
+      {
+        "paper_benchmark_name": "10D rolling element bearing design",
+        "paper_research_field": "Constrained Bayesian Optimization",
+        "matched_benchmark_name": "10D rolling element bearing design",
+        "matched_research_field": "Constrained Bayesian Optimization",
+        "name_match_type": "exact",
+        "field_match_status": "same_field",
+        "match_reason": "The benchmark follows the analytic formulation presented by Gupta et al. (2007).",
+        "status": "well_established_formula",
+        "materialization_strategy": "generate_definition",
+        "source_type": "literature_formula",
+        "source_url": "",
+        "download_subdir": "10d_rolling_element_bearing_design",
+        "materialization_commands": [],
+        "definition_summary": "A ten-dimensional design problem for rolling element bearings, optimizing dynamic capacity under a set of nonlinear constraints.",
+        "equations_or_components": [
+          "Design vector x = (Dm, Db, Z, f_i, f_o, KDmin, KDmax, ε, ...)",
+          "c1(x) = φ0^2*sin^(-1)(Db/Dm - Z + 1)",
+          "c2(x) = 2*Db - KDmin*(D-d)",
+          "c3(x) = KDmax*(D-d) - 2*Db",
+          "c4(x) = ξBw - Db",
+          "c5(x) = Dm - 0.5*(D+d)",
+          "c6(x) = (0.5+e)*(D+d) - Dm",
+          "c7(x) = 0.5*(D-Dm-Db) - e*Db"
+        ],
+        "variables_or_inputs": [
+          "Dm",
+          "Db",
+          "Z",
+          "f_i",
+          "f_o",
+          "KDmin",
+          "KDmax",
+          "ε",
+          "..."
+        ],
+        "constraints_or_bounds": [
+          "Bounds as specified in Gupta et al. (2007)"
+        ],
+        "expected_artifacts": [
+          "spec.txt"
+        ],
+        "license_or_access_notes": [
+          "Analytic benchmark from published literature; no license restrictions"
+        ],
+        "failure_reason": ""
+      },
+      {
+        "paper_benchmark_name": "30D cantilever beam design",
+        "paper_research_field": "Constrained Bayesian Optimization",
+        "matched_benchmark_name": "30D cantilever beam design",
+        "matched_research_field": "Constrained Bayesian Optimization",
+        "name_match_type": "exact",
+        "field_match_status": "same_field",
+        "match_reason": "Benchmark is referenced from Cheng et al. (2018) and defined by complex analytic expressions.",
+        "status": "well_established_formula",
+        "materialization_strategy": "generate_definition",
+        "source_type": "literature_formula",
+        "source_url": "",
+        "download_subdir": "30d_cantilever_beam_design",
+        "materialization_commands": [],
+        "definition_summary": "A high-dimensional cantilever beam design problem aimed at minimizing tip deflection, with a complex set of constraints as detailed in the original paper.",
+        "equations_or_components": [
+          "Full analytic formulation available in Cheng et al. (2018)"
+        ],
+        "variables_or_inputs": [
+          "30-dimensional design vector"
+        ],
+        "constraints_or_bounds": [
+          "Complex bounds and constraints as detailed in Cheng et al. (2018)"
+        ],
+        "expected_artifacts": [
+          "spec.txt"
+        ],
+        "license_or_access_notes": [
+          "Refer to the original publication for licensing details; generally no restrictions for analytic benchmarks"
+        ],
+        "failure_reason": ""
+      }
+    ],
+    "global_notes": [
+      "All benchmarks are defined by analytic formulas from the literature. They can be locally generated via the provided shell commands which create specification files (spec.txt) in their respective subdirectories."
+    ],
+    "manual_follow_ups": []
+  },
+  "run_result": {
+    "status": "completed",
+    "returncode": 0,
+    "run_log_path": "/home/yantingchi/Desktop/DK/Paper2Code/outputs/BE-CBO_repo/benchmark/benchmark_materialization_run.log"
+  },
+  "raw_model_output": "{\n  \"paper_research_field\": \"Constrained Bayesian Optimization\",\n  \"paper_summary\": \"The paper introduces BE-CBO, a Bayesian optimization method for expensive black‐box functions with unknown physical constraints. By focusing on the exploration of the boundary between feasible and infeasible regions, BE-CBO is evaluated on a set of synthetic and real-world engineering design problems defined by analytic formulas.\",\n  \"benchmark_downloads\": [\n    {\n      \"paper_benchmark_name\": \"2D Townsend function\",\n      \"paper_research_field\": \"Constrained Bayesian Optimization\",\n      \"matched_benchmark_name\": \"2D Townsend function\",\n      \"matched_research_field\": \"Constrained Bayesian Optimization\",\n      \"name_match_type\": \"exact\",\n      \"field_match_status\": \"same_field\",\n      \"match_reason\": \"Benchmark is directly referenced in the paper and based on Townsend (2014).\",\n      \"status\": \"well_established_formula\",\n      \"materialization_strategy\": \"generate_definition\",\n      \"source_type\": \"literature_formula\",\n      \"source_url\": \"\",\n      \"download_subdir\": \"2D_Townsend_function\",\n      \"materialization_commands\": [\n        \"printf 'Objective: f(x) = -[cos((x1 - 0.1)*x2)]^2 - x1*sin(3*x1 + x2)\\\\nConstraint: c(x) = (2*cos(t) - 1/2*cos(2*t) - 1/4*cos(3*t) - 1/8*cos(4*t))^2 + (2*sin(t))^2 - x2\\\\nParameter: t = arctan2(x1, x2)\\\\nBounds: x1 in [-2.25, 2.25], x2 in [-2.5, 1.75]\\\\n' > spec.txt\"\n      ],\n      \"definition_summary\": \"A 2-dimensional trigonometric synthetic function with a nonlinear constraint, defined by analytic expressions.\",\n      \"equations_or_components\": [\n        \"f(x) = -[cos((x1 - 0.1)*x2)]^2 - x1*sin(3*x1 + x2)\",\n        \"c(x) = (2*cos(t) - 1/2*cos(2*t) - 1/4*cos(3*t) - 1/8*cos(4*t))^2 + (2*sin(t))^2 - x2\",\n        \"t = arctan2(x1, x2)\"\n      ],\n      \"variables_or_inputs\": [\n        \"x1\",\n        \"x2\"\n      ],\n      \"constraints_or_bounds\": [\n        \"x1 ∈ [-2.25, 2.25]\",\n        \"x2 ∈ [-2.5, 1.75]\"\n      ],\n      \"expected_artifacts\": [\n        \"spec.txt\"\n      ],\n      \"license_or_access_notes\": [\n        \"Analytic benchmark based on published literature; no license restrictions\"\n      ],\n      \"failure_reason\": \"\"\n    },\n    {\n      \"paper_benchmark_name\": \"2D Simionescu function\",\n      \"paper_research_field\": \"Constrained Bayesian Optimization\",\n      \"matched_benchmark_name\": \"2D Simionescu function\",\n      \"matched_research_field\": \"Constrained Bayesian Optimization\",\n      \"name_match_type\": \"exact\",\n      \"field_match_status\": \"same_field\",\n      \"match_reason\": \"Directly referenced in the paper with its analytic definition (Simionescu, 2014).\",\n      \"status\": \"well_established_formula\",\n      \"materialization_strategy\": \"generate_definition\",\n      \"source_type\": \"literature_formula\",\n      \"source_url\": \"\",\n      \"download_subdir\": \"2D_Simionescu_function\",\n      \"materialization_commands\": [\n        \"printf 'Objective: f(x) = 0.1 * x1 * x2\\\\nConstraint: c(x) = (1 + 0.2*cos(8*arctan(x1/x2)))^2 - (x1 + x2)\\\\nParameters: rT = 1, rS = 0.2, n = 8\\\\nBounds: x1, x2 in [-1.25, 1.25]\\\\n' > spec.txt\"\n      ],\n      \"definition_summary\": \"A 2D hyperbolic paraboloid function with a sinusoidal constraint, defined over the square domain [-1.25, 1.25]^2.\",\n      \"equations_or_components\": [\n        \"f(x) = 0.1 * x1 * x2\",\n        \"c(x) = (1 + 0.2*cos(8*arctan(x1/x2)))^2 - (x1 + x2)\",\n        \"Parameters: rT = 1, rS = 0.2, n = 8\"\n      ],\n      \"variables_or_inputs\": [\n        \"x1\",\n        \"x2\"\n      ],\n      \"constraints_or_bounds\": [\n        \"x1 ∈ [-1.25, 1.25]\",\n        \"x2 ∈ [-1.25, 1.25]\"\n      ],\n      \"expected_artifacts\": [\n        \"spec.txt\"\n      ],\n      \"license_or_access_notes\": [\n        \"Analytic benchmark from literature; no license restrictions\"\n      ],\n      \"failure_reason\": \"\"\n    },\n    {\n      \"paper_benchmark_name\": \"2D LSQ function\",\n      \"paper_research_field\": \"Constrained Bayesian Optimization\",\n      \"matched_benchmark_name\": \"2D LSQ function\",\n      \"matched_research_field\": \"Constrained Bayesian Optimization\",\n      \"name_match_type\": \"exact\",\n      \"field_match_status\": \"same_field\",\n      \"match_reason\": \"Referenced with explicit analytic formulas (Gramacy et al., 2016).\",\n      \"status\": \"well_established_formula\",\n      \"materialization_strategy\": \"generate_definition\",\n      \"source_type\": \"literature_formula\",\n      \"source_url\": \"\",\n      \"download_subdir\": \"2D_LSQ_function\",\n      \"materialization_commands\": [\n        \"printf 'Objective: f(x) = x1 + x2\\\\nConstraint 1: c1(x) = x1 + 2*x2 + 0.5*sin(2π*(x1 - 2*x2)) - 1.5\\\\nConstraint 2: c2(x) = 1.5 - x1 - x2^2\\\\nBounds: x1, x2 in [0, 1]\\\\n' > spec.txt\"\n      ],\n      \"definition_summary\": \"A linear objective function defined on [0,1]^2 with sinusoidal and quadratic constraints.\",\n      \"equations_or_components\": [\n        \"f(x) = x1 + x2\",\n        \"c1(x) = x1 + 2*x2 + 0.5*sin(2π*(x1 - 2*x2)) - 1.5\",\n        \"c2(x) = 1.5 - x1 - x2^2\"\n      ],\n      \"variables_or_inputs\": [\n        \"x1\",\n        \"x2\"\n      ],\n      \"constraints_or_bounds\": [\n        \"x1 ∈ [0, 1]\",\n        \"x2 ∈ [0, 1]\"\n      ],\n      \"expected_artifacts\": [\n        \"spec.txt\"\n      ],\n      \"license_or_access_notes\": [\n        \"Based on published formulations; no license restrictions\"\n      ],\n      \"failure_reason\": \"\"\n    },\n    {\n      \"paper_benchmark_name\": \"2D three-bar truss design\",\n      \"paper_research_field\": \"Constrained Bayesian Optimization\",\n      \"matched_benchmark_name\": \"2D three-bar truss design\",\n      \"matched_research_field\": \"Constrained Bayesian Optimization\",\n      \"name_match_type\": \"exact\",\n      \"field_match_status\": \"same_field\",\n      \"match_reason\": \"The benchmark is taken directly from Ray & Saini (2001) with an analytic formulation.\",\n      \"status\": \"well_established_formula\",\n      \"materialization_strategy\": \"generate_definition\",\n      \"source_type\": \"literature_formula\",\n      \"source_url\": \"\",\n      \"download_subdir\": \"2D_three_bar_truss_design\",\n      \"materialization_commands\": [\n        \"printf 'Objective: f(x) = l*(2*√2*x1 + x2)\\\\nConstraint 1: c1(x) = 2 - (√(2*x1 + x2))/(√(2*x2 + 1 + 2*x1*x2))\\\\nConstraint 2: c2(x) = 2 - (1/x1 + √(2*x2))\\\\nConstraint 3: c3(x) = 2 - x2/(√(2*x2 + 1 + 2*x1*x2))\\\\nBounds: x1, x2 in [0, 1]\\\\n' > spec.txt\"\n      ],\n      \"definition_summary\": \"A two-variable truss design problem that minimizes the structure's volume subject to stress constraints.\",\n      \"equations_or_components\": [\n        \"f(x) = l*(2*√2*x1 + x2)\",\n        \"c1(x) = 2 - (√(2*x1 + x2))/(√(2*x2 + 1 + 2*x1*x2))\",\n        \"c2(x) = 2 - (1/x1 + √(2*x2))\",\n        \"c3(x) = 2 - x2/(√(2*x2 + 1 + 2*x1*x2))\"\n      ],\n      \"variables_or_inputs\": [\n        \"x1\",\n        \"x2\"\n      ],\n      \"constraints_or_bounds\": [\n        \"x1 ∈ [0, 1]\",\n        \"x2 ∈ [0, 1]\"\n      ],\n      \"expected_artifacts\": [\n        \"spec.txt\"\n      ],\n      \"license_or_access_notes\": [\n        \"Formulation from literature; no license restrictions\"\n      ],\n      \"failure_reason\": \"\"\n    },\n    {\n      \"paper_benchmark_name\": \"3D tension-compression string design\",\n      \"paper_research_field\": \"Constrained Bayesian Optimization\",\n      \"matched_benchmark_name\": \"3D tension-compression string design\",\n      \"matched_research_field\": \"Constrained Bayesian Optimization\",\n      \"name_match_type\": \"exact\",\n      \"field_match_status\": \"same_field\",\n      \"match_reason\": \"The benchmark is directly cited from Hedar et al. (2006) with analytic definitions.\",\n      \"status\": \"well_established_formula\",\n      \"materialization_strategy\": \"generate_definition\",\n      \"source_type\": \"literature_formula\",\n      \"source_url\": \"\",\n      \"download_subdir\": \"3D_tension_compression_string_design\",\n      \"materialization_commands\": [\n        \"printf 'Objective: f(x) = (x1 + 2) * x2 * x3^3\\\\nConstraints:\\\\n  c1(x): Derived from deflection/shear stress criteria\\\\n  c2(x): Additional performance constraint\\\\n  c3(x): Constraint on surge frequency\\\\n  c4(x) = 1 - x2 + x3^1.5\\\\nBounds: x1 ∈ [2,15] (integer), x2 ∈ [0.25,1.3], x3 ∈ [0.05,2]\\\\n' > spec.txt\"\n      ],\n      \"definition_summary\": \"A three-dimensional design problem minimizing the weight of a tension-compression string subject to multiple engineering constraints.\",\n      \"equations_or_components\": [\n        \"f(x) = (x1 + 2) * x2 * x3^3\",\n        \"c1(x): Constraint related to deflection and shear stress\",\n        \"c2(x): Constraint related to material limits\",\n        \"c3(x): Constraint related to surge frequency\",\n        \"c4(x) = 1 - x2 + x3^1.5\"\n      ],\n      \"variables_or_inputs\": [\n        \"x1\",\n        \"x2\",\n        \"x3\"\n      ],\n      \"constraints_or_bounds\": [\n        \"x1 ∈ [2,15] (integer)\",\n        \"x2 ∈ [0.25, 1.3]\",\n        \"x3 ∈ [0.05, 2]\"\n      ],\n      \"expected_artifacts\": [\n        \"spec.txt\"\n      ],\n      \"license_or_access_notes\": [\n        \"Based on published work; no license restrictions\"\n      ],\n      \"failure_reason\": \"\"\n    },\n    {\n      \"paper_benchmark_name\": \"4D welded beam design\",\n      \"paper_research_field\": \"Constrained Bayesian Optimization\",\n      \"matched_benchmark_name\": \"4D welded beam design\",\n      \"matched_research_field\": \"Constrained Bayesian Optimization\",\n      \"name_match_type\": \"exact\",\n      \"field_match_status\": \"same_field\",\n      \"match_reason\": \"Direct analytic formulation from Belegundu & Arora (1985) is used.\",\n      \"status\": \"well_established_formula\",\n      \"materialization_strategy\": \"generate_definition\",\n      \"source_type\": \"literature_formula\",\n      \"source_url\": \"\",\n      \"download_subdir\": \"4D_welded_beam_design\",\n      \"materialization_commands\": [\n        \"printf 'Objective: f(x) = 1.10471*x1^2*x2 + 0.04811*x3*x4*(14 + x2)\\\\nConstraints:\\\\n  c1(x) = 13000 - τ(x)\\\\n  c2(x) = 30000 - σ(x)\\\\n  c3(x) = P_c(x) - 6000\\\\n  c4(x) = 0.25 - δ(x)\\\\n  c5(x) = x4 - x1\\\\nBounds: x1 ∈ [0.125,10], x2,x3,x4 ∈ [0.1,10]\\\\n' > spec.txt\"\n      ],\n      \"definition_summary\": \"A four-dimensional welded beam design problem minimizing cost with multiple mechanical constraints.\",\n      \"equations_or_components\": [\n        \"f(x) = 1.10471*x1^2*x2 + 0.04811*x3*x4*(14 + x2)\",\n        \"c1(x) = 13000 - τ(x)\",\n        \"c2(x) = 30000 - σ(x)\",\n        \"c3(x) = P_c(x) - 6000\",\n        \"c4(x) = 0.25 - δ(x)\",\n        \"c5(x) = x4 - x1\"\n      ],\n      \"variables_or_inputs\": [\n        \"x1\",\n        \"x2\",\n        \"x3\",\n        \"x4\"\n      ],\n      \"constraints_or_bounds\": [\n        \"x1 ∈ [0.125, 10]\",\n        \"x2, x3, x4 ∈ [0.1, 10]\"\n      ],\n      \"expected_artifacts\": [\n        \"spec.txt\"\n      ],\n      \"license_or_access_notes\": [\n        \"Formulation from literature; no license issues\"\n      ],\n      \"failure_reason\": \"\"\n    },\n    {\n      \"paper_benchmark_name\": \"4D gas transmission compressor design\",\n      \"paper_research_field\": \"Constrained Bayesian Optimization\",\n      \"matched_benchmark_name\": \"4D gas transmission compressor design\",\n      \"matched_research_field\": \"Constrained Bayesian Optimization\",\n      \"name_match_type\": \"exact\",\n      \"field_match_status\": \"same_field\",\n      \"match_reason\": \"The benchmark is taken directly from Pant et al. (2009) with published analytic expressions.\",\n      \"status\": \"well_established_formula\",\n      \"materialization_strategy\": \"generate_definition\",\n      \"source_type\": \"literature_formula\",\n      \"source_url\": \"\",\n      \"download_subdir\": \"4D_gas_transmission_compressor_design\",\n      \"materialization_commands\": [\n        \"printf 'Objective: f(x) = (8.61e5)*sqrt(x1)*x2^(-2/3)*x3^(-1/2)*x4 + (3.69e4)*x3 + (7.72e8)*... - (765.43e6)*...\\\\nConstraint: c(x) = 1 - (x4 term expression)\\\\nBounds: x1 ∈ [20,50], x2 ∈ [1,10], x3 ∈ [20,50], x4 ∈ [0.1,60]\\\\nNote: Refer to Pant et al. (2009) for complete expressions.\\\\n' > spec.txt\"\n      ],\n      \"definition_summary\": \"A four-dimensional design problem for minimizing the annual cost of a gas transmission system, with complex expressions and one engineering constraint.\",\n      \"equations_or_components\": [\n        \"f(x) = (8.61e5)*sqrt(x1)*x2^(-2/3)*x3^(-1/2)*x4 + (3.69e4)*x3 + (7.72e8)*... - (765.43e6)*...\",\n        \"c(x) = 1 - (expression involving x4)\",\n        \"Refer to Pant et al. (2009) for full details\"\n      ],\n      \"variables_or_inputs\": [\n        \"x1\",\n        \"x2\",\n        \"x3\",\n        \"x4\"\n      ],\n      \"constraints_or_bounds\": [\n        \"x1 ∈ [20, 50]\",\n        \"x2 ∈ [1, 10]\",\n        \"x3 ∈ [20, 50]\",\n        \"x4 ∈ [0.1, 60]\"\n      ],\n      \"expected_artifacts\": [\n        \"spec.txt\"\n      ],\n      \"license_or_access_notes\": [\n        \"Based on literature; refer to original publication for any licensing details\"\n      ],\n      \"failure_reason\": \"\"\n    },\n    {\n      \"paper_benchmark_name\": \"4D pressure vessel design\",\n      \"paper_research_field\": \"Constrained Bayesian Optimization\",\n      \"matched_benchmark_name\": \"4D pressure vessel design\",\n      \"matched_research_field\": \"Constrained Bayesian Optimization\",\n      \"name_match_type\": \"exact\",\n      \"field_match_status\": \"same_field\",\n      \"match_reason\": \"Analytic formulation directly referenced from Coello & Montes (2002).\",\n      \"status\": \"well_established_formula\",\n      \"materialization_strategy\": \"generate_definition\",\n      \"source_type\": \"literature_formula\",\n      \"source_url\": \"\",\n      \"download_subdir\": \"4D_pressure_vessel_design\",\n      \"materialization_commands\": [\n        \"printf 'Objective: f(x) = 0.6224*x1*x3*x4 + 1.7781*x2^3 + 3.1661*x2*x1*x4 + 19.84*x2*x1*x3\\\\nConstraints:\\\\n  c1(x) = x1 - 0.0193*x3\\\\n  c2(x) = x2 - 0.00954*x3\\\\n  c3(x) = π*x2^3*x4 + (4/3)*π*x3^3 - 1296000\\\\n  c4(x) = 240 - x4\\\\nBounds: Refer to Coello & Montes (2002)\\\\n' > spec.txt\"\n      ],\n      \"definition_summary\": \"A four-dimensional pressure vessel design problem that minimizes total cost with four design constraints.\",\n      \"equations_or_components\": [\n        \"f(x) = 0.6224*x1*x3*x4 + 1.7781*x2^3 + 3.1661*x2*x1*x4 + 19.84*x2*x1*x3\",\n        \"c1(x) = x1 - 0.0193*x3\",\n        \"c2(x) = x2 - 0.00954*x3\",\n        \"c3(x) = π*x2^3*x4 + (4/3)*π*x3^3 - 1296000\",\n        \"c4(x) = 240 - x4\"\n      ],\n      \"variables_or_inputs\": [\n        \"x1\",\n        \"x2\",\n        \"x3\",\n        \"x4\"\n      ],\n      \"constraints_or_bounds\": [\n        \"Design-specific bounds (see Coello & Montes, 2002)\"\n      ],\n      \"expected_artifacts\": [\n        \"spec.txt\"\n      ],\n      \"license_or_access_notes\": [\n        \"Literature-based benchmark; no known license restrictions\"\n      ],\n      \"failure_reason\": \"\"\n    },\n    {\n      \"paper_benchmark_name\": \"7D speed reducer design\",\n      \"paper_research_field\": \"Constrained Bayesian Optimization\",\n      \"matched_benchmark_name\": \"7D speed reducer design\",\n      \"matched_research_field\": \"Constrained Bayesian Optimization\",\n      \"name_match_type\": \"exact\",\n      \"field_match_status\": \"same_field\",\n      \"match_reason\": \"Benchmark is taken from Lemonge et al. (2010) with explicit analytic formulations.\",\n      \"status\": \"well_established_formula\",\n      \"materialization_strategy\": \"generate_definition\",\n      \"source_type\": \"literature_formula\",\n      \"source_url\": \"\",\n      \"download_subdir\": \"7D_speed_reducer_design\",\n      \"materialization_commands\": [\n        \"printf 'Objective: f(x) = 0.7854*x1*x2^2*(3.3333*x2^3 + 14.9334*x3 - 43.0934) - 1.508*x1*(x2^6 + x7^2) + 7.4777*(x3^6 + x3^7) + 0.7854*(x4*x2^6 + x5*x2^7)\\\\nConstraints: c7(x) = 40 - x2*x3, c8(x) = x1/x2 - 5, c9(x) = 12 - x1/x2, c10(x) = 1 - (1.5*x6 + 1.9)/x4, c11(x) = 1 - (1.1*x7 + 1.9)/x5\\\\nBounds: x1 ∈ [2.6,3.6], x2 ∈ [0.7,0.8], x3 ∈ [17,28], x4,x5 ∈ [7.3,8.3], x6 ∈ [2.9,3.9], x7 ∈ [5,5.5]\\\\n' > spec.txt\"\n      ],\n      \"definition_summary\": \"A seven-dimensional design problem for a speed reducer, minimizing weight subject to multiple mechanical constraints.\",\n      \"equations_or_components\": [\n        \"f(x) = 0.7854*x1*x2^2*(3.3333*x2^3 + 14.9334*x3 - 43.0934) - 1.508*x1*(x2^6 + x7^2) + 7.4777*(x3^6 + x3^7) + 0.7854*(x4*x2^6 + x5*x2^7)\",\n        \"c7(x) = 40 - x2*x3\",\n        \"c8(x) = x1/x2 - 5\",\n        \"c9(x) = 12 - x1/x2\",\n        \"c10(x) = 1 - (1.5*x6 + 1.9)/x4\",\n        \"c11(x) = 1 - (1.1*x7 + 1.9)/x5\"\n      ],\n      \"variables_or_inputs\": [\n        \"x1\",\n        \"x2\",\n        \"x3\",\n        \"x4\",\n        \"x5\",\n        \"x6\",\n        \"x7\"\n      ],\n      \"constraints_or_bounds\": [\n        \"x1 ∈ [2.6,3.6]\",\n        \"x2 ∈ [0.7,0.8]\",\n        \"x3 ∈ [17,28]\",\n        \"x4, x5 ∈ [7.3,8.3]\",\n        \"x6 ∈ [2.9,3.9]\",\n        \"x7 ∈ [5,5.5]\"\n      ],\n      \"expected_artifacts\": [\n        \"spec.txt\"\n      ],\n      \"license_or_access_notes\": [\n        \"Published benchmark; no license restrictions\"\n      ],\n      \"failure_reason\": \"\"\n    },\n    {\n      \"paper_benchmark_name\": \"9D planetary gear train design\",\n      \"paper_research_field\": \"Constrained Bayesian Optimization\",\n      \"matched_benchmark_name\": \"9D planetary gear train design\",\n      \"matched_research_field\": \"Constrained Bayesian Optimization\",\n      \"name_match_type\": \"exact\",\n      \"field_match_status\": \"same_field\",\n      \"match_reason\": \"The formulation is directly taken from Rao et al. (2012) with detailed analytic expressions.\",\n      \"status\": \"well_established_formula\",\n      \"materialization_strategy\": \"generate_definition\",\n      \"source_type\": \"literature_formula\",\n      \"source_url\": \"\",\n      \"download_subdir\": \"9D_planetary_gear_train_design\",\n      \"materialization_commands\": [\n        \"printf 'Objective: f(x) = max{|i_k - i^0_k|} for k ∈ {1,2,R}\\\\nWhere: i1 = N6/N4, i^0_1 = 3.11, i2 = (N6*(N1*N3 + N2*N4))/(N1*N3*(N6-N4)), i^0_2 = 1.84, i_R = N2*N6/(N1*N3), i^0_R = -3.11\\\\nConstraints: As defined in Rao et al. (2012)\\\\nVariables: x = (ρ, N6, N5, N4, N3, N2, N1, m2, m1)\\\\nBounds: N1 ∈ [17,96], N2 ∈ [14,54], N3 ∈ [14,51], N4 ∈ [17,46], N5 ∈ [14,51], N6 ∈ [48,124]; p ∈ {3,4,5}, m1, m3 ∈ {1.75,2.0,2.25,2.5,2.75,3.0}\\\\n' > spec.txt\"\n      ],\n      \"definition_summary\": \"A nine-dimensional planetary gear train design problem that minimizes gear ratio errors under complex constraints.\",\n      \"equations_or_components\": [\n        \"f(x) = max{|i_k - i^0_k|} for k ∈ {1,2,R}\",\n        \"i1 = N6/N4, i^0_1 = 3.11\",\n        \"i2 = (N6*(N1*N3 + N2*N4))/(N1*N3*(N6-N4)), i^0_2 = 1.84\",\n        \"i_R = N2*N6/(N1*N3), i^0_R = -3.11\",\n        \"Additional constraints as per Rao et al. (2012)\"\n      ],\n      \"variables_or_inputs\": [\n        \"ρ\",\n        \"N6\",\n        \"N5\",\n        \"N4\",\n        \"N3\",\n        \"N2\",\n        \"N1\",\n        \"m2\",\n        \"m1\"\n      ],\n      \"constraints_or_bounds\": [\n        \"N1 ∈ [17,96]\",\n        \"N2 ∈ [14,54]\",\n        \"N3 ∈ [14,51]\",\n        \"N4 ∈ [17,46]\",\n        \"N5 ∈ [14,51]\",\n        \"N6 ∈ [48,124]\",\n        \"p ∈ {3,4,5}\",\n        \"m1, m3 ∈ {1.75,2.0,2.25,2.5,2.75,3.0}\"\n      ],\n      \"expected_artifacts\": [\n        \"spec.txt\"\n      ],\n      \"license_or_access_notes\": [\n        \"Standard benchmark from literature; no license restrictions\"\n      ],\n      \"failure_reason\": \"\"\n    },\n    {\n      \"paper_benchmark_name\": \"10D rolling element bearing design\",\n      \"paper_research_field\": \"Constrained Bayesian Optimization\",\n      \"matched_benchmark_name\": \"10D rolling element bearing design\",\n      \"matched_research_field\": \"Constrained Bayesian Optimization\",\n      \"name_match_type\": \"exact\",\n      \"field_match_status\": \"same_field\",\n      \"match_reason\": \"The benchmark follows the analytic formulation presented by Gupta et al. (2007).\",\n      \"status\": \"well_established_formula\",\n      \"materialization_strategy\": \"generate_definition\",\n      \"source_type\": \"literature_formula\",\n      \"source_url\": \"\",\n      \"download_subdir\": \"10D_rolling_element_bearing_design\",\n      \"materialization_commands\": [\n        \"printf 'Objective: Defined to optimize the dynamic capacity of a rolling element bearing.\\\\nDesign vector: x = (Dm, Db, Z, f_i, f_o, KDmin, KDmax, ε, ...)\\\\nConstraints include: c1(x) = φ0^2*sin^(-1)(Db/Dm - Z + 1), c2(x) = 2*Db - KDmin*(D-d),\\\\n  c3(x) = KDmax*(D-d) - 2*Db, c4(x) = ξBw - Db, c5(x) = Dm - 0.5*(D+d),\\\\n  c6(x) = (0.5+e)*(D+d) - Dm, c7(x) = 0.5*(D-Dm-Db) - e*Db\\\\nRefer to Gupta et al. (2007) for complete formulation and bounds.\\\\n' > spec.txt\"\n      ],\n      \"definition_summary\": \"A ten-dimensional design problem for rolling element bearings, optimizing dynamic capacity under a set of nonlinear constraints.\",\n      \"equations_or_components\": [\n        \"Design vector x = (Dm, Db, Z, f_i, f_o, KDmin, KDmax, ε, ...)\",\n        \"c1(x) = φ0^2*sin^(-1)(Db/Dm - Z + 1)\",\n        \"c2(x) = 2*Db - KDmin*(D-d)\",\n        \"c3(x) = KDmax*(D-d) - 2*Db\",\n        \"c4(x) = ξBw - Db\",\n        \"c5(x) = Dm - 0.5*(D+d)\",\n        \"c6(x) = (0.5+e)*(D+d) - Dm\",\n        \"c7(x) = 0.5*(D-Dm-Db) - e*Db\"\n      ],\n      \"variables_or_inputs\": [\n        \"Dm\",\n        \"Db\",\n        \"Z\",\n        \"f_i\",\n        \"f_o\",\n        \"KDmin\",\n        \"KDmax\",\n        \"ε\",\n        \"...\"\n      ],\n      \"constraints_or_bounds\": [\n        \"Bounds as specified in Gupta et al. (2007)\"\n      ],\n      \"expected_artifacts\": [\n        \"spec.txt\"\n      ],\n      \"license_or_access_notes\": [\n        \"Analytic benchmark from published literature; no license restrictions\"\n      ],\n      \"failure_reason\": \"\"\n    },\n    {\n      \"paper_benchmark_name\": \"30D cantilever beam design\",\n      \"paper_research_field\": \"Constrained Bayesian Optimization\",\n      \"matched_benchmark_name\": \"30D cantilever beam design\",\n      \"matched_research_field\": \"Constrained Bayesian Optimization\",\n      \"name_match_type\": \"exact\",\n      \"field_match_status\": \"same_field\",\n      \"match_reason\": \"Benchmark is referenced from Cheng et al. (2018) and defined by complex analytic expressions.\",\n      \"status\": \"well_established_formula\",\n      \"materialization_strategy\": \"generate_definition\",\n      \"source_type\": \"literature_formula\",\n      \"source_url\": \"\",\n      \"download_subdir\": \"30D_cantilever_beam_design\",\n      \"materialization_commands\": [\n        \"printf 'Objective: Minimize the tip deflection of a stepped cantilever beam.\\\\nDesign: 30-dimensional design vector with complex structural constraints.\\\\nNote: Due to complexity, refer to Cheng et al. (2018) for full formulation details.\\\\n' > spec.txt\"\n      ],\n      \"definition_summary\": \"A high-dimensional cantilever beam design problem aimed at minimizing tip deflection, with a complex set of constraints as detailed in the original paper.\",\n      \"equations_or_components\": [\n        \"Full analytic formulation available in Cheng et al. (2018)\"\n      ],\n      \"variables_or_inputs\": [\n        \"30-dimensional design vector\"\n      ],\n      \"constraints_or_bounds\": [\n        \"Complex bounds and constraints as detailed in Cheng et al. (2018)\"\n      ],\n      \"expected_artifacts\": [\n        \"spec.txt\"\n      ],\n      \"license_or_access_notes\": [\n        \"Refer to the original publication for licensing details; generally no restrictions for analytic benchmarks\"\n      ],\n      \"failure_reason\": \"\"\n    }\n  ],\n  \"global_notes\": [\n    \"All benchmarks are defined by analytic formulas from the literature. They can be locally generated via the provided shell commands which create specification files (spec.txt) in their respective subdirectories.\"\n  ],\n  \"manual_follow_ups\": []\n}"
+}

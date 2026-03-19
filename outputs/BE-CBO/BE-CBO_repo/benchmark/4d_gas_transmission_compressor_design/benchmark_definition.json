@@ -1,0 +1,35 @@
+{
+  "paper_benchmark_name": "4D gas transmission compressor design",
+  "matched_benchmark_name": "4D gas transmission compressor design",
+  "status": "well_established_formula",
+  "materialization_strategy": "generate_definition",
+  "paper_research_field": "Constrained Bayesian Optimization",
+  "matched_research_field": "Constrained Bayesian Optimization",
+  "definition_summary": "A four-dimensional design problem for minimizing the annual cost of a gas transmission system, with complex expressions and one engineering constraint.",
+  "equations_or_components": [
+    "f(x) = (8.61e5)*sqrt(x1)*x2^(-2/3)*x3^(-1/2)*x4 + (3.69e4)*x3 + (7.72e8)*... - (765.43e6)*...",
+    "c(x) = 1 - (expression involving x4)",
+    "Refer to Pant et al. (2009) for full details"
+  ],
+  "variables_or_inputs": [
+    "x1",
+    "x2",
+    "x3",
+    "x4"
+  ],
+  "constraints_or_bounds": [
+    "x1 ∈ [20, 50]",
+    "x2 ∈ [1, 10]",
+    "x3 ∈ [20, 50]",
+    "x4 ∈ [0.1, 60]"
+  ],
+  "expected_artifacts": [
+    "spec.txt"
+  ],
+  "license_or_access_notes": [
+    "Based on literature; refer to original publication for any licensing details"
+  ],
+  "match_reason": "The benchmark is taken directly from Pant et al. (2009) with published analytic expressions.",
+  "source_type": "literature_formula",
+  "source_url": ""
+}

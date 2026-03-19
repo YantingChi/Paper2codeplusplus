@@ -1,0 +1,268 @@
+"""
+deep_ensemble.py
+
+This module implements the DeepEnsembleClassifier using PyTorch. 
+It builds an ensemble of MLP classifiers to model the binary constraint function 
+(feasible vs. infeasible) via variational inference (ELBO). Each network outputs a 
+latent scalar g(x) that is transformed via the standard normal CDF into a feasibility 
+probability p(x). The ensemble’s prediction uncertainty is computed as the spread of the 
+latent outputs in probability space, used later in the dynamic bound calculation (l(x) = 0.5 - sigma_E(x)).
+
+Public Methods:
+    - train_model(data: List[Tuple[Tensor, int]]) -> None
+          Trains (or updates) the ensemble on the provided constraint data using a loss function 
+          that combines the negative log-likelihood (NLL) with a KL divergence regularizer.
+    - predict(x: Tensor) -> Tuple[Tensor, Tensor]
+          Returns a tuple (feasibility_probability, uncertainty), where the feasibility probability 
+          is computed as Φ(μ_g(x)) and the uncertainty is defined as:
+              sigma_E(x) = [Φ(μ_g(x)+σ_g(x)) - Φ(μ_g(x)-σ_g(x))] / 2.
+          
+Configuration Parameters (from config.py):
+    - config.ensemble.size: number of ensemble members.
+    - config.ensemble.layers: number of fully connected layers (should be 4 per design).
+    - config.ensemble.neurons_formula: formula to compute the number of neurons in each hidden layer.
+      (Default: "64 * floor(log2(d))", where d is the problem dimension.)
+    - config.ensemble.activation: activation function to use in hidden layers (e.g. "ReLU").
+    - config.ensemble.use_dropout: whether to use dropout (default: false).
+    - config.training.learning_rate: learning rate for Adam optimizer.
+    - config.training.iterations: number of training iterations.
+    - config.general.device: computation device ("cpu" or "cuda").
+
+Author: BE-CBO Research Team (2024)
+"""
+
+import math
+import logging
+from typing import List, Tuple
+
+import torch
+import torch.nn as nn
+import torch.nn.functional as F
+from torch.distributions.normal import Normal
+
+from config import config
+from utils import to_device, get_logger
+
+
+class DeepEnsembleClassifier(nn.Module):
+    """
+    DeepEnsembleClassifier implements an ensemble of MLPs for modeling unknown constraints.
+    
+    Public Methods:
+        - train_model(data: List[Tuple[Tensor, int]]) -> None:
+              Trains the ensemble using an ELBO loss (NLL + KL divergence) on the labeled constraint data.
+        - predict(x: Tensor) -> Tuple[Tensor, Tensor]:
+              Returns a tuple (feasibility_probability, uncertainty) for input candidate points.
+    """
+    def __init__(self, config_obj: config.__class__ = config, problem_dim: int = 2) -> None:
+        """
+        Initializes the DeepEnsembleClassifier.
+        
+        Args:
+            config_obj: Global configuration object from config.py.
+            problem_dim (int): Dimensionality of the problem input.
+        """
+        super(DeepEnsembleClassifier, self).__init__()
+        self.config = config_obj
+        self.device: str = self.config.general.device
+        self.problem_dim: int = problem_dim
+        
+        # Compute the number of neurons per hidden layer using the formula: 64 * floor(log2(problem_dim))
+        self.hidden_neurons: int = 64 * int(math.floor(math.log2(self.problem_dim))) if self.problem_dim > 0 else 64
+        
+        # Ensemble parameters
+        self.ensemble_size: int = self.config.ensemble.size
+        self.num_layers: int = self.config.ensemble.layers  # Expected to be 4 as per design.
+        self.activation_name: str = self.config.ensemble.activation
+        self.use_dropout: bool = self.config.ensemble.use_dropout
+        
+        # Set the activation function; currently supporting ReLU.
+        if self.activation_name.lower() == "relu":
+            self.activation_fn = nn.ReLU()
+        else:
+            raise ValueError(f"Unsupported activation function: {self.activation_name}")
+        
+        # Build the ensemble: a ModuleList of MLP models.
+        self.models = nn.ModuleList([self._build_model(self.problem_dim) for _ in range(self.ensemble_size)])
+        self.to(self.device)
+        
+        self.logger = get_logger("DeepEnsembleClassifier")
+        self.logger.info(f"Initialized DeepEnsembleClassifier: ensemble_size={self.ensemble_size}, "
+                         f"num_layers={self.num_layers}, hidden_neurons={self.hidden_neurons}, "
+                         f"activation={self.activation_name}, dropout={self.use_dropout}, device={self.device}.")
+
+    def _build_model(self, input_dim: int) -> nn.Module:
+        """
+        Constructs a multi-layer perceptron (MLP) model for an ensemble member.
+        
+        Architecture:
+            - Linear(input_dim, hidden_neurons) + Activation
+            - Linear(hidden_neurons, hidden_neurons) + Activation
+            - Linear(hidden_neurons, hidden_neurons) + Activation
+            - (Optionally dropout if enabled)
+            - Linear(hidden_neurons, 1) for output (latent value g(x))
+        
+        Args:
+            input_dim (int): Dimensionality of the input.
+        
+        Returns:
+            nn.Module: The MLP model.
+        """
+        layers = []
+        # First fully connected layer
+        layers.append(nn.Linear(input_dim, self.hidden_neurons))
+        layers.append(self.activation_fn)
+        
+        # Second fully connected layer
+        layers.append(nn.Linear(self.hidden_neurons, self.hidden_neurons))
+        layers.append(self.activation_fn)
+        
+        # Third fully connected layer
+        layers.append(nn.Linear(self.hidden_neurons, self.hidden_neurons))
+        layers.append(self.activation_fn)
+        
+        # Optionally add dropout if flag is set (config typically disables dropout)
+        if self.use_dropout:
+            layers.append(nn.Dropout(p=0.5))
+        
+        # Fourth fully connected layer: output a single latent value
+        layers.append(nn.Linear(self.hidden_neurons, 1))
+        
+        model = nn.Sequential(*layers)
+        return model
+
+    def train_model(self, data: List[Tuple[torch.Tensor, int]]) -> None:
+        """
+        Trains or updates the deep ensemble classifier on the given dataset using an ELBO-based loss.
+        
+        The ELBO loss for each model comprises:
+            - Negative Log-Likelihood (NLL) calculated via the Bernoulli likelihood, where the predicted 
+              probability is computed as Φ(g(x)) with g(x) being the latent output.
+            - A KL divergence term acting as a regularizer computed as 0.5 * sum(param^2) for all model parameters.
+        
+        Args:
+            data: A list of (x, label) pairs. 
+                  x is a torch.Tensor (1D tensor of length problem_dim) representing the candidate design.
+                  label is an integer (0 for infeasible, 1 for feasible).
+        """
+        if not data:
+            self.logger.error("No training data provided to train_model.")
+            return
+        
+        # Collate training examples into tensors.
+        x_list = []
+        y_list = []
+        for (x, label) in data:
+            x_list.append(x)
+            y_list.append(label)
+        # Convert list to tensor: X_train shape [num_samples, problem_dim]
+        X_train = torch.stack(x_list, dim=0).to(self.device)
+        # Convert labels to float tensor of shape [num_samples, 1]
+        Y_train = torch.tensor(y_list, dtype=torch.float32, device=self.device).unsqueeze(-1)
+        
+        self.train()  # set module to training mode
+        
+        optimizer = torch.optim.Adam(self.parameters(), lr=self.config.training.learning_rate)
+        num_iterations = self.config.training.iterations
+        normal_dist = Normal(0, 1)
+        epsilon: float = 1e-6  # for numerical stability in log calculations
+        kl_weight: float = 1e-3  # weight for the KL divergence term
+        
+        for iteration in range(num_iterations):
+            optimizer.zero_grad()
+            total_loss = 0.0
+            # Loop over each model in the ensemble
+            for model in self.models:
+                latent_outputs = model(X_train)  # shape [num_samples, 1]
+                # Transform latent outputs to probabilities using standard normal CDF: p = Φ(g(x))
+                probabilities = normal_dist.cdf(latent_outputs)
+                # Clamp probabilities to avoid log(0)
+                probabilities = torch.clamp(probabilities, min=epsilon, max=1 - epsilon)
+                # Compute Negative Log-Likelihood loss for Bernoulli likelihood
+                nll_loss = - (Y_train * torch.log(probabilities) + (1 - Y_train) * torch.log(1 - probabilities))
+                nll_loss = nll_loss.mean()
+                
+                # Compute KL divergence for model parameters relative to a standard normal prior.
+                kl_loss = 0.0
+                for param in model.parameters():
+                    kl_loss += 0.5 * torch.sum(param ** 2)
+                kl_loss = kl_loss / X_train.size(0)  # normalize by number of samples
+                
+                # Total loss for this model
+                model_loss = nll_loss + kl_weight * kl_loss
+                total_loss += model_loss
+            # Average the loss over ensemble members
+            total_loss = total_loss / self.ensemble_size
+            
+            total_loss.backward()
+            optimizer.step()
+            
+            # Log training progress every 10% of iterations and at the first iteration.
+            if (iteration + 1) % (max(1, num_iterations // 10)) == 0 or iteration == 0:
+                self.logger.info(f"Iteration {iteration+1}/{num_iterations}, Loss: {total_loss.item():.6f}")
+                
+        self.logger.info("Deep ensemble training complete.")
+
+    def predict(self, x: torch.Tensor) -> Tuple[torch.Tensor, torch.Tensor]:
+        """
+        Predicts the feasibility probability and uncertainty for the given candidate points x.
+        
+        For each candidate x, the method:
+            - Runs a forward pass through each ensemble member to obtain latent outputs g_i(x).
+            - Computes the ensemble mean μ_g(x) and standard deviation σ_g(x) from these latent outputs.
+            - Transforms μ_g(x) to a probability via the standard normal CDF: p(x) = Φ(μ_g(x)).
+            - Derives the uncertainty as sigma_E(x) = [Φ(μ_g + σ_g) - Φ(μ_g - σ_g)] / 2.
+        
+        Args:
+            x: A tensor of candidate points with shape [n_samples, problem_dim].
+        
+        Returns:
+            A tuple (feasibility_probability, uncertainty):
+                - feasibility_probability: Tensor of shape [n_samples]
+                - uncertainty: Tensor of shape [n_samples]
+        """
+        self.eval()
+        x = to_device(x, self.device)
+        latent_outputs_list = []
+        with torch.no_grad():
+            for model in self.models:
+                outputs = model(x)  # shape: [n_samples, 1]
+                # Squeeze to shape [n_samples]
+                latent_outputs_list.append(outputs.squeeze(-1))
+            # Stack outputs to shape [ensemble_size, n_samples]
+            ensemble_outputs = torch.stack(latent_outputs_list, dim=0)
+            # Compute ensemble statistics in latent space.
+            mu_g = torch.mean(ensemble_outputs, dim=0)
+            sigma_g = torch.std(ensemble_outputs, dim=0)
+            
+            normal_dist = Normal(0, 1)
+            # Transform the ensemble mean to feasibility probability via CDF.
+            feasibility_probability = normal_dist.cdf(mu_g)
+            # Compute uncertainty: sigma_E = [Φ(mu_g + σ_g) - Φ(mu_g - σ_g)] / 2.
+            prob_plus = normal_dist.cdf(mu_g + sigma_g)
+            prob_minus = normal_dist.cdf(mu_g - sigma_g)
+            uncertainty = (prob_plus - prob_minus) / 2.0
+            
+        return feasibility_probability, uncertainty
+
+
+# For independent testing of this module.
+if __name__ == "__main__":
+    # Example: use a small problem of dimension 2.
+    test_problem_dim = 2
+    classifier = DeepEnsembleClassifier(problem_dim=test_problem_dim)
+    
+    # Generate synthetic training data: 10 samples with random inputs in [0, 1]
+    num_samples = 10
+    X_dummy = torch.rand(num_samples, test_problem_dim)
+    # Define a simple binary constraint: feasible if sum(x) >= 0.5, else infeasible.
+    training_data = [(x, 1 if x.sum().item() >= 0.5 else 0) for x in X_dummy]
+    
+    # Train the deep ensemble classifier.
+    classifier.train_model(training_data)
+    
+    # Test prediction on new dummy input.
+    X_test = torch.rand(5, test_problem_dim)
+    prob, uncert = classifier.predict(X_test)
+    print("Predicted feasibility probabilities:", prob)
+    print("Predicted uncertainty:", uncert)

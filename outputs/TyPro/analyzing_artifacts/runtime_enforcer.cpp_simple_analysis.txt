@@ -1,0 +1,98 @@
+Below is a detailed logic analysis for the runtime_enforcer.cpp component. This document explains the algorithms, decision points, and security checks that must be implemented in the C++ runtime enforcer. It is intended to guide the implementation of dynamic linking support according to the TyPro design and the paper’s methodology, while also observing the configuration settings (e.g., dynamic_linking enabled) from config.yaml.
+
+──────────────────────────────
+1. Overview
+
+The runtime enforcer is responsible for dynamic updating of indirect call target sets at runtime. Its key functions are:
+
+• Loading module summaries (the “external” facts exported by each module).  
+• Merging these summaries with the host module’s fact set.  
+• Recomputing the allowed TargetSet mappings for indirect calls by re-running the type propagation analysis using the new external facts.  
+• Just-in-time (JIT) recompilation of switch-case constructs that replace indirect calls when target sets change.  
+• Providing security and thread-safe updates with minimal performance impact.
+
+──────────────────────────────
+2. Main Logical Components and Flow
+
+A. Initialization and Protected Heap Setup  
+   • At startup, allocate and initialize a custom, protected heap.  
+     – This heap is used exclusively for storing module summary data and JIT-generated code.  
+     – Ensure that the memory area is isolated from the rest of the program’s memory to avoid leakage and tampering.
+   • Read the initial module summary from a designated read-only section (as provided by the main module) and any additional summaries from dynamic modules.
+   • Validate that the module summary files adhere to the expected format (e.g., JSON or a structured fact file that lists External, ExternalSymbol, and InterfaceType relations).
+
+B. Module Summary Loading and Merging  
+   • For each new dynamic module that is loaded at runtime:  
+     – Open and parse the module’s summary file to extract its exported type/context facts.  
+     – Merge these externally sourced facts with the current (in-memory) master summary.  
+       ▪ Use a merging algorithm that ensures each unique type/context pair is present only once.
+       ▪ If the merging process finds new facts (i.e., facts that were not part of the original module summary), mark that a target set update is required.
+   • Keep a record (cache) of the current merged summary so that repeated dynamic linking events do not cause redundant recomputation.
+
+C. Triggering the Target Set Re-computation  
+   • When a new module summary is merged (or when a dynamic module load event signals that new function pointers might be available), trigger a re-run of the target set computation:  
+     – Prepare an updated fact set that now includes both the statically extracted facts (stored with the main module) and the merged external facts.
+     – Either invoke an embedded or external datalog computation using the same Horn clause rules (as defined in rules.dl) or call out to the Soufflé solver to recompute the TargetSet mapping.
+       ▪ The new TargetSet mapping is a dictionary that maps the identifier of an indirect call (or its trampoline) to a list of allowed function identifiers.
+     – Ensure that the recomputation overapproximates the allowed targets (never underapproximating to avoid breaking correct behavior).
+
+D. Just-In-Time (JIT) Recompilation of Switch-Case Constructs  
+   • For every indirect call whose allowed target set has changed as a result of the updated target set computation:  
+     – Allocate a new code region in the protected heap; mark it writeable (and not executable) during compilation.
+     – Generate a new switch-case construct that:
+       ▪ Checks the function identifier.
+       ▪ Contains a direct call for each allowed target from the recomputed TargetSet.
+       ▪ Includes a default case that signals a policy violation (e.g., terminates the program).
+     – Perform a “double-compilation” step:
+       ▪ After placing the new instructions, run a verification pass (such as computing a checksum or comparing against an expected pattern) to ensure no tampering has occurred.
+       ▪ Once verified, mark the code region read-only and executable.
+     – Update the global trampoline pointer for the indirect call so that future calls are routed to the new switch-case routine.
+   • Ensure that the update is performed atomically (using locking or atomic pointer updates) so that concurrent calls never see an inconsistent state.
+
+E. Security and Memory Safety Measures  
+   • The runtime enforcer must isolate its memory allocations from the general application memory:  
+     – Use OS-specific memory protection primitives (such as mprotect) to switch between writeable and execute-only/read-only states.
+   • Maintain a secure log of module summary loads and target set updates for auditing purposes.
+   • In case of any errors (e.g., a module summary cannot be loaded or the updated target set is inconsistent), fall back to a secure default behavior such as terminating the application immediately.
+   • All modification of trampolines and recompiled code should be performed inside protected sections to prevent TOCTOU vulnerabilities.
+
+F. Runtime Interaction and Performance Considerations  
+   • The update of target sets and re-JIT compilation should occur lazily—only when a new module is loaded and when the first indirect cross-module call is encountered.
+   • Cache the results of the target set computation to avoid repeated expensive computations when no new modules are loaded.
+   • Ensure that the dynamic update routine has minimal impact on the normal runtime performance. This includes running the re-computation and code replacement during periods of low activity if possible.
+
+──────────────────────────────
+3. Design Ambiguities and Points Requiring Clarification
+
+• Integration Point for Code Transformation:  
+  – It is not yet fully defined whether the new switch-case constructs introduced by the runtime enforcer will be generated via an integrated LLVM pass or as a post-compilation transformation using llvmlite.  
+  – For the runtime enforcer, we assume that the transformation is applied to designated trampoline routines that already exist in the binary.
+
+• Module Summary Format and Content:  
+  – The precise format of module summaries is not fixed in the paper. We assume a structured file (JSON/YAML) that contains only external facts that may affect type propagation between modules.
+  – The runtime enforcer should document the expected schema for these summaries so that all modules provide consistent information.
+
+• Handling of Non-Standard AST Nodes:  
+  – While the fact extraction phase must consider inline assembly and non-standard AST nodes, the runtime enforcer only deals with merged summaries. Therefore, it is assumed that the fact extraction phase will have already filtered out or appropriately flagged these cases.
+
+──────────────────────────────
+4. Summary of the Runtime Enforcer Logic Flow
+
+1. On program startup, initialize a dedicated, secure heap and load the initial module summary.  
+2. When a new dynamic module is loaded, read its module summary and merge the external facts into the existing summary store.  
+3. If the merged summary introduces new facts affecting indirect call targets:
+  – Re-run the target set computation using the updated fact set (invoking the datalog-based logic through an embedded/external Soufflé call).
+  – For each changed indirect call (or trampoline), trigger a JIT recompile:
+   ○ Allocate a temporary code region.
+   ○ Generate the new switch-case logic corresponding to the updated TargetSet.
+   ○ Verify and then change the memory protections to mark the region executable.
+   ○ Atomically update the indirect call’s trampoline pointer.
+4. Maintain rigorous security checks (memory protection transitions, atomic updates, and logging) to guard against potential tampering.
+5. Ensure that these dynamic updates incur only minimal runtime overhead, following the performance guidelines and evaluation metrics (e.g., correctness, binary size overhead, and performance overhead).
+
+──────────────────────────────
+5. Final Remarks
+
+This logic analysis establishes a clear blueprint for the runtime_enforcer.cpp implementation. It is essential that each step—from secure module summary merging to safe JIT recompile of switch-case constructs—adheres to the design principles outlined in the paper and the project plan. All operations must honor the configuration constraints (e.g., dynamic linking enabled) and must be documented thoroughly to ensure reproducibility and security.
+
+With this analysis, the developer should be well-prepared to implement the runtime enforcer in C++, enabling dynamic runtime updates to the CFI enforcement as additional modules are loaded.

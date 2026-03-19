@@ -4,7 +4,7 @@ import argparse
 import re
 import sys
 
-from openai import OpenAI
+from openai_client import create_openai_client
 from utils import read_python_files, content_to_json, extract_planning
 
 
@@ -123,7 +123,7 @@ def parse_args() -> argparse.Namespace:
 
 
 args = parse_args()
-client = OpenAI(api_key = os.environ["OPENAI_API_KEY"])
+client = create_openai_client()
 
 if not os.path.exists(args.error_file_name):
     raise FileNotFoundError(f"Error file not found: {args.error_file_name}")
@@ -258,5 +258,4 @@ answer = response.choices[0].message.content
 # Use the direct API response as input to the patch applier
 responses = [answer]
 parse_and_apply_changes(responses, debug_dir, save_num=args.save_num)
-
 

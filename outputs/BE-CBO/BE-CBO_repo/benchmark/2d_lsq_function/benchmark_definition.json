@@ -1,0 +1,31 @@
+{
+  "paper_benchmark_name": "2D LSQ function",
+  "matched_benchmark_name": "2D LSQ function",
+  "status": "well_established_formula",
+  "materialization_strategy": "generate_definition",
+  "paper_research_field": "Constrained Bayesian Optimization",
+  "matched_research_field": "Constrained Bayesian Optimization",
+  "definition_summary": "A linear objective function defined on [0,1]^2 with sinusoidal and quadratic constraints.",
+  "equations_or_components": [
+    "f(x) = x1 + x2",
+    "c1(x) = x1 + 2*x2 + 0.5*sin(2π*(x1 - 2*x2)) - 1.5",
+    "c2(x) = 1.5 - x1 - x2^2"
+  ],
+  "variables_or_inputs": [
+    "x1",
+    "x2"
+  ],
+  "constraints_or_bounds": [
+    "x1 ∈ [0, 1]",
+    "x2 ∈ [0, 1]"
+  ],
+  "expected_artifacts": [
+    "spec.txt"
+  ],
+  "license_or_access_notes": [
+    "Based on published formulations; no license restrictions"
+  ],
+  "match_reason": "Referenced with explicit analytic formulas (Gramacy et al., 2016).",
+  "source_type": "literature_formula",
+  "source_url": ""
+}

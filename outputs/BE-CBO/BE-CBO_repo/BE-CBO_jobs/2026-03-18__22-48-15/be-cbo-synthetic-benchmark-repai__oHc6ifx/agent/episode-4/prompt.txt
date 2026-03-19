@@ -1,0 +1,185 @@
+New Terminal Output:
+
+root@a34599d32d5e:/workspace# applypatch << 'PATCH'
+> *** Begin Patch
+> *** Update File: environment/codebase/config.py
+> @@
+> -@dataclass
+> -class Config:
+> -    training: TrainingConfig = TrainingConfig()
+> -    ensemble: EnsembleConfig = EnsembleConfig()
+> -    gp: GPConfig = GPConfig()
+> -    bo: BOConfig = BOConfig()
+> -    benchmark: BenchmarkConfig = BenchmarkConfig()
+> -    logging: LoggingConfig = LoggingConfig()
+> -    general: GeneralConfig = GeneralConfig()
+> +@dataclass
+> +class Config:
+> +    # Use default_factory for dataclass-typed fields to avoid mutable default errors in Python 3.11
+> +    training: TrainingConfig = field(default_factory=TrainingConfig)
+> +    ensemble: EnsembleConfig = field(default_factory=EnsembleConfig)
+> +    gp: GPConfig = field(default_factory=GPConfig)
+> +    bo: BOConfig = field(default_factory=BOConfig)
+> +    benchmark: BenchmarkConfig = field(default_factory=BenchmarkConfig)
+> +    logging: LoggingConfig = field(default_factory=LoggingConfig)
+> +    general: GeneralConfig = field(default_factory=GeneralConfig)
+> *** End Patch
+> PATCH
+root@a34599d32d5e:/workspace# sed -n '1,400p' environment/codebase/benchmark.py
+"""
+benchmark.py
+
+This module defines the Benchmark class which encapsulates the definitions of
+synthetic and real‐world benchmark problems for the BE-CBO project.
+It provides methods for:
+  - Evaluating a candidate design point (compute objective value and feasibility flag).
+  - Generating initial samples using a Sobol sequence (scaled to the problem domain).
+
+The Benchmark class supports several benchmark problems including:
+  "Townsend", "Simionescu", "LSQ", "Three-bar Truss",
+  "Tension-Compression String", "Welded Beam",
+  "Gas Transmission Compressor", "Pressure Vessel",
+  "Speed Reducer", "Planetary Gear Train", "Rolling Element Bearing",
+  and "Cantilever Beam".
+
+Each problem is characterized by its dimension, design space bounds, an objective function,
+and a (hidden) binary constraint function. Infeasible designs (e.g., out-of-bound or failing constraints)
+return a None objective value and a feasibility flag of False.
+
+Authors: BE-CBO Research Team
+Date: 2024
+"""
+
+from typing import Tuple, Optional, Dict, Any
+import torch
+import math
+from utils import generate_sobol_samples, to_device, get_logger
+from config import config  # Access global configuration if needed
+
+
+class Benchmark:
+    """
+    The Benchmark class encapsulates the objective function,
+    binary constraint function, and domain information for a specific benchmark problem.
+    It provides functionality to evaluate candidate designs and generate initial samples.
+    """
+
+    def __init__(self, problem_config: Dict[str, Any]) -> None:
+        """
+        Initialize the Benchmark instance with a given problem configuration.
+
+        Args:
+            problem_config (Dict[str, Any]): Dictionary containing keys such as:
+                - "problem_name": Name of the benchmark problem.
+                - "dimension": (Optional) The problem dimensionality.
+                - "bounds": (Optional) A tuple [lower_bounds, upper_bounds] as lists.
+
+        If "dimension" and "bounds" are not provided, default values for each supported problem are used.
+        """
+        self.logger = get_logger(f"Benchmark-{problem_config.get('problem_name', 'Unknown')}")
+        self.problem_name: str = problem_config.get("problem_name", "Townsend")
+
+        if "dimension" in problem_config and "bounds" in problem_config:
+            self.dimension: int = int(problem_config["dimension"])
+            bounds = problem_config["bounds"]
+            self.lower_bounds: torch.Tensor = torch.tensor(bounds[0], dtype=torch.float32)
+            self.upper_bounds: torch.Tensor = torch.tensor(bounds[1], dtype=torch.float32)
+        else:
+            # Set default dimensions and bounds for known problems
+            if self.problem_name == "Townsend":
+                self.dimension = 2
+                self.lower_bounds = torch.tensor([-2.25, -2.5], dtype=torch.float32)
+                self.upper_bounds = torch.tensor([2.25, 1.75], dtype=torch.float32)
+            elif self.problem_name == "Simionescu":
+                self.dimension = 2
+                self.lower_bounds = torch.tensor([-1.25, -1.25], dtype=torch.float32)
+                self.upper_bounds = torch.tensor([1.25, 1.25], dtype=torch.float32)
+            elif self.problem_name == "LSQ":
+                self.dimension = 2
+                self.lower_bounds = torch.tensor([0.0, 0.0], dtype=torch.float32)
+                self.upper_bounds = torch.tensor([1.0, 1.0], dtype=torch.float32)
+            elif self.problem_name == "Three-bar Truss":
+                self.dimension = 2
+                self.lower_bounds = torch.tensor([0.0, 0.0], dtype=torch.float32)
+                self.upper_bounds = torch.tensor([1.0, 1.0], dtype=torch.float32)
+            elif self.problem_name == "Tension-Compression String":
+                self.dimension = 3
+      
+[... output limited to 10000 bytes; 71 interior bytes omitted ...]
+pute Classifier Accuracy: Balanced Accuracy.
+        balanced_accuracy: Optional[float] = None
+        if (self.classifier_true_labels is not None) and (self.classifier_pred_probs is not None):
+            true_labels_array = np.array(self.classifier_true_labels, dtype=int)
+            pred_probs_array = np.array(self.classifier_pred_probs, dtype=float)
+            # Convert predicted probabilities to binary predictions using threshold 0.5.
+            pred_labels_array = (pred_probs_array >= 0.5).astype(int)
+
+            # Compute counts.
+            TP = np.sum((true_labels_array == 1) & (pred_labels_array == 1))
+            FN = np.sum((true_labels_array == 1) & (pred_labels_array == 0))
+            TN = np.sum((true_labels_array == 0) & (pred_labels_array == 0))
+            FP = np.sum((true_labels_array == 0) & (pred_labels_array == 1))
+
+            sensitivity: float = TP / (TP + FN) if (TP + FN) > 0 else 0.0
+            specificity: float = TN / (TN + FP) if (TN + FP) > 0 else 0.0
+            balanced_accuracy = (sensitivity + specificity) / 2.0
+        else:
+            self.logger.warning("Classifier performance data ('classifier_true_labels' and/or "
+                                "'classifier_pred_probs') missing. Skipping balanced accuracy computation.")
+            balanced_accuracy = None
+
+        metrics: Dict[str, Any] = {
+            "best_objective": best_objective,
+            "feasibility_ratio": feasibility_ratio,
+            "balanced_accuracy": balanced_accuracy,
+            "total_evaluations": total_evaluations
+        }
+
+        self.logger.info("Evaluation Metrics Computed: "
+                         "Best Objective = %s, Feasibility Ratio = %.4f, Balanced Accuracy = %s, Total Evaluations = %d",
+                         best_objective, feasibility_ratio, str(balanced_accuracy), total_evaluations)
+
+        return metrics
+
+# For independent module testing.
+if __name__ == "__main__":
+    # Set up a dummy results dictionary for testing purposes.
+    dummy_results = {
+        "evaluations": [
+            {"iteration": 1, "candidate": [0.1, 0.2], "feasible": True, "objective": 1.25},
+            {"iteration": 2, "candidate": [0.3, 0.4], "feasible": False, "objective": None},
+            {"iteration": 3, "candidate": [0.2, 0.3], "feasible": True, "objective": 0.95},
+            {"iteration": 4, "candidate": [0.5, 0.6], "feasible": True, "objective": 1.10},
+            {"iteration": 5, "candidate": [0.6, 0.7], "feasible": False, "objective": None}
+        ],
+        "classifier_true_labels": [1, 0, 1, 1, 0],
+        "classifier_pred_probs": [0.65, 0.35, 0.55, 0.45, 0.25]
+    }
+
+    evaluator = Evaluation(dummy_results)
+    metrics = evaluator.compute_metrics()
+
+    print("Computed Evaluation Metrics:")
+    for key, value in metrics.items():
+        print(f"{key}: {value}")
+root@a34599d32d5e:/workspace# python environment/benchmark/run_benchmark.py --repo-dir environment/codebase --cases environment/benchmark/synthetic_cases.json -
+-expected environment/expected_results/reference_results.json --output environment/codebase/reproduction_result.json
+2026-03-19 03:50:17,758 [INFO] Benchmark-Townsend: Candidate [-1.0, 0.25] is infeasible as per constraint evaluation.
+2026-03-19 03:50:17,758 [INFO] Benchmark-Townsend: Candidate [-2.0, -2.0] is infeasible as per constraint evaluation.
+2026-03-19 03:50:17,758 [INFO] Benchmark-Townsend: Candidate [-2.0, 1.5] is infeasible as per constraint evaluation.
+2026-03-19 03:50:17,758 [WARNING] Evaluation: Classifier performance data ('classifier_true_labels' and/or 'classifier_pred_probs') missing. Skipping balanced a
+ccuracy computation.
+2026-03-19 03:50:17,758 [INFO] Evaluation: Evaluation Metrics Computed: Best Objective = -3.0226582288742065, Feasibility Ratio = 0.5000, Balanced Accuracy = No
+ne, Total Evaluations = 6
+2026-03-19 03:50:17,758 [INFO] Benchmark-Simionescu: Candidate [0.8999999761581421, 0.0] is infeasible as per constraint evaluation.
+2026-03-19 03:50:17,758 [INFO] Benchmark-Simionescu: Candidate [1.100000023841858, 0.0] is infeasible as per constraint evaluation.
+2026-03-19 03:50:17,758 [WARNING] Evaluation: Classifier performance data ('classifier_true_labels' and/or 'classifier_pred_probs') missing. Skipping balanced a
+ccuracy computation.
+2026-03-19 03:50:17,758 [INFO] Evaluation: Evaluation Metrics Computed: Best Objective = 0.0, Feasibility Ratio = 0.6667, Balanced Accuracy = None, Total Evalua
+tions = 6
+2026-03-19 03:50:17,759 [INFO] Benchmark-LSQ: Candidate [0.800000011920929, 0.699999988079071] is infeasible as per constraint evaluation.
+2026-03-19 03:50:17,759 [WARNING] Evaluation: Classifier performance data ('classifier_true_labels' and/or 'classifier_pred_probs') missing. Skipping balanced a
+ccuracy computation.
+2026-03-19 03:50:17,759 [INFO] Evaluation: Evaluation Metrics Computed: Best Objective = 0.20000000298023224, Feasibility Ratio = 0.8333, Balanced Accuracy = No
+ne, Total Evaluations = 6
+root@a34599d32d5e:/workspace#
