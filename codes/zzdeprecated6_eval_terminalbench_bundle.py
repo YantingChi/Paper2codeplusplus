@@ -10,7 +10,7 @@ The v1 implementation focuses on BE-CBO style analytic benchmark bundles:
 - it writes assets, prompt, tests, Docker spec, and a reference solution
 - it validates the generated bundle structure before exiting
 """
-
+# not harbor so should be deprecated
 from __future__ import annotations
 
 import argparse

@@ -9,7 +9,7 @@ from openai_client import create_openai_client
 
 from utils import get_now_str, num_tokens_from_messages, print_log_cost, read_all_files
 
-
+#deprecated
 DOCKER_REPRO_SCHEMA = {
     "type": "object",
     "additionalProperties": False,

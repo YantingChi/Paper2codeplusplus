@@ -57,7 +57,7 @@ cp -rp "$OUTPUT_DIR/planning_config.yaml" "$OUTPUT_REPO_DIR/config.yaml"
 
 echo "------- Eval Info -------"
 
-"$PYTHON_BIN" "$ROOT_DIR/codes/eval_get_running_info.py" \
+"$PYTHON_BIN" "$ROOT_DIR/codes/5_eval_get_running_info.py" \
     --paper_name "$PAPER_NAME" \
     --paper_format JSON \
     --pdf_json_path "$PDF_JSON_CLEANED_PATH" \
@@ -68,7 +68,7 @@ echo "------- Harbor Bundle -------"
 
 bundle_cmd=(
     "$PYTHON_BIN"
-    "$ROOT_DIR/codes/eval_terminalbench_bundle.py"
+    "$ROOT_DIR/codes/6_eval_terminalbench_bundle.py"
     --paper_name "$PAPER_NAME"
     --target_repo_dir "$OUTPUT_REPO_DIR"
     --eval_metrics_path "$EVAL_INFO_PATH"

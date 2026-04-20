@@ -3,7 +3,7 @@ set -euo pipefail
 
 # One-click runner for the BE-CBO Terminal-Bench bundle.
 #
-# Flow:
+# Default flow:
 # 1) generate the bundle
 # 2) build the Docker image
 # 3) run the reference solution
@@ -11,27 +11,21 @@ set -euo pipefail
 # 5) run the checker
 #
 # Usage:
+#   bash scripts/run_be_cbo_terminalbench.sh
 #   bash scripts/run_be_cbo_terminalbench.sh generate
 #   bash scripts/run_be_cbo_terminalbench.sh build
 #   bash scripts/run_be_cbo_terminalbench.sh run
 #   bash scripts/run_be_cbo_terminalbench.sh all
 #
-# Required environment:
-#   PAPER_NAME=BE-CBO
+# Common overrides:
 #   PYTHON_BIN=python3.10
-#   TARGET_REPO_DIR=/path/to/repo
-#   EVAL_DIR=/path/to/eval
-#   PAPER_JSON_PATH=/path/to/paper.json
-#   OUTPUT_BUNDLE_DIR=/path/to/bundle
 #   IMAGE_NAME=paper2code-be-cbo-bundle:test
-#   CONTAINER_NAME=paper2code-be-cbo-bundle-run
-#   HOST_RESULTS_DIR=/path/to/results
 #   KEEP_CONTAINER=1
-#   LOCAL_MACHINE_CHECK=1
 
 SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_ROOT="$(cd -- "${SCRIPT_DIR}/.." && pwd)"
 
+-
 usage() {
   cat <<'EOF'
 Usage:
@@ -41,13 +35,11 @@ Stages:
   generate   Generate the Terminal-Bench bundle only.
   build      Generate the bundle and build the Docker image.
   run        Generate, build, run the solution, and copy outputs to host.
-  all        Generate, build, run, copy outputs, and run checker.
+  all        Generate, build, run, copy outputs, and run checker. Default.
 
-Required environment:
+Environment overrides:
   PYTHON_BIN          Python executable for bundle generation.
-  PAPER_NAME          Paper name used for eval artifact lookup.
   TARGET_REPO_DIR     Generated Paper2Code repo directory.
-  EVAL_DIR            Evaluation directory for lookup and outputs.
   EVAL_METRICS_PATH   Explicit paper_only_eval_info JSON path.
   PAPER_JSON_PATH     Paper source JSON path.
   OUTPUT_BUNDLE_DIR   Bundle output directory.
@@ -55,29 +47,9 @@ Required environment:
   CONTAINER_NAME      Docker container name.
   HOST_RESULTS_DIR    Host directory for copied reproduction outputs.
   KEEP_CONTAINER      Keep the container after completion when set to 1.
-  LOCAL_MACHINE_CHECK Enable local machine probe when set to 1.
+  LOCAL_MACHINE_CHECK Enable local machine probe when set to 1. Default: 1.
 EOF
 }
-
-if [[ $# -lt 1 ]]; then
-  echo "[ERROR] Missing action argument." >&2
-  echo >&2
-  usage >&2
-  exit 1
-fi
-
-ACTION="$1"
-: "${PAPER_NAME:?Set PAPER_NAME}"
-: "${PYTHON_BIN:?Set PYTHON_BIN}"
-: "${TARGET_REPO_DIR:?Set TARGET_REPO_DIR}"
-: "${EVAL_DIR:?Set EVAL_DIR}"
-: "${PAPER_JSON_PATH:?Set PAPER_JSON_PATH}"
-: "${OUTPUT_BUNDLE_DIR:?Set OUTPUT_BUNDLE_DIR}"
-: "${IMAGE_NAME:?Set IMAGE_NAME}"
-: "${CONTAINER_NAME:?Set CONTAINER_NAME}"
-: "${HOST_RESULTS_DIR:?Set HOST_RESULTS_DIR}"
-: "${KEEP_CONTAINER:?Set KEEP_CONTAINER}"
-: "${LOCAL_MACHINE_CHECK:?Set LOCAL_MACHINE_CHECK}"
 
 log() {
   echo "[INFO] $*"

@@ -3,7 +3,7 @@ import re
 import os
 import argparse
 import shutil
-from utils import extract_planning, content_to_json, format_json_data
+from utils import extract_last_fenced_block, extract_planning, content_to_json, format_json_data
 
 parser = argparse.ArgumentParser()
 
@@ -18,27 +18,23 @@ with open(f'{output_dir}/planning_trajectories.json', encoding='utf8') as f:
     traj = json.load(f)
 
 yaml_raw_content = ""
-for turn_idx, turn in enumerate(traj):
-        if turn_idx == 8:
-            yaml_raw_content = turn['content']   
+for turn in reversed(traj):
+    if turn.get("role") != "assistant":
+        continue
+    content = turn.get("content", "")
+    if "```yaml" in content or "```yaml\\n" in content:
+        yaml_raw_content = content
+        break
 
 if "</think>" in yaml_raw_content:
     yaml_raw_content = yaml_raw_content.split("</think>")[-1]
 
-match = re.search(r"```yaml\n(.*?)\n```", yaml_raw_content, re.DOTALL)
-if match:
-    yaml_content = match.group(1)
+yaml_content = extract_last_fenced_block(yaml_raw_content, fence_languages=("yaml",))
+if yaml_content:
     with open(f'{output_dir}/planning_config.yaml', 'w', encoding='utf8') as f:
         f.write(yaml_content)
 else:
-    # print("No YAML content found.")
-    match2 = re.search(r"```yaml\\n(.*?)\\n```", yaml_raw_content, re.DOTALL)
-    if match2:
-        yaml_content = match2.group(1)
-        with open(f'{output_dir}/planning_config.yaml', 'w', encoding='utf8') as f:
-            f.write(yaml_content)
-    else:
-        print("No YAML content found.")
+    print("No YAML content found.")
 
 # ---------------------------------------
 

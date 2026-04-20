@@ -3,6 +3,67 @@ import re
 import os
 from datetime import datetime
 
+
+def load_paper_content(paper_format, pdf_json_path=None, pdf_latex_path=None):
+    if paper_format == "JSON":
+        if not pdf_json_path:
+            raise ValueError("pdf_json_path is required when paper_format is JSON")
+        with open(pdf_json_path, encoding="utf-8") as f:
+            return json.load(f)
+    if paper_format == "LaTeX":
+        if not pdf_latex_path:
+            raise ValueError("pdf_latex_path is required when paper_format is LaTeX")
+        with open(pdf_latex_path, encoding="utf-8") as f:
+            return f.read()
+    raise ValueError("Invalid paper format. Please select either 'JSON' or 'LaTeX'.")
+
+
+def _normalize_lookup_key(key):
+    return key.strip().lower().replace(" ", "").replace("_", "")
+
+
+def get_case_insensitive(payload, *keys, default=None):
+    if not isinstance(payload, dict):
+        return default
+
+    normalized_payload = {
+        _normalize_lookup_key(current_key): value
+        for current_key, value in payload.items()
+    }
+    for key in keys:
+        normalized_key = _normalize_lookup_key(key)
+        if normalized_key in normalized_payload:
+            return normalized_payload[normalized_key]
+    return default
+
+
+def get_task_file_list(task_payload):
+    task_list = get_case_insensitive(task_payload, "Task list", "task_list", "task list")
+    if task_list is None:
+        raise KeyError("'Task list' does not exist. Please re-generate the planning.")
+    return task_list
+
+
+def get_logic_analysis_entries(task_payload):
+    logic_analysis = get_case_insensitive(
+        task_payload,
+        "Logic Analysis",
+        "logic_analysis",
+        "logic analysis",
+    )
+    if logic_analysis is None:
+        raise KeyError("'Logic Analysis' does not exist. Please re-generate the planning.")
+    return logic_analysis
+
+
+def build_logic_analysis_map(task_payload):
+    logic_analysis = get_logic_analysis_entries(task_payload)
+    return {entry[0]: entry[1] for entry in logic_analysis if len(entry) >= 2}
+
+
+def sanitize_artifact_name(file_path):
+    return file_path.replace("\\", "_").replace("/", "_")
+
 def extract_planning(trajectories_json_file_path):
     with open(trajectories_json_file_path) as f:
         traj = json.load(f)
@@ -420,6 +481,55 @@ def read_python_files(directory):
                     python_files_content[relative_path] = file.read()
     
     return python_files_content
+
+
+def read_repository_files(directory, relative_paths=None, extra_paths=None):
+    repository_files = {}
+    requested_paths = []
+    seen_paths = set()
+
+    for path_group in (relative_paths or [], extra_paths or []):
+        normalized_path = path_group.replace("\\", "/")
+        if normalized_path in seen_paths or len(normalized_path.strip()) == 0:
+            continue
+        seen_paths.add(normalized_path)
+        requested_paths.append(normalized_path)
+
+    for relative_path in requested_paths:
+        absolute_path = os.path.join(directory, relative_path)
+        if not os.path.exists(absolute_path) or os.path.isdir(absolute_path):
+            continue
+        try:
+            with open(absolute_path, "r", encoding="utf-8") as file:
+                repository_files[relative_path] = file.read()
+        except UnicodeDecodeError:
+            print(f"[SKIP] Binary or non-UTF8 file: {absolute_path}")
+        except Exception as exc:
+            print(f"[SKIP] {absolute_path}: {exc}")
+
+    return repository_files
+
+
+def extract_last_fenced_block(content, fence_languages=None):
+    candidates = [content]
+    if "\\n" in content:
+        candidates.append(content.replace("\\n", "\n"))
+
+    normalized_languages = None
+    if fence_languages is not None:
+        normalized_languages = {language.strip().lower() for language in fence_languages}
+
+    pattern = re.compile(r"```([^\n`]*)\n(.*?)\n```", re.DOTALL)
+
+    for candidate in candidates:
+        matches = list(pattern.finditer(candidate))
+        for match in reversed(matches):
+            language = match.group(1).strip().lower()
+            if normalized_languages is not None and language not in normalized_languages:
+                continue
+            return match.group(2)
+
+    return ""
   
 
 def extract_json_from_string(text):

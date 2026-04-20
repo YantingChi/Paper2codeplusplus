@@ -29,11 +29,22 @@ def parse_args() -> argparse.Namespace:
         default="gpt-4.1-mini",
         help="OpenAI chat model name used for name detection.",
     )
+    parser.add_argument(
+        "--target_language",
+        type=str,
+        default="python",
+        choices=["python", "c"],
+        help="Target language for the generated repository. Hugging Face refinement is only applied to Python mode.",
+    )
     return parser.parse_args()
 
 
 args = parse_args()
 client = create_openai_client()
+
+if args.target_language != "python":
+    print("Skipping Hugging Face config refinement because target_language is not python.")
+    sys.exit(0)
 
 planning_config_path = os.path.join(
     args.output_dir, f"planning_config.yaml"

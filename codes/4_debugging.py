@@ -2,14 +2,18 @@ import os
 import json
 import argparse
 import re
+import subprocess
 import sys
 
+from codes.ShiftToC.language_profiles import get_language_profile
 from openai_client import create_openai_client
-from utils import read_python_files, content_to_json, extract_planning
+from codes.ShiftToC.prompt_builders import build_debugging_messages
+from utils import content_to_json, extract_planning, get_task_file_list, read_repository_files
 
 
 def parse_and_apply_changes(responses, debug_dir, save_num=1):
     """Apply SEARCH / REPLACE edits produced by the LLM to files in debug_dir."""
+    modified_any = False
     for response in responses:
         # Split into blocks per file
         file_blocks = re.split(r"Filename:\s*([^\n]+)", response)
@@ -59,6 +63,7 @@ def parse_and_apply_changes(responses, debug_dir, save_num=1):
                 if search_text in file_content:
                     file_content = file_content.replace(search_text, replace_text)
                     modified = True
+                    modified_any = True
                     print(f"✅ {filename}: Modification {idx} applied")
                 else:
                     print(
@@ -79,6 +84,43 @@ def parse_and_apply_changes(responses, debug_dir, save_num=1):
             else:
                 print(f"ℹ️ {filename}: No modifications applied\n")
 
+    return modified_any
+
+
+def build_repository_context(debug_dir, todo_file_lst, profile):
+    repo_files = read_repository_files(
+        debug_dir,
+        relative_paths=todo_file_lst,
+        extra_paths=profile.extra_context_files,
+    )
+    return "\n\n".join(
+        profile.format_file_block(path, content)
+        for path, content in repo_files.items()
+    )
+
+
+def run_repository_verification(debug_dir, profile):
+    commands = profile.build_verification_commands(debug_dir)
+    log_lines = []
+
+    for command in commands:
+        log_lines.append(f"$ {command}")
+        completed = subprocess.run(
+            ["bash", "-lc", command],
+            cwd=debug_dir,
+            text=True,
+            capture_output=True,
+        )
+        if completed.stdout:
+            log_lines.append(completed.stdout)
+        if completed.stderr:
+            log_lines.append(completed.stderr)
+        log_lines.append(f"[exit_code={completed.returncode}]")
+        if completed.returncode != 0:
+            return False, "\n".join(log_lines), commands
+
+    return True, "\n".join(log_lines), commands
+
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(
@@ -87,7 +129,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument(
         "--error_file_name",
         type=str,
-        required=True,
+        default="",
         help="Path to a text file containing the execution error message.",
     )
 
@@ -107,6 +149,12 @@ def parse_args() -> argparse.Namespace:
         help="Paper name for output_dir.",
     )
     parser.add_argument(
+        "--output_repo_dir",
+        type=str,
+        required=True,
+        help="Path to the generated repository that should be debugged.",
+    )
+    parser.add_argument(
         "--model",
         type=str,
         default="o4-mini",
@@ -119,17 +167,40 @@ def parse_args() -> argparse.Namespace:
         required=True,
         help="Backup index appended as .<save_num>.bak when saving modified files.",
     )
+    parser.add_argument(
+        "--target_language",
+        type=str,
+        default="python",
+        choices=["python", "c"],
+        help="Target language used to choose repository context, code fences, and verification commands.",
+    )
+    parser.add_argument(
+        "--run_verification",
+        action="store_true",
+        help="Run language-aware verification commands and feed the resulting output into the debugging loop.",
+    )
+    parser.add_argument(
+        "--max_rounds",
+        type=int,
+        default=1,
+        help="Maximum number of verify-and-repair rounds when --run_verification is enabled.",
+    )
     return parser.parse_args()
 
 
 args = parse_args()
 client = create_openai_client()
+profile = get_language_profile(args.target_language)
 
-if not os.path.exists(args.error_file_name):
-    raise FileNotFoundError(f"Error file not found: {args.error_file_name}")
+if len(args.error_file_name.strip()) == 0 and not args.run_verification:
+    raise ValueError("Provide --error_file_name or enable --run_verification.")
 
-with open(args.error_file_name, "r", encoding="utf-8") as f:
-    execution_error_msg = f.read()
+seed_error_msg = ""
+if len(args.error_file_name.strip()) > 0:
+    if not os.path.exists(args.error_file_name):
+        raise FileNotFoundError(f"Error file not found: {args.error_file_name}")
+    with open(args.error_file_name, "r", encoding="utf-8") as f:
+        seed_error_msg = f.read()
 
 # --------------------------------------------------
 # Resolve output_dir and debug_dir
@@ -151,111 +222,62 @@ context_lst = extract_planning(planning_traj_path)
 # context_lst indices: 0 overview, 1 detailed, 2 PRD (per your original comment)
 
 task_list = content_to_json(context_lst[2])
-todo_file_lst = task_list.get("Task list", [])
+try:
+    todo_file_lst = get_task_file_list(task_list)
+except KeyError as exc:
+    print(f"❌ {exc}", file=sys.stderr)
+    sys.exit(1)
 
-# --------------------------------------------------
-# Load repo files and configuration files
-# --------------------------------------------------
-python_dict = read_python_files(debug_dir)
+round_limit = args.max_rounds if args.run_verification else 1
 
-codes = ""
-for todo_file in todo_file_lst:
-    if todo_file.endswith(".yaml"):
-        continue
-    if todo_file not in python_dict:
-        print(f"⚠️ {todo_file} not found in python_dict. Skipping.")
-        continue
-    codes += f"```python\n## File name: {todo_file}\n{python_dict[todo_file]}\n```\n\n"
+for round_idx in range(round_limit):
+    verification_commands = []
+    current_error_msg = seed_error_msg
 
-config_path = os.path.join(debug_dir, "config.yaml")
-if os.path.exists(config_path):
-    with open(config_path, "r", encoding="utf-8") as f:
-        config_yaml = f.read()
-    codes += f"```yaml\n## File name: config.yaml\n{config_yaml}\n```\n\n"
-        
-reproduce_path = os.path.join(debug_dir, "reproduce.sh")
-if os.path.exists(reproduce_path):
-    with open(reproduce_path, "r", encoding="utf-8") as f:
-        reproduce_sh = f.read()
-    codes += f"```bash\n## File name: reproduce.sh\n{reproduce_sh}\n```\n\n"
+    if args.run_verification:
+        is_success, verification_log, verification_commands = run_repository_verification(
+            debug_dir,
+            profile,
+        )
+        if is_success:
+            print("✅ Verification passed. No debugging changes were required.")
+            sys.exit(0)
+        current_error_msg = verification_log
+        if len(seed_error_msg.strip()) > 0:
+            current_error_msg = (
+                seed_error_msg.strip()
+                + "\n\n[Verification output]\n"
+                + verification_log
+            )
 
-# --------------------------------------------------
-# Build debugging prompt
-# --------------------------------------------------
-msg = [
-    {
-        "role": "system",
-        "content": """You are a highly capable code assistant specializing in debugging real-world code repositories. You will be provided with:
-(1) a code repository (in part or in full), and
-(2) one or more execution error messages generated during the execution of the repository.
+    codes = build_repository_context(debug_dir, todo_file_lst, profile)
+    msg = build_debugging_messages(
+        codes,
+        current_error_msg,
+        profile,
+        verification_commands=verification_commands,
+    )
 
-Your objective is to debug the code so that it executes successfully.
-This may involve identifying the root causes of the errors, modifying faulty logic or syntax, handling missing dependencies, or making other appropriate corrections.
+    response = client.chat.completions.create(
+        model=args.model,
+        messages=msg,
+        reasoning_effort="high",
+    )
 
-Guidelines:
-- Provide the exact lines or file changes needed to resolve the issue.
-- When necessary, suggest best practices or improvements to prevent similar issues.
-- Show only the modified lines using a unified diff format:
+    answer = response.choices[0].message.content
+    modified = parse_and_apply_changes(
+        [answer],
+        debug_dir,
+        save_num=args.save_num + round_idx,
+    )
 
-<<<<<<< SEARCH  
-    original line  
-=======  
-    corrected line  
->>>>>>> REPLACE  
+    if not args.run_verification or not modified:
+        break
 
-- If multiple fixes are needed, provide them sequentially with clear separation.
-- If external dependencies or environment setups are required (for example, packages, versions, file paths), specify them explicitly.
-
-Constraints:
-- Do not make speculative edits without justification.
-- Do not assume access to an internet connection for installation or retrieval unless explicitly stated.
-- Prioritize minimal and effective fixes that preserve the original intent of the code.
-- Maintain the coding style and structure used in the original repository unless refactoring is necessary for correctness.
-""",
-    },
-    {
-        "role": "user",
-        "content": f"""
-### Code Repository
-{codes}
-
---
-
-### Execution Error Messages
-{execution_error_msg}
-
---
-
-## Instruction
-Now, you need to debug the above code so that it runs without errors. Identify the cause of the execution error and modify the code appropriately. Your output must follow the exact format as shown in the example below.
-
---
-
-## Format Example
-Filename: train.py
-<<<<<<< SEARCH
-result = model.predict(input_data)
-=======
-result = model(input_data)
->>>>>>> REPLACE
-
---
-
-## Answer
-""",
-    },
-]
-response = client.chat.completions.create(
-    model=args.model,
-    messages=msg,
-    reasoning_effort="high",
-)
-
-answer = response.choices[0].message.content
-# print("===== RAW MODEL ANSWER =====")
-# print(answer)
-
-# Use the direct API response as input to the patch applier
-responses = [answer]
-parse_and_apply_changes(responses, debug_dir, save_num=args.save_num)
-
+if args.run_verification:
+    final_success, final_log, _ = run_repository_verification(debug_dir, profile)
+    if final_success:
+        print("✅ Verification passed after applying fixes.")
+    else:
+        print("❌ Verification still failing after the debug loop.")
+        print(final_log)
