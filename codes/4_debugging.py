@@ -4,9 +4,10 @@ import argparse
 import re
 import sys
 
-from openai_client import create_openai_client
+
 from utils import read_python_files, content_to_json, extract_planning
 
+from openai_client import create_openai_client
 
 def parse_and_apply_changes(responses, debug_dir, save_num=1):
     """Apply SEARCH / REPLACE edits produced by the LLM to files in debug_dir."""
@@ -109,7 +110,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument(
         "--model",
         type=str,
-        default="o4-mini",
+        default="gpt-5.4",
         help="OpenAI chat model used for debugging.",
     )
     parser.add_argument(
@@ -258,4 +259,3 @@ answer = response.choices[0].message.content
 # Use the direct API response as input to the patch applier
 responses = [answer]
 parse_and_apply_changes(responses, debug_dir, save_num=args.save_num)
-

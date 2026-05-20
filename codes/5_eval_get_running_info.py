@@ -46,6 +46,25 @@ PAPER_ONLY_SCHEMA = {
             "type": "array",
             "items": {"type": "string"},
         },
+        "Baseline compared with": {
+            "type": "array",
+            "items": {
+                "type": "object",
+                "additionalProperties": False,
+                "properties": {
+                    "name": {"type": "string"},
+                    "paper_citation": {"type": "string"},
+                    "download_link": {"type": "string"},
+                    "short_description": {"type": "string"},
+                },
+                "required": [
+                    "name",
+                    "paper_citation",
+                    "download_link",
+                    "short_description",
+                ],
+            },
+        },
         "Training": {
             "type": "object",
             "additionalProperties": False,
@@ -103,6 +122,7 @@ PAPER_ONLY_SCHEMA = {
     "required": [
         "Evaluation Set-up",
         "Benchmark evaluated on",
+        "Baseline compared with",
         "Training",
         "Results",
         "Expected Results",
@@ -192,13 +212,13 @@ def build_messages(paper_text: str, paper_meta: Dict[str, object]) -> List[Dict[
 Extract ONLY the following information from the provided paper context:
 1) Evaluation Set-up
 2) Benchmark evaluated on
-3) Training
+3) Baseline compared with
+4) Training
 5) Expected Results
 
 Critical constraints:
 - Use only information from the paper text (including appendix content if present in the input).
 - Do NOT use repository/code assumptions or external knowledge.
-- Do NOT compare with other works. Keep only this paper's own evaluation details.
 - If a detail is missing, write \"Not specified\".
 - Return only valid JSON matching the provided schema.
 - Do not output chain-of-thought.
@@ -215,6 +235,13 @@ Extract the required fields from the paper.
   - docker_requirements: what is needed to run in Docker (base image, CUDA/toolkit, runtime constraints) if available.
 - Benchmark evaluated on:
   - list datasets/benchmarks/tasks used by this paper.
+- Baseline compared with:
+  - For each baseline method this paper compares against, list:
+    - name: the baseline method name as written in the paper.
+    - paper_citation: the citation string as printed in the paper (e.g., "Smith et al., 2022").
+    - download_link: a URL to the baseline's code/repo/page if explicitly given in the paper; otherwise "Not specified". Do not invent URLs.
+    - short_description: one sentence describing what the baseline is, drawn only from this paper's text.
+  - If the paper does not compare against any baselines, return an empty array.
 - Training:
   - is_training_required: whether a new model needs training.
   - hyperparameters: training hyperparameters (LR, batch size, epochs, etc.).
@@ -225,7 +252,6 @@ Extract the required fields from the paper.
   - figure_results: findings tied to figures/tables for this work.
 - List benchmark names/datasets/tasks explicitly.
 - Summarize expected results exactly as stated in paper text; do not invent numbers.
-- Exclude comparisons against external baselines unless needed to explain this paper's own reported value.
 </success_criteria>
 
 <input_meta>

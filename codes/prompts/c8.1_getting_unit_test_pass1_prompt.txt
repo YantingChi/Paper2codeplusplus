@@ -1,0 +1,91 @@
+System Prompt:
+You are an expert at converting a paper2code rubric into a structured plan of executable pytest specifications. You read a paper, a hierarchical rubric of reproduction requirements, and the planned/exported symbol map of the generated codebase. You produce a JSON list of test specifications — NOT pytest code yet. Code generation happens in a later pass.
+
+User Prompt
+Problem:
+Given a paper, its paper2code rubric (output of script 8), and the symbol map of the generated repo, plan a set of pytest tests that will verify the implementation reproduces the paper. Two tiers of tests must be planned:
+
+Tier A — Intermediate-value tests:
+  Verify that key intermediate computations from the paper produce expected values. Examples:
+    - A drift term f(x,t)=0 for all (x,t) → expected_value=0, comparison_kind=allclose_zero.
+    - Attention rows sum to 1 → comparison_kind=sum_to_one.
+    - A constant set in the paper, e.g. "sigma_max=15" → comparison_kind=constant_equals.
+    - A specific output shape after reshape → comparison_kind=shape_only.
+
+Tier B — Final-comparison tests (A outperforms B):
+  Verify that our implementation's final metric beats a rival/baseline by some margin
+  on a downloaded benchmark. The rival is to be imported live from the assets directory
+  (assets/rivals/<rival_name>) populated by c1_download_dataset.py.
+
+Input:
+- A paper2code rubric JSON tree. Each node has: id, requirements, weight, sub_tasks,
+  task_category, finegrained_task_category.
+- The cleaned paper JSON (text body, abstract, ref_entries).
+- A symbol map of the generated repo: {module_path: [class_or_function_names]}.
+
+Output:
+A JSON object with this exact schema:
+
+{
+  "paper_name": "",
+  "tests": [
+    {
+      "test_id": "T-0001",                      // unique, sequential
+      "rubric_id": "<uuid from rubric leaf>",
+      "rubric_text": "<verbatim rubric requirements text>",
+      "weight": 1,
+      "tier": "intermediate",                    // "intermediate" or "comparison"
+      "branch_slug": "vesde",                    // slug of top-level rubric branch
+      "paper_section_ref": "Section 3.1 / A2.1",
+      "imports": ["from src.sde.vesde import VESDE"],
+      "rationale": "Paper specifies f(x,t)=0.",
+
+      "intermediate": {                          // null when tier=comparison
+        "what_to_compute": "VESDE().drift(x, t)",
+        "input_recipe": "x = torch.randn(4, 3); t = torch.tensor(0.5)",
+        "expected_value": 0.0,                   // null if shape_only
+        "expected_shape": [4, 3],                // null if not applicable
+        "tolerance": {"atol": 1e-6, "rtol": 0.0},
+        "comparison_kind": "allclose_zero"
+        // enum: allclose_zero | allclose_value | shape_only | sum_to_one | monotonic | constant_equals
+      },
+
+      "comparison": {                            // null when tier=intermediate
+        "our_call": "run_apt(model='llama-7b', sparsity=0.5)",
+        "rival_call": "run_magnitude_prune(model='llama-7b', sparsity=0.5)",
+        "metric": "wikitext_ppl",
+        "comparison_op": "lt",                   // lt|gt — direction in which ours is "better"
+        "margin": 0.5,                           // additive margin, in metric units
+        "paper_table_ref": "Table 2"
+      },
+
+      "skip_reason": null                        // or "qualitative" / "no_symbol" etc.
+    }
+  ]
+}
+
+Mapping rules (apply in order):
+1. If a rubric leaf's finegrained_task_category is "Method Implementation" → tier=intermediate.
+2. If finegrained_task_category is "Experimental Setup" AND the requirement names a numeric constant
+   (e.g. "sigma_max is set to 15") → tier=intermediate, comparison_kind=constant_equals.
+3. If finegrained_task_category is "Evaluation, Metrics & Benchmarking" AND the requirement implies
+   beating a baseline (or quotes a metric threshold against a named rival) → tier=comparison.
+4. If a rubric leaf is qualitative (no number, no rival, e.g. "the tokenizer is learnable")
+   → tier=intermediate, set comparison_kind=shape_only with a smoke check, AND set
+   skip_reason="qualitative".
+5. If you cannot find a plausible symbol in repo_symbols to import for a leaf → still emit
+   the spec but set skip_reason="no_symbol" and put your best-guess import in `imports`.
+6. The branch_slug is the slug of the leaf's top-level ancestor under the rubric root
+   (lowercase, underscores). Example: ancestor "Variance Exploding SDE (VESDE) ..." → "vesde".
+
+Constraints:
+- Use ONLY the provided rubric, paper text, and symbol map. Do NOT invent numbers or symbols.
+- Every numeric `expected_value` and every `margin` MUST be traceable to a sentence in the paper.
+  If you cannot find one, prefer comparison_kind=shape_only over fabricating a number.
+- Tests must be deterministic on tiny inputs. Avoid input_recipe that requires datasets or
+  large tensors. Use shapes like (4, 3), batch=2, seq_len=3 unless the rubric demands otherwise.
+- Keep input_recipe a single line of valid Python that defines the variables referenced in
+  what_to_compute. Use torch.Generator().manual_seed(0) for any randomness.
+- Return ONLY valid JSON matching the schema. No markdown, no commentary.
+
+Now generate the test specifications.

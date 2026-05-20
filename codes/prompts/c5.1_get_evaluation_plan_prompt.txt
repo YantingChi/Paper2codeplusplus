@@ -1,0 +1,194 @@
+System Prompt:
+You are an expert in ML paper reproduction. Your goal is to create a hardware-constrained evaluation plan for a Paper2Code reproduction, given a paper's extracted evaluation info and strict resource limits.
+
+User Prompt:
+Problem:
+Given a paper's evaluation info JSON and hardware constraints, produce a feasibility-filtered evaluation plan that defines exactly which datasets and rival baselines to download, and what partial evaluation scope to run in final testing and unit tests.
+
+Input:
+- A paper JSON file (`paper_json_path` in runtime context).
+- An eval info JSON from 5_eval_get_running_info.py (`eval_info_json_path` in runtime context), containing:
+  - Benchmarks evaluated on
+  - Baselines compared with
+  - Training requirements
+  - Hardware requirements
+- Hardware constraints:
+  - GPU VRAM limit: training must not exceed `hardware_constraints.gpu_vram_limit_gb` GB (typically 6 GB).
+  - Dataset size limit: total downloaded data must not exceed `hardware_constraints.dataset_size_limit_gb` GB (typically 5 GB).
+- `generated_repo_path`: the generated codebase for the paper.
+- `eval_plan_output_dir`: where to write all output files.
+
+Output (write all three files to `eval_plan_output_dir`):
+
+1. `eval_plan.json` — Full evaluation plan:
+   {
+     "paper_name": "...",
+     "hardware_constraints": { "gpu_vram_limit_gb": 6.0, "dataset_size_limit_gb": 5.0 },
+     "full_scope": {
+       "datasets": [
+         { "name": "...", "estimated_size_gb": ..., "source": "...", "notes": "..." }
+       ],
+       "baselines": [
+         { "name": "...", "repo_url": "...", "estimated_size_gb": ..., "role": "main|ablation|upper_bound" }
+       ]
+     },
+     "feasibility_analysis": {
+       "total_dataset_gb_required": ...,
+       "total_baseline_gb_required": ...,
+       "gpu_vram_required_gb": ...,
+       "fits_within_constraints": true/false,
+       "issues": ["description of constraint violations if any"]
+     },
+     "selected_scope": { ... same structure as full_scope, but only items that fit },
+     "skipped_items": [
+       { "name": "...", "type": "dataset|baseline", "reason": "...", "estimated_size_gb": ... }
+     ],
+     "partial_eval_description": "One paragraph: which experiments can be reproduced, on which datasets, against which baselines, within the constraints."
+   }
+
+2. `partial_scope.json` — Minimal evaluation scope for unit tests and CI:
+   {
+     "description": "Subset of evaluation that runs end-to-end within constraints",
+     "datasets": [
+       {
+         "name": "...",
+         "download_source": "huggingface|github|official|manual",
+         "hf_path": "...",         (if huggingface)
+         "git_url": "...",          (if github clone)
+         "estimated_size_gb": ...,
+         "split_to_use": "test|validation|...",
+         "toy_subset": "first 100 samples",
+         "local_path": "assets/benchmarks/<name>/"
+       }
+     ],
+     "baselines": [
+       {
+         "name": "...",
+         "git_url": "...",
+         "estimated_size_gb": ...,
+         "role": "main|ablation",
+         "local_path": "assets/rivals/<slug>/"
+       }
+     ],
+     "unit_test_plan": [
+       "pytest tests/test_data_prep.py --toy",
+       "pytest tests/test_metrics.py",
+       "python main.py --toy --dataset <name> --epochs 1"
+     ],
+     "integration_test_plan": [
+       "python main.py --dataset <name> --baseline <name> --epochs 3"
+     ]
+   }
+
+3. `download_list.json` — Ordered list of what to actually download:
+   [
+     {
+       "priority": 1,
+       "type": "dataset|baseline",
+       "name": "...",
+       "method": "huggingface|git_clone|wget|manual",
+       "source_url": "...",
+       "hf_path": "...",           (if huggingface)
+       "estimated_size_gb": ...,
+       "local_path": "...",
+       "download_command": "...",  (exact shell command or instruction)
+       "fits_budget": true/false
+     }
+   ]
+
+Constraints & Detailed Instructions:
+
+1. Read the paper JSON from `paper_json_path`. Look in:
+   - Experimental Setup, Experiments, Datasets, Benchmarks
+   - Training and Evaluation Setup, Baselines, Implementation Details, Appendix
+
+2. Use `eval_info_summary` from the runtime context as the starting authoritative list of benchmarks and baselines.
+
+3. Feasibility filtering:
+   a) For each dataset, estimate size:
+      - Standard NLP benchmarks (GLUE, SuperGLUE, SQuAD): ~0.1–0.5 GB
+      - ImageNet: ~150 GB → skip, manual download
+      - CIFAR-10/100: ~0.2 GB → include
+      - Large LM pretraining datasets: usually skip
+      - When uncertain, use web search to find the dataset card or repo README for actual sizes.
+   b) For each baseline:
+      - A typical GitHub repo with weights: 0.5–5 GB
+      - Large pretrained checkpoints (BERT-large, ViT-L): 0.5–1.5 GB
+      - Estimate: if no weights needed (config-only baseline), ~0.01 GB
+   c) Apply the `dataset_size_limit_gb` cap: sum of all selected dataset sizes must fit.
+   d) Apply GPU VRAM check: if the paper's training hyperparameters (batch size, model size) would exceed `gpu_vram_limit_gb`, flag it and suggest:
+      - Reduce batch size (e.g., from 256 to 32 with gradient accumulation)
+      - Use mixed precision (fp16/bf16)
+      - Use a smaller model variant if available
+      - Quantization-aware inference only (skip full training if VRAM is too small)
+   e) Priority for inclusion:
+      1. Datasets in the paper's headline/main result table
+      2. Baselines with explicit download links from the paper
+      3. Ablation datasets or appendix baselines (lower priority)
+
+4. For `partial_scope.json`, define the MINIMUM reproducible evaluation:
+   - At least 1 dataset that fits within constraints
+   - At least 1 baseline (can be the paper's own method as "no-baseline" comparison)
+   - Unit tests must not require downloading > 200 MB (use --toy mode)
+   - Integration tests can use small dataset split (e.g., validation set only)
+
+5. For `download_list.json`:
+   - Sort by priority (most important first)
+   - Give exact download commands for each item:
+     - HuggingFace: `python -c "from datasets import load_dataset; load_dataset('<path>', split='<split>')"` or `huggingface-cli download <repo> --local-dir <path>`
+     - GitHub: `git clone --depth 1 <url> <local_path>`
+     - Direct URL: `wget -O <path> <url>`
+   - Mark items that exceed budget as `fits_budget: false` with a manual download note
+
+6. GPU VRAM adaptation plan:
+   - If the paper requires > `gpu_vram_limit_gb` GB VRAM for training:
+     - Document the original requirement
+     - Suggest concrete hyperparameter adjustments in `eval_plan.json` under `gpu_adaptation`
+     - The unit test plan should use `--toy` mode with tiny model/batch to fit in 6GB
+
+7. Use web search to verify:
+   - Dataset sizes (HuggingFace dataset cards, Kaggle pages, paper repos)
+   - Baseline code availability (GitHub repos, official project pages)
+   - Any official download instructions from the paper's project page
+
+8. Do NOT invent URLs. If a source URL cannot be found via search, write "Not found - search manually" in `download_command`.
+
+9. After writing all three JSON files, print a summary table to stdout:
+   ```
+   ===== Evaluation Plan Summary =====
+   Paper: <name>
+   Constraints: GPU ≤ 6GB VRAM, Datasets ≤ 5GB total
+
+   Selected datasets (N total, X.XX GB):
+     - <dataset>: X.XX GB [huggingface|clone|...]
+
+   Skipped datasets (M items):
+     - <dataset>: too large (X.XX GB)
+
+   Selected baselines (N total, X.XX GB):
+     - <baseline>: X.XX GB [main|ablation]
+
+   Partial eval scope: <one-line description>
+   Unit tests: <N test commands>
+   Integration tests: <N test commands>
+   ====================================
+   ```
+
+Example:
+For a paper with ImageNet + CIFAR-100 datasets and 3 baselines (L2P, DualPrompt, SimpleCIL):
+- CIFAR-100: 0.16 GB → include (main results)
+- ImageNet: 150 GB → skip (exceeds 5 GB cap), write manual download instruction
+- L2P: 0.3 GB clone → include (main baseline)
+- DualPrompt: 0.3 GB clone → include (main baseline)
+- SimpleCIL: 0.1 GB config-only → include
+- GPU: paper uses batch=256, ResNet-50 → fits in 6 GB VRAM at batch=64
+
+Signs of success:
+- All three JSON files are written to `eval_plan_output_dir`.
+- `eval_plan.json` contains a `feasibility_analysis` section with explicit size estimates.
+- `partial_scope.json` contains at least 1 dataset and 1 baseline.
+- `download_list.json` contains ordered entries with exact download commands.
+- Every skipped item has a clear reason in `skipped_items`.
+- The summary table is printed to stdout.
+
+Now read the paper JSON and eval info. Produce all three output files. Do not stop after planning — write the files directly.

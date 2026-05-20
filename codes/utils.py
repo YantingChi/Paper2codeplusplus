@@ -1,6 +1,7 @@
 import json
 import re
 import os
+import ast
 from datetime import datetime
 
 def extract_planning(trajectories_json_file_path):
@@ -95,6 +96,11 @@ def content_to_json3(data):
         
         # print(f"[DEBUG] utils.py > content_to_json3 ")
         # return None 
+        try:
+            clean_data = re.sub(r'\[CONTENT\]|\[/CONTENT\]', '', data).strip()
+            return ast.literal_eval(clean_data)
+        except (ValueError, SyntaxError):
+            pass
         return content_to_json4(data)
     
 def content_to_json4(data):
@@ -151,6 +157,15 @@ def format_json_data(data):
 
 def cal_cost(response_json, model_name):
     model_cost = {
+        # gpt-5.4
+        "gpt-5.4": {"input": 2.50, "cached_input": 0.25, "output": 15.00},
+        "gpt-5.4-2026-03-05": {"input": 2.50, "cached_input": 0.25, "output": 15.00},
+
+        # gpt-5.2
+        "gpt-5.2": {"input": 1.75, "cached_input": 0.175, "output": 14.00},
+        "gpt-5.2-chat-latest": {"input": 1.75, "cached_input": 0.175, "output": 14.00},
+        "gpt-5.2-codex": {"input": 1.75, "cached_input": 0.175, "output": 14.00},
+
         # gpt-4.1
         "gpt-4.1": {"input": 2.00, "cached_input": 0.50, "output": 8.00},
         "gpt-4.1-2025-04-14": {"input": 2.00, "cached_input": 0.50, "output": 8.00},

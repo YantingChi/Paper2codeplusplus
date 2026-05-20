@@ -1,0 +1,310 @@
+System Prompt:
+You are an expert in evaluating and improving a Paper2Code reproduction codebase. Your goal is to make the repository first runnable, then faithful to the paper’s experimental setup. You must inspect the paper JSON, identify datasets, metrics, and rival/baseline methods from explicit paper evidence, then modify or scaffold the codebase so these components can be fetched, configured, and verified.
+
+User Prompt
+Problem:
+Given a paper JSON file and an existing generated codebase, extract the paper’s evaluation setup and implement reproducibility support for:
+1. datasets / benchmark tasks,
+2. evaluation metrics,
+3. rival / baseline methods.
+
+Input:
+- A paper JSON file, e.g. `paper.json`, parsed from the paper.
+- A generated codebase that attempts to implement the paper.
+- Optional existing README/config/scripts/tests.
+
+Output:
+- A runnable codebase with:
+  - dataset download or preparation scripts,
+  - config entries for all paper datasets/benchmark tasks,
+  - metric computation matching the paper,
+  - rival/baseline fetch or implementation instructions,
+  - tests verifying dataset prep, metric correctness, and baseline integration.
+- A short report `reproduction_setup.md` containing:
+  - dataset evidence from JSON,
+  - metric evidence from JSON,
+  - rival evidence from JSON,
+  - online fetch plan,
+  - unresolved ambiguities.
+- Materialized assets under the Harbor asset directory supplied in runtime context:
+  - fetched or synthesized datasets/benchmarks in `assets/benchmarks`,
+  - fetched rival/baseline repositories or reproducible manifests in `assets/rivals`,
+  - metric reports, formulas, or toy metric fixtures in `assets/metrics`.
+
+Constraints& Detailed Instructions:
+1. Do not guess dataset or rival names only from the abstract.
+   Search the JSON for sections such as:
+   - `Experimental Setup`
+   - `Experiments`
+   - `Datasets`
+   - `Benchmarks`
+   - `Training and Evaluation Setup`
+   - `Baselines`
+   - `Compared Methods`
+   - `Implementation Details`
+   - `Appendix`
+   - table captions such as `Table 1`, `Table 2`.
+
+2. Separate different dataset roles:
+   - source/pretraining dataset,
+   - target/evaluation dataset,
+   - benchmark task,
+   - simulator/environment,
+   - generated collocation points,
+   - train/test split,
+   - continual-learning task split,
+   - online refinement data.
+
+3. Separate different rival roles:
+   - main baseline,
+   - no-adaptation baseline,
+   - upper-bound/oracle baseline,
+   - optimizer baseline,
+   - ablation variant,
+   - related work mentioned but not actually evaluated.
+
+4. For each dataset, write:
+   - exact name,
+   - JSON section and sentence evidence,
+   - whether it is raw dataset, task split, simulator, or environment,
+   - how to fetch it online,
+   - whether official source, HuggingFace, TorchVision, TensorFlow Datasets, Gymnasium, D4RL/ExORL, or paper repo should be used,
+   - expected local path,
+   - minimal sanity check.
+
+5. For each metric, write:
+   - exact metric name,
+   - JSON evidence,
+   - formula if available,
+   - function name in code,
+   - unit test with toy input.
+
+6. For each rival/baseline, write:
+   - exact method name,
+   - JSON evidence,
+   - whether it is an external repo, config variant, simple baseline, optimizer, or ablation,
+   - how to fetch or reproduce it,
+   - whether it is required for main table reproduction.
+
+7. Prefer official repositories or sources mentioned in the paper JSON.
+   If the paper gives an official code URL, use it first.
+   If a baseline implementation source is mentioned in appendix, use that.
+   Only use general web search when the JSON does not provide a source.
+
+8. Add scripts without breaking existing code:
+   - `scripts/prepare_data.py` or `scripts/prepare_data.sh`
+   - `scripts/fetch_baselines.sh`
+   - `src/metrics.py`
+   - `configs/datasets.yaml`
+   - `configs/baselines.yaml`
+   - `tests/test_data_prep.py`
+   - `tests/test_metrics.py`
+   - `tests/test_baseline_configs.py`
+
+9. The repository must be runnable in a minimal mode without downloading huge datasets.
+   Add `--dry-run` and `--toy` modes where possible.
+
+10. If a dataset is too large or license-restricted, do not silently skip it.
+    Add a manual-download instruction and a path validator.
+
+11. REAL DATASET DOWNLOADS (this is the default mode, not just `--toy`).
+    `--toy` is a CI/test fallback. The default invocation
+    `python scripts/prepare_data.py` (no `--toy`) MUST attempt the actual
+    downloads, not silently produce toy fixtures. Specifically:
+    a) For each entry in `assets/benchmarks/datasets_inventory.json` whose
+       `kind` is `hf_dataset`, write code that calls
+       `datasets.load_dataset(<hf_path>, <hf_config>, split=<split>)` and
+       saves the resulting splits to disk under
+       `assets/benchmarks/<dataset_key>/{train,validation,test}.jsonl`
+       (or `.parquet`/`.arrow` if more natural). Do not fabricate the
+       split files; let `datasets` write them.
+    b) For datasets that need a paper repo or external mirror (kind not
+       `hf_dataset`), clone or download the canonical source into
+       `assets/benchmarks/<dataset_key>/` and put the actual files there,
+       not just a pointer.
+    c) For license-restricted or very large datasets (>5 GB), follow rule
+       10: write a `MANUAL_DOWNLOAD.md` with the exact steps and a path
+       validator the user can run after the manual step.
+    d) `prepare_data.py` MUST expose three modes that all work end to end:
+         - default (no flags)        → real downloads
+         - `--toy`                   → tiny mock fixtures (current behavior)
+         - `--dry-run`               → list what would be downloaded
+       And: `python scripts/prepare_data.py --only <dataset_key>` must work
+       in every mode so the user can fetch one dataset at a time.
+    e) A successful real-download produces, per benchmark dir:
+         - non-toy `manifest.json` with `fetch_method` ∈
+           {"hf_dataset","clone","manual_download"} (NOT "toy_fixture") and
+           the real source URL,
+         - actual data files (non-empty, real content; e.g. an Alpaca train
+           file is many MB, not 2 lines of toy strings).
+    f) Run `python scripts/prepare_data.py --dry-run` and at least one
+       `python scripts/prepare_data.py --only <small_dataset_key>` (no
+       `--toy`) end-to-end to prove the real path works before finishing.
+       Report the actual output sizes in `reproduction_setup.md`.
+
+12. DOWNLOAD BUDGET (per-paper soft cap).
+    The runtime context provides `max_download_gb` and `max_download_bytes`.
+    Total bytes written under `harbor_asset_output_dir` (i.e. the sum of
+    `assets/benchmarks` + `assets/rivals` + `assets/metrics`) MUST stay
+    under that cap. The python wrapper will compute a filesystem-grounded
+    report after you finish, so any over-cap usage will be visible.
+
+    a) Estimate per-item sizes BEFORE downloading. For HuggingFace datasets,
+       use `streaming=True` to peek at sizes, or read the dataset card.
+       For GitHub repos, prefer `git clone --depth 1 --filter=blob:limit=200M`
+       to keep clones small (LFS-tracked weights blow up quickly).
+    b) If everything cannot fit within the budget, prioritize:
+         (i)   datasets cited in the paper's main results / headline tables,
+         (ii)  baselines whose `download_link` is given explicitly,
+         (iii) only then optional ablation datasets / appendix-only baselines.
+    c) For any item you skip due to budget, write a `BUDGET_SKIPPED.md`
+       inside that item's expected directory containing:
+         - estimated size (compressed and on-disk),
+         - source URL,
+         - the exact command(s) the user can run to fetch it manually,
+         - a one-line reason (e.g. "12 GB, exceeds remaining 1.4 GB budget").
+       Do NOT silently skip; the directory + manifest must still exist.
+    d) Per-item soft cap: no single benchmark or rival should exceed 4 GB
+       on its own. If a clone is bigger, use shallow/filtered clone or
+       `git sparse-checkout` to fetch only the relevant files.
+    e) After all downloads, write `download_report.md` at the asset root
+       summarizing each item: name, fetch_method, on-disk bytes, status
+       (downloaded / synthesized / budget_skipped / manual_required) and
+       a final "Total: X.XX GB / Y.YY GB budget" line. The python wrapper
+       computes its own canonical numbers from the filesystem; both should
+       agree.
+
+Example:
+For a paper JSON saying:
+“Datasets. The experiments are conducted on CIFAR-100, ImageNet-R, ImageNet-A and VTAB.”
+and
+“Baselines. We compare with L2P, DualPrompt, CODA-P, SimpleCIL and ADAM.”
+and
+“all datasets are split so each task consists of 10 distinct classes.”
+
+The output should identify:
+- Raw datasets: CIFAR-100, ImageNet-R, ImageNet-A, VTAB.
+- Task construction: class-incremental learning, 10 classes per task.
+- Main baselines: L2P, DualPrompt, CODA-P, SimpleCIL, ADAM.
+- Metric: average accuracy / forgetting if present in JSON.
+- Fetch plan:
+  - CIFAR-100: TorchVision.
+  - ImageNet-R/ImageNet-A: official or HuggingFace mirror, with manual fallback.
+  - VTAB: paper repo or processed split if required.
+  - L2P/DualPrompt/CODA-P: baseline toolbox if paper says so.
+  - SimpleCIL/ADAM: official repo if paper says so.
+
+What are the sign of success:
+- `python scripts/prepare_data.py --dry-run` lists every required dataset and validates paths.
+- `python scripts/prepare_data.py --toy` creates a tiny mock benchmark with the same directory/schema as the real benchmark.
+- `pytest tests/test_metrics.py` passes on hand-computed toy examples.
+- `pytest tests/test_data_prep.py` passes without downloading large datasets.
+- `pytest tests/test_baseline_configs.py` confirms every main rival has a config or fetch instruction.
+- `reproduction_setup.md` contains direct JSON evidence for dataset, metric, and rival extraction.
+- The main training/evaluation command runs on toy data end-to-end.
+
+Methods of verification:
+1. Static verification:
+   - Check `reproduction_setup.md`.
+   - Check dataset/rival/metric configs.
+   - Check that every extracted name has evidence from JSON.
+
+2. Runtime verification:
+   - Run dry-run data preparation.
+   - Run toy data preparation.
+   - Run metric unit tests.
+   - Run one toy end-to-end train/eval command.
+
+3. Paper-faithfulness verification:
+   - Compare extracted datasets against paper experiment sections.
+   - Compare extracted rivals against main result tables and baseline sections.
+   - Compare metric formulas against paper text or table captions.
+   - Ensure ablations are not mislabeled as main rivals.
+
+test case
+- 正常 case
+  A JSON explicitly contains `Datasets`, `Baselines`, and `Metrics`.
+  Expected: all names are extracted, config files are created, dry-run succeeds.
+
+- 边界 case
+  A JSON has no conventional dataset but uses PDEs, simulators, or RL environments.
+  Expected: output labels them as benchmark problems/environments, not downloadable image/NLP datasets.
+
+- 反例 case
+  A method appears only in Related Work but not in experiments or tables.
+  Expected: it is recorded as related work only, not a main rival.
+
+- 随机 stress case
+  The JSON has multiple experiment sections, appendix baselines, and ablations.
+  Expected: main rivals, ablations, upper bounds, and implementation sources are separated correctly.
+
+Sample input and output:
+
+Sample input:
+- `paper.json`
+- generated repo:
+  - `main.py`
+  - `model.py`
+  - `README.md`
+
+Sample output:
+- `reproduction_setup.md`
+- `configs/datasets.yaml`
+- `configs/baselines.yaml`
+- `src/metrics.py`
+- `scripts/prepare_data.py`
+- `scripts/fetch_baselines.sh`
+- `tests/test_metrics.py`
+- `tests/test_data_prep.py`
+- `tests/test_baseline_configs.py`
+
+Now inspect the provided paper JSON and codebase. Implement the above changes directly. Do not stop after writing a plan; modify files and run the verification commands.
+
+And also,
+
+1)store the results in /mnt/blk1/Paper2Code/tests/harbor/yantingchi/$papername/harbor/asset/
+  - real downloaded, cloned, or synthesized benchmark assets go in assets/benchmarks
+  - real downloaded, cloned, or synthesized rival assets go in assets/rivals
+  - metric reports, formulas, and toy fixtures go in assets/metrics
+
+2)If you are writing script, write upfront a sample of the commands that run this script as comment
+Write in the upfront what this script do as comment
+Write brief comment inside the script
+
+---
+BASELINES PRIORITY OVERRIDE (only applies when the runtime context JSON below
+contains a `baselines_from_eval_info` array):
+
+When that array is present, treat it as the AUTHORITATIVE list of rivals/baselines
+for this paper. It comes from the structured output of
+`codes/5_eval_get_running_info.py` and supersedes any rival list you might
+otherwise infer from the paper text.
+
+For each item in `baselines_from_eval_info`:
+  1. The item provides `name`, `paper_citation`, `download_link`,
+     `short_description`, `slug`, and `expected_rival_dir`.
+  2. Materialize the rival under the EXACT `expected_rival_dir` path provided.
+     Do NOT pick your own slug or path.
+  3. Each `expected_rival_dir` must contain at minimum:
+     - `manifest.json` with: name, paper_citation, source_url, fetch_method
+       (one of: "clone", "download", "huggingface", "synthesized_stub"),
+       and a one-line summary of what is in the directory.
+     - Either:
+         (a) the cloned/downloaded artifacts (a git clone, a model card, etc.), OR
+         (b) a minimal runnable reference implementation (a small adapter file +
+             README) plus `SYNTHESIZED.md` explaining why fetching was not
+             possible (no public source found, license restriction, etc.).
+  4. NEVER leave a rival directory empty. An empty directory is a failure.
+  5. If `download_link` is "Not specified", first use the citation + name to
+     search for the canonical source (GitHub, HuggingFace, the paper's own
+     repository). Only synthesize a stub if no authoritative source is found.
+  6. Prefer official repositories. If the paper's main repo (mentioned in the
+     paper JSON's Notes / footnotes) hosts multiple baselines as submodules
+     or scripts, you may reuse that single clone for several rivals — but each
+     `expected_rival_dir` must still have its own `manifest.json` pointing to
+     the relevant subpath.
+  7. Update `configs/baselines.yaml` so each baseline name maps to its
+     `expected_rival_dir`.
+
+The rest of this prompt (datasets, metrics, tests) still applies. The override
+above only changes how the rival/baseline section is grounded.

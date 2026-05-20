@@ -4,14 +4,16 @@ from tqdm import tqdm
 import re
 import sys
 import copy
-from openai_client import create_openai_client
+
 from utils import extract_planning, content_to_json, extract_code_from_content, print_response, print_log_cost, load_accumulated_cost, save_accumulated_cost
 import argparse
+
+from openai_client import create_openai_client
 
 parser = argparse.ArgumentParser()
 
 parser.add_argument('--paper_name',type=str)
-parser.add_argument('--gpt_version',type=str, default="o3-mini")
+parser.add_argument('--gpt_version',type=str, default="gpt-5.4")
 parser.add_argument('--paper_format',type=str, default="JSON", choices=["JSON", "LaTeX"])
 parser.add_argument('--pdf_json_path', type=str) # json format
 parser.add_argument('--pdf_latex_path', type=str) # latex format

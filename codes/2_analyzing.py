@@ -2,16 +2,19 @@ import json
 import os
 from tqdm import tqdm
 import sys
-from openai_client import create_openai_client
+
 from utils import extract_planning, content_to_json, print_response, print_log_cost, load_accumulated_cost, save_accumulated_cost
 import copy
 
 import argparse
 
+from openai_client import create_openai_client
+
+
 parser = argparse.ArgumentParser()
 
 parser.add_argument('--paper_name',type=str)
-parser.add_argument('--gpt_version',type=str, default="o3-mini")
+parser.add_argument('--gpt_version',type=str, default="gpt-5.4")
 parser.add_argument('--paper_format',type=str, default="JSON", choices=["JSON", "LaTeX"])
 parser.add_argument('--pdf_json_path', type=str) # json format
 parser.add_argument('--pdf_latex_path', type=str) # latex format
@@ -186,18 +189,18 @@ for todo_file_name in tqdm(todo_file_lst):
     total_accumulated_cost = temp_total_accumulated_cost
 
     # save
-    with open(f'{artifact_output_dir}/{todo_file_name}_simple_analysis.txt', 'w') as f:
+    save_todo_file_name = todo_file_name.replace("/", "_")
+    with open(f'{artifact_output_dir}/{save_todo_file_name}_simple_analysis.txt', 'w') as f:
         f.write(completion_json['choices'][0]['message']['content'])
 
 
     done_file_lst.append(todo_file_name)
 
     # save for next stage(coding)
-    todo_file_name = todo_file_name.replace("/", "_") 
-    with open(f'{output_dir}/{todo_file_name}_simple_analysis_response.json', 'w') as f:
+    with open(f'{output_dir}/{save_todo_file_name}_simple_analysis_response.json', 'w') as f:
         json.dump(responses, f)
 
-    with open(f'{output_dir}/{todo_file_name}_simple_analysis_trajectories.json', 'w') as f:
+    with open(f'{output_dir}/{save_todo_file_name}_simple_analysis_trajectories.json', 'w') as f:
         json.dump(trajectories, f)
 
 save_accumulated_cost(f"{output_dir}/accumulated_cost.json", total_accumulated_cost)

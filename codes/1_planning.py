@@ -3,8 +3,11 @@ from tqdm import tqdm
 import argparse
 import os
 import sys
-from openai_client import create_openai_client
+
 from utils import print_response, print_log_cost, load_accumulated_cost, save_accumulated_cost
+
+from openai_client import create_openai_client
+
 
 parser = argparse.ArgumentParser()
 
