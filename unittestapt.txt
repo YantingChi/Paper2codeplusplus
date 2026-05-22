@@ -1,0 +1,208 @@
+provider=azure
+api_key_source=AZURE_OPENAI_API_KEY
+azure_endpoint=https://csci8980-group11-resource.openai.azure.com/
+azure_api_version=2024-12-01-preview
+provider=azure
+api_key_source=AZURE_OPENAI_API_KEY
+azure_endpoint=https://csci8980-group11-resource.openai.azure.com/
+azure_api_version=2024-12-01-preview
+[run_codex] Logging to /mnt/blk1/Paper2Code/outputs/aalog/run_codex_adaptive-pruning_2.log (index 2)
+adaptive-pruning
+Running stages: 9
+------- Stage 9a: Categorize Rubric + Pass 1 -------
+[c9a categorize] 62 rubric leaves → intermediate=50, comparison=12
+[c9a categorize] wrote /mnt/blk1/Paper2Code/outputs/paperbench_tests/adaptive-pruning_tests/categorized_rubric.json
+[c9a categorize] wrote /mnt/blk1/Paper2Code/outputs/paperbench_tests/adaptive-pruning_tests/repo_api_manifest.json
+🌟 Usage Summary 🌟
+[c9a Pass1] adaptive-pruning
+🛠️ Model: gpt-5.2
+📥 Input tokens: 69143 (Cost: $0.12100025)
+📦 Cached input tokens: 51456 (Cost: $0.00900480)
+📤 Output tokens: 14193 (Cost: $0.19870200)
+💵 Current total cost: $0.32870705
+🪙 Accumulated total cost so far: $0.32870705
+============================================
+
+============================================================
+c9a_categorize_and_plan summary — adaptive-pruning
+  Leaves total:        62
+  Leaves intermediate: 50
+  Leaves comparison:   12
+  Specs emitted:       62
+  Specs intermediate:  50
+  Specs comparison:    12
+  Uncovered leaves:    0
+  Tier corrections:    0
+  Output:              /mnt/blk1/Paper2Code/outputs/paperbench_tests/adaptive-pruning_tests/test_specs.json
+============================================================
+------- Stage 9b: Synthesize Unit Tests (both tiers) -------
+[c9b synthesize] tier=both → 62 specs (out of 62 total)
+🌟 Usage Summary 🌟
+[c9b Pass2 both] batch 1
+🛠️ Model: gpt-5.2
+📥 Input tokens: 59606 (Cost: $0.10431050)
+📦 Cached input tokens: 50560 (Cost: $0.00884800)
+📤 Output tokens: 879 (Cost: $0.01230600)
+💵 Current total cost: $0.12546450
+🪙 Accumulated total cost so far: $0.12546450
+============================================
+
+🌟 Usage Summary 🌟
+[c9b Pass2 both] batch 2
+🛠️ Model: gpt-5.2
+📥 Input tokens: 59040 (Cost: $0.10332000)
+📦 Cached input tokens: 50560 (Cost: $0.00884800)
+📤 Output tokens: 421 (Cost: $0.00589400)
+💵 Current total cost: $0.11806200
+🪙 Accumulated total cost so far: $0.24352650
+============================================
+
+🌟 Usage Summary 🌟
+[c9b Pass2 both] batch 3
+🛠️ Model: gpt-5.2
+📥 Input tokens: 2475 (Cost: $0.00433125)
+📦 Cached input tokens: 108032 (Cost: $0.01890560)
+📤 Output tokens: 604 (Cost: $0.00845600)
+💵 Current total cost: $0.03169285
+🪙 Accumulated total cost so far: $0.27521935
+============================================
+
+🌟 Usage Summary 🌟
+[c9b Pass2 both] batch 4
+🛠️ Model: gpt-5.2
+📥 Input tokens: 2310 (Cost: $0.00404250)
+📦 Cached input tokens: 108032 (Cost: $0.01890560)
+📤 Output tokens: 653 (Cost: $0.00914200)
+💵 Current total cost: $0.03209010
+🪙 Accumulated total cost so far: $0.30730945
+============================================
+
+🌟 Usage Summary 🌟
+[c9b Pass2 both] batch 5
+🛠️ Model: gpt-5.2
+📥 Input tokens: 2214 (Cost: $0.00387450)
+📦 Cached input tokens: 108032 (Cost: $0.01890560)
+📤 Output tokens: 735 (Cost: $0.01029000)
+💵 Current total cost: $0.03307010
+🪙 Accumulated total cost so far: $0.34037955
+============================================
+
+🌟 Usage Summary 🌟
+[c9b Pass2 both] batch 6
+🛠️ Model: gpt-5.2
+📥 Input tokens: 2083 (Cost: $0.00364525)
+📦 Cached input tokens: 108032 (Cost: $0.01890560)
+📤 Output tokens: 617 (Cost: $0.00863800)
+💵 Current total cost: $0.03118885
+🪙 Accumulated total cost so far: $0.37156840
+============================================
+
+🌟 Usage Summary 🌟
+[c9b Pass2 both] batch 7
+🛠️ Model: gpt-5.2
+📥 Input tokens: 2283 (Cost: $0.00399525)
+📦 Cached input tokens: 108032 (Cost: $0.01890560)
+📤 Output tokens: 704 (Cost: $0.00985600)
+💵 Current total cost: $0.03275685
+🪙 Accumulated total cost so far: $0.40432525
+============================================
+
+🌟 Usage Summary 🌟
+[c9b Pass2 both] batch 8
+🛠️ Model: gpt-5.2
+📥 Input tokens: 2205 (Cost: $0.00385875)
+📦 Cached input tokens: 108032 (Cost: $0.01890560)
+📤 Output tokens: 590 (Cost: $0.00826000)
+💵 Current total cost: $0.03102435
+🪙 Accumulated total cost so far: $0.43534960
+============================================
+
+🌟 Usage Summary 🌟
+[c9b Pass2 both] batch 9
+🛠️ Model: gpt-5.2
+📥 Input tokens: 2047 (Cost: $0.00358225)
+📦 Cached input tokens: 108032 (Cost: $0.01890560)
+📤 Output tokens: 777 (Cost: $0.01087800)
+💵 Current total cost: $0.03336585
+🪙 Accumulated total cost so far: $0.46871545
+============================================
+
+🌟 Usage Summary 🌟
+[c9b Pass2 both] batch 10
+🛠️ Model: gpt-5.2
+📥 Input tokens: 2014 (Cost: $0.00352450)
+📦 Cached input tokens: 108032 (Cost: $0.01890560)
+📤 Output tokens: 826 (Cost: $0.01156400)
+💵 Current total cost: $0.03399410
+🪙 Accumulated total cost so far: $0.50270955
+============================================
+
+🌟 Usage Summary 🌟
+[c9b Pass2 both] batch 11
+🛠️ Model: gpt-5.2
+📥 Input tokens: 1829 (Cost: $0.00320075)
+📦 Cached input tokens: 108032 (Cost: $0.01890560)
+📤 Output tokens: 777 (Cost: $0.01087800)
+💵 Current total cost: $0.03298435
+🪙 Accumulated total cost so far: $0.53569390
+============================================
+
+🌟 Usage Summary 🌟
+[c9b Pass2 both] batch 12
+🛠️ Model: gpt-5.2
+📥 Input tokens: 1801 (Cost: $0.00315175)
+📦 Cached input tokens: 108032 (Cost: $0.01890560)
+📤 Output tokens: 487 (Cost: $0.00681800)
+💵 Current total cost: $0.02887535
+🪙 Accumulated total cost so far: $0.56456925
+============================================
+
+🌟 Usage Summary 🌟
+[c9b Pass2 both] batch 13
+🛠️ Model: gpt-5.2
+📥 Input tokens: 728 (Cost: $0.00127400)
+📦 Cached input tokens: 108032 (Cost: $0.01890560)
+📤 Output tokens: 281 (Cost: $0.00393400)
+💵 Current total cost: $0.02411360
+🪙 Accumulated total cost so far: $0.58868285
+============================================
+
+[c9b synthesize] wiped existing tests_dir/intermediate/ before regenerating.
+[c9b synthesize] wiped existing tests_dir/comparison/ before regenerating.
+[c9b synthesize] collect-only failed; running one more audit/repair pass.
+============================================================
+c9b_synthesize_tests summary — adaptive-pruning (tier=both)
+  Specs in:           62
+  Pass 2 functions:   62
+  Manifest entries:   62
+  Tests dir:          /mnt/blk1/Paper2Code/outputs/paperbench_repos/adaptive-pruning_repo/tests
+  Audit (intermediate ): PASS (0 blockers, 0 warnings)
+  Audit (comparison   ): PASS (0 blockers, 0 warnings)
+  pytest --collect-only: FAILED
+  collect-only output (tail):
+    /home/yantingchi/.local/lib/python3.10/site-packages/transformers/generation/utils.py:120: in <module>
+        from accelerate.hooks import AlignDevicesHook, add_hook_to_module
+    /home/yantingchi/.local/lib/python3.10/site-packages/accelerate/__init__.py:16: in <module>
+        from .accelerator import Accelerator
+    /home/yantingchi/.local/lib/python3.10/site-packages/accelerate/accelerator.py:37: in <module>
+        from .big_modeling import _attach_context_parallel_hooks
+    /home/yantingchi/.local/lib/python3.10/site-packages/accelerate/big_modeling.py:25: in <module>
+        from .hooks import (
+    /home/yantingchi/.local/lib/python3.10/site-packages/accelerate/hooks.py:23: in <module>
+        from .utils import (
+    /home/yantingchi/.local/lib/python3.10/site-packages/accelerate/utils/__init__.py:224: in <module>
+        from .bnb import has_4bit_bnb_layers, load_and_quantize_model
+    /home/yantingchi/.local/lib/python3.10/site-packages/accelerate/utils/bnb.py:29: in <module>
+        from ..big_modeling import dispatch_model, init_empty_weights
+    E   ImportError: cannot import name 'dispatch_model' from partially initialized module 'accelerate.big_modeling' (most likely due to a circular import) (/home/yantingchi/.local/lib/python3.10/site-packages/accelerate/big_modeling.py)
+    =========================== short test summary info ============================
+    ERROR outputs/paperbench_repos/adaptive-pruning_repo/tests/comparison/test_comparisons.py
+    ERROR outputs/paperbench_repos/adaptive-pruning_repo/tests/intermediate/test_key_experiments_are_executed_to_generate_the_paper_s_reporte.py
+    !!!!!!!!!!!!!!!!!!! Interrupted: 2 errors during collection !!!!!!!!!!!!!!!!!!!!
+    ==================== 41 tests collected, 2 errors in 1.99s =====================
+  Accumulated cost: $0.588683
+============================================================
+[ERROR] pytest --collect-only still failed after repair; unresolved blocker listed above.
+[run_codex] ERROR during Stage 9b: Synthesize Unit Tests: command failed with exit status 1
+[run_codex] Last command: "$PYTHON_BIN" "$ROOT_DIR/codes/9b_synthesize_tests.py" --specs_path "$TESTS_OUTPUT_DIR/test_specs.json" --generated_repo_path "$OUTPUT_REPO_DIR" --output_dir "$TESTS_OUTPUT_DIR" --gpt_version "$GPT_VERSION" --tier both
+[run_codex] PAPER_NAME=adaptive-pruning; START_STAGE=0; ONLY_STAGE=unset; STAGES=9

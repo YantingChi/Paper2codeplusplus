@@ -17,6 +17,7 @@
 import ast
 import json
 import re
+import shutil
 import subprocess
 import sys
 from pathlib import Path
@@ -1125,6 +1126,36 @@ def remove_legacy_root_test_files(tests_dir: Path) -> List[str]:
         py_path.unlink()
         removed.append(py_path.name)
     return removed
+
+
+# Wipe tests_dir/<tier>/ entirely so a re-run doesn't leave orphans behind.
+# Used before assemble_test_files writes the fresh per-tier subdir contents.
+def wipe_tier_subdir(tests_dir: Path, tier: str) -> bool:
+    """Delete tests_dir/<tier>/ if it exists. Returns True if anything was removed."""
+    if tier not in ("intermediate", "comparison"):
+        return False
+    target = tests_dir / tier
+    if not target.exists():
+        return False
+    shutil.rmtree(target, ignore_errors=True)
+    return True
+
+
+# Warn if a doubly-nested tests/tests/ subdir is present (orphan from misconfigured
+# prior runs that pointed --output_dir at the repo's tests/ instead of the sidecar).
+# We do NOT auto-delete it — it could contain hand-written content. Leave it to the
+# user to inspect and clean manually.
+def warn_if_doubly_nested_tests(tests_dir: Path) -> bool:
+    nested = tests_dir / "tests"
+    if not nested.exists() or not nested.is_dir():
+        return False
+    print(
+        f"[c9b synthesize] WARNING: doubly-nested tests directory exists at {nested}. "
+        "This is likely orphan content from a previous mis-configured run; please "
+        "inspect and remove it manually if it's not user-owned."
+    )
+    return True
+
 
 CONFTEST_TEMPLATE = '''import json
 import os

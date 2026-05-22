@@ -3,17 +3,25 @@
 # What this file does:
 #   Reads test_specs.json (produced by 9a_categorize_and_plan.py), filters the
 #   specs by `--tier`, then runs Pass 2 (LLM converts each spec into pytest
-#   code), assembles the resulting functions into per-tier subdirectories,
-#   writes the shared conftest.py + pytest.ini, runs Pass 3 audit, and applies
-#   Pass 4 repair if the audit flagged any blockers.
+#   code), assembles the resulting functions into per-tier subdirectories
+#   INSIDE the generated repo, writes the shared conftest.py + pytest.ini,
+#   runs Pass 3 audit, and applies Pass 4 repair if the audit flagged any
+#   blockers.
 #
-# Per-tier output layout:
-#   <output_dir>/tests/intermediate/test_<branch_slug>.py
-#   <output_dir>/tests/comparison/test_comparisons.py
-#   <output_dir>/tests/conftest.py              (shared)
-#   <output_dir>/tests/pytest.ini               (shared)
-#   <output_dir>/test_manifest_<tier>.json
-#   <output_dir>/audit_<tier>.json
+# Output layout (two trees, split by purpose):
+#   <generated_repo_path>/tests/intermediate/test_<branch_slug>.py   (TEST FILES — in repo)
+#   <generated_repo_path>/tests/comparison/test_comparisons.py        (TEST FILES — in repo)
+#   <generated_repo_path>/tests/conftest.py                           (shared, in repo)
+#   <generated_repo_path>/tests/pytest.ini                            (shared, in repo)
+#   <output_dir>/test_manifest_<tier>.json                            (ARTIFACT — sidecar)
+#   <output_dir>/audit_<tier>.json                                    (ARTIFACT — sidecar)
+#   <output_dir>/scores/scores.json                                   (filled at pytest run time)
+#   <output_dir>/prompts/pass2_raw_<tier>.json                        (only if --save_raw_completion)
+#
+# Why split this way: the .sh runners (scripts/run_tests_*.sh) point pytest at
+# <repo>/tests/<tier>/, so writing tests there means no copy/symlink dance.
+# The generation artifacts stay in the sidecar so the repo doesn't get polluted
+# with audit/manifest/spec files.
 #
 # Usage example (both tiers in one run):
 #   python3.10 codes/9b_synthesize_tests.py \
@@ -55,6 +63,8 @@ from _unit_test_utils import (
     run_pass2_in_batches,
     sanitize_generated_functions,
     validate_and_resolve_specs,
+    warn_if_doubly_nested_tests,
+    wipe_tier_subdir,
     write_conftest,
     write_pytest_ini,
     write_repo_api_manifest,
@@ -145,7 +155,16 @@ def audit_and_repair_tier(
 # Stage B entrypoint: load specs, synthesize per-tier, assemble, audit, repair.
 def main(args: argparse.Namespace) -> None:
     output_dir = Path(args.output_dir).resolve()
-    tests_dir = output_dir / "tests"
+    # Generated test files live INSIDE the generated repo so the .sh runners
+    # (run_tests_local.sh / run_tests_intermediate.sh / run_tests_comparison.sh)
+    # find them at <repo>/tests/<tier>/ with no copy or symlink. Generation
+    # artifacts (specs, manifests, audits, scores, raw prompts) stay under
+    # output_dir — keeping the source repo clean.
+    repo_root = Path(args.generated_repo_path).resolve()
+    if not repo_root.exists():
+        print(f"[ERROR] Generated repo path does not exist: {repo_root}")
+        sys.exit(1)
+    tests_dir = repo_root / "tests"
     scores_dir = output_dir / "scores"
     raw_prompts_dir = output_dir / "prompts"
     output_dir.mkdir(parents=True, exist_ok=True)
@@ -163,10 +182,6 @@ def main(args: argparse.Namespace) -> None:
         sys.exit(1)
 
     # repo_symbols was cached by Stage A; fall back to recomputing if missing.
-    repo_root = Path(args.generated_repo_path).resolve()
-    if not repo_root.exists():
-        print(f"[ERROR] Generated repo path does not exist: {repo_root}")
-        sys.exit(1)
     manifest_path_value = specs_payload.get("repo_api_manifest_path")
     api_manifest: Dict[str, Any]
     if manifest_path_value and Path(manifest_path_value).is_file():
@@ -225,11 +240,23 @@ def main(args: argparse.Namespace) -> None:
         )
 
     # ---------- Assemble per-tier files ----------
+    # Pre-write cleanup so a re-run doesn't leave orphans behind:
+    #   1) Wipe each tier subdir we're about to repopulate.
+    #   2) Drop flat-layout test_*.py files at tests_dir's root.
+    #   3) Warn (don't auto-delete) if a doubly-nested tests/tests/ exists.
+    tiers_touched: List[str] = (
+        ["intermediate", "comparison"] if args.tier == "both" else [args.tier]
+    )
+    for tier in tiers_touched:
+        if wipe_tier_subdir(tests_dir, tier):
+            print(f"[c9b synthesize] wiped existing tests_dir/{tier}/ before regenerating.")
     removed_legacy_tests = remove_legacy_root_test_files(tests_dir)
     if removed_legacy_tests:
         print(
             f"[c9b synthesize] removed {len(removed_legacy_tests)} legacy root-level test file(s)."
         )
+    warn_if_doubly_nested_tests(tests_dir)
+
     tier_filter_arg = None if args.tier == "both" else args.tier
     manifest = assemble_test_files(
         functions, specs_by_id, tests_dir, tier_filter=tier_filter_arg
@@ -243,9 +270,6 @@ def main(args: argparse.Namespace) -> None:
     write_pytest_ini(tests_dir)
 
     # Per-tier manifest(s) — one file per tier so partial re-runs don't clobber the other.
-    tiers_touched: List[str] = (
-        ["intermediate", "comparison"] if args.tier == "both" else [args.tier]
-    )
     for tier in tiers_touched:
         tier_entries = [m for m in manifest if m["tier"] == tier]
         if not tier_entries:

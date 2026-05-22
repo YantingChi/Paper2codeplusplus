@@ -213,6 +213,32 @@ mkdir -p "$OUTPUT_BASE_DIR" "$OUTPUT_REPO_BASE_DIR" "$LOG_DIR"
 FAILED_PAPERS_PATH="$LOG_DIR/failed_papers.txt"
 : > "$FAILED_PAPERS_PATH"
 
+# ---- Centralized batch-level log ----
+# This is the orchestrator log: which papers launched, which finished, failure
+# table. Per-paper detail still flows into $LOG_DIR/${paper_name}.log (set up
+# below in the main loop) and into outputs/aalog/run_codex_<paper>_<N>.log
+# (written by each run_codex.sh subprocess independently).
+AALOG_DIR="$ROOT_DIR/outputs/aalog"
+mkdir -p "$AALOG_DIR"
+
+# allocate_run_log: atomically claim the next free outputs/aalog/<prefix>_<N>.log.
+allocate_run_log() {
+    local prefix="$1"
+    local n=1
+    while true; do
+        local candidate="$AALOG_DIR/${prefix}_${n}.log"
+        if (set -o noclobber; : > "$candidate") 2>/dev/null; then
+            RUN_LOG_FILE="$candidate"
+            return
+        fi
+        n=$((n + 1))
+    done
+}
+
+allocate_run_log "run_paperbench_codex_all"
+echo "[run_paperbench_codex_all] Batch-level log: $RUN_LOG_FILE"
+exec > >(tee -a "$RUN_LOG_FILE") 2>&1
+
 # Track background jobs by pid so parallel failures can be attributed to papers.
 declare -A PID_TO_NAME=()
 declare -A PID_TO_LOG=()

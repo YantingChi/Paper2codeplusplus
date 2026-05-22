@@ -223,7 +223,7 @@ PDF_JSON_PATH="${PDF_JSON_PATH:-$PAPERBENCH_JSONS_DIR/$PAPER_NAME/paper.json}"
 PDF_JSON_CLEANED_PATH="${PDF_JSON_CLEANED_PATH:-$PAPERBENCH_JSONS_DIR/$PAPER_NAME/paper_cleaned.json}"
 
 # ---- Output directories (derived from PAPER_NAME) ----
-OUTPUT_DIR="${OUTPUT_DIR:-$ROOT_DIR/outputs/paperbench/$PAPER_NAME}"
+OUTPUT_DIR="${OUTPUT_DIR:-$ROOT_DIR/outputs/paperbench_log/$PAPER_NAME}"
 OUTPUT_REPO_DIR="${OUTPUT_REPO_DIR:-$ROOT_DIR/outputs/paperbench_repos/${PAPER_NAME}_repo}"
 EVAL_DIR="${EVAL_DIR:-$OUTPUT_REPO_DIR/eval}"
 TESTS_OUTPUT_DIR="${TESTS_OUTPUT_DIR:-$ROOT_DIR/outputs/paperbench_tests/${PAPER_NAME}_tests}"
@@ -269,6 +269,56 @@ GRADER_MODEL="${GRADER_MODEL:-gpt-5.1-codex}"
 
 mkdir -p "$OUTPUT_DIR" "$OUTPUT_REPO_DIR" "$EVAL_DIR"
 
+# ---- Centralized run log + intermediate repo snapshots ----
+# Same scheme as run_codex.sh: one consolidated log per invocation under
+# outputs/aalog/, plus snapshots of OUTPUT_REPO_DIR after stage 3 and 8.1
+# under outputs/paperbench_subrepos/<paper>/. The snapshot is taken *before*
+# run_paperbench_grade so the snapshot reflects exactly what the grader scored.
+AALOG_DIR="$ROOT_DIR/outputs/aalog"
+SUBREPOS_DIR="$ROOT_DIR/outputs/paperbench_subrepos"
+mkdir -p "$AALOG_DIR" "$SUBREPOS_DIR"
+
+# allocate_run_log: atomically claim the next free outputs/aalog/<prefix>_<N>.log.
+allocate_run_log() {
+    local prefix="$1"
+    local n=1
+    while true; do
+        local candidate="$AALOG_DIR/${prefix}_${n}.log"
+        if (set -o noclobber; : > "$candidate") 2>/dev/null; then
+            RUN_INDEX="$n"
+            RUN_LOG_FILE="$candidate"
+            return
+        fi
+        n=$((n + 1))
+    done
+}
+
+# snapshot_repo: copy $OUTPUT_REPO_DIR to subrepos/$PAPER_NAME/<tag>_<N>/.
+# Re-uses RUN_INDEX when free; otherwise falls back to next free N for this tag.
+snapshot_repo() {
+    local tag="$1"
+    local paper_dir="$SUBREPOS_DIR/$PAPER_NAME"
+    mkdir -p "$paper_dir"
+    local n="$RUN_INDEX"
+    local dest=""
+    while true; do
+        dest="$paper_dir/${tag}_${n}"
+        if mkdir "$dest" 2>/dev/null; then
+            break
+        fi
+        n=$((n + 1))
+    done
+    echo "[run_codex_with_eval] Snapshotting $OUTPUT_REPO_DIR -> $dest"
+    if ! cp -a "$OUTPUT_REPO_DIR/." "$dest/"; then
+        echo "[run_codex_with_eval] ERROR: failed to snapshot $tag repo to $dest" >&2
+        return 1
+    fi
+}
+
+allocate_run_log "run_codex_with_eval_${PAPER_NAME}"
+echo "[run_codex_with_eval] Logging to $RUN_LOG_FILE (index $RUN_INDEX)"
+exec > >(tee -a "$RUN_LOG_FILE") 2>&1
+
 echo "$PAPER_NAME"
 if [[ -n "$STAGES" ]]; then
     echo "Running stages: $STAGES"
@@ -309,6 +359,7 @@ if run_stage 2; then
         --output_dir "$OUTPUT_DIR"
 fi
 
+STAGE3_RAN=0
 if run_stage 3; then
     echo "------- Stage 3: Coding -------"
     "$PYTHON_BIN" "$ROOT_DIR/codes/3_coding.py" \
@@ -317,6 +368,10 @@ if run_stage 3; then
         --pdf_json_path "$PDF_JSON_CLEANED_PATH" \
         --output_dir "$OUTPUT_DIR" \
         --output_repo_dir "$OUTPUT_REPO_DIR"
+    STAGE3_RAN=1
+fi
+if (( STAGE3_RAN == 1 )); then
+    snapshot_repo "stage3"
 fi
 run_paperbench_grade "after_stage3"
 
@@ -394,6 +449,7 @@ if run_stage 8; then
         --output_path "$PAPER2CODE_RUBRIC_PATH"
 fi
 
+STAGE81_RAN=0
 if run_stage 8.1; then
     echo "------- Stage 8.1: Self-Ameliorating (Code Dev patches) -------"
     "$PYTHON_BIN" "$ROOT_DIR/codes/8.1_self_ameliorating.py" \
@@ -402,6 +458,10 @@ if run_stage 8.1; then
         --output_dir "$OUTPUT_DIR" \
         --output_repo_dir "$OUTPUT_REPO_DIR" \
         --rubric_path "$PAPER2CODE_RUBRIC_PATH"
+    STAGE81_RAN=1
+fi
+if (( STAGE81_RAN == 1 )); then
+    snapshot_repo "stage8.1"
 fi
 run_paperbench_grade "after_stage8.1"
 
