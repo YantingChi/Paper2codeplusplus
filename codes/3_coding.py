@@ -58,9 +58,25 @@ code_msg = [
 You will receive a research paper in {paper_format} format, an overview of the plan, a Design in JSON format consisting of "Implementation approach", "File list", "Data structures and interfaces", and "Program call flow", followed by a Task in JSON format that includes "Required packages", "Required other language third-party packages", "Logic Analysis", and "Task list", along with a configuration file named "config.yaml". 
 Your task is to write code to reproduce the experiments and methodologies described in the paper. 
 
-The code you write must be elegant, modular, and maintainable, adhering to Google-style guidelines. 
-The code must strictly align with the paper's methodology, experimental setup, and evaluation metrics. 
-Write code with triple quoto."""}]
+The code you write must be elegant, modular, and maintainable, adhering to Google-style guidelines.
+The code must strictly align with the paper's methodology, experimental setup, and evaluation metrics.
+Write code with triple quoto.
+
+Every class definition and every function/method definition MUST be preceded by a Doxygen-style comment block using Python ## syntax:
+
+  ## @brief One-line description.
+  # @details Optional longer description.
+  # @param paramName Type Description of the parameter.
+  # @return Type Description of what is returned.
+
+Rules for Doxygen comments:
+- Use ## (double hash) to open the Doxygen block; use # (single hash) for continuation lines.
+- Every @param line must state: parameter name, its Python type annotation, and a brief description.
+- Include a @param line for EVERY parameter (including those with default values).
+- Include @return for every function/method that returns a non-None value.
+- Place the Doxygen block IMMEDIATELY before the def or class line with no blank line between them.
+- Module-level functions and class methods both require their own block.
+- Private helper methods (underscore prefix) require at minimum @brief."""}]
 
 def get_write_msg(todo_file_name, detailed_logic_analysis, done_file_lst): 
     code_files = ""

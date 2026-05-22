@@ -315,7 +315,13 @@ Rules:
 - Each edit must include `Filename: <relative path>` then a SEARCH block, ======= separator, REPLACE block, then the closing line.
 - Keep edits minimal and surgical. Do not rewrite whole files.
 - Do not rename existing functions/classes. Add new code where needed.
-- The SEARCH text must be an EXACT substring of the current file (whitespace matters)."""
+- The SEARCH text must be an EXACT substring of the current file (whitespace matters).
+- Whenever you add or modify a function or class, include or update its Doxygen comment block immediately before the def/class line:
+    ## @brief One-line description.
+    # @param paramName Type Description.
+    # @return Type Description.
+- When adding a new function, always precede it with a complete Doxygen block covering all parameters.
+- When modifying a function's signature (adding/removing parameters), update its @param lines to match."""
 
     user = f"""## Planning context
 

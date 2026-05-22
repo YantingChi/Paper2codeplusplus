@@ -18,10 +18,41 @@ Tier B — Final-comparison tests (A outperforms B):
   (assets/rivals/<rival_name>) populated by c1_download_dataset.py.
 
 Input:
-- A paper2code rubric JSON tree. Each node has: id, requirements, weight, sub_tasks,
-  task_category, finegrained_task_category.
+- A flattened list of rubric leaves. Each leaf has: rubric_id, rubric_text, weight,
+  task_category, finegrained_task_category, branch_slug, ancestor_path, and a
+  pre-assigned `tier` field ("intermediate" or "comparison"). The `tier` was
+  determined deterministically by the upstream pipeline (codes/_unit_test_utils.py
+  via `assign_tier`). You MUST echo the input `tier` verbatim — do NOT reclassify.
 - The cleaned paper JSON (text body, abstract, ref_entries).
-- A symbol map of the generated repo: {module_path: [class_or_function_names]}.
+- api_docs_json: AST-built API documentation of the generated repo. Structure:
+    {
+      "module.path": {
+        "ClassName": {
+          "module": "module.path",
+          "qualname": "ClassName",
+          "import_stmt": "from module.path import ClassName",
+          "access_expr": "ClassName",
+          "nested_in": null,
+          "brief": "one-line description",
+          "signature": "def __init__(self, param1: Type1, param2: Type2)",
+          "params": {"param1": "Type1", "param2": "Type2"},
+          "returns": ""
+        },
+        "function_name": {
+          "module": "module.path",
+          "qualname": "function_name",
+          "import_stmt": "from module.path import function_name",
+          "access_expr": "function_name",
+          "nested_in": null,
+          "brief": "one-line description",
+          "signature": "def function_name(arg1: Type1, arg2: Type2) -> ReturnType",
+          "params": {"arg1": "Type1", "arg2": "Type2"},
+          "returns": "ReturnType"
+        }
+      }
+    }
+  CRITICAL: Only reference class names, method names, and kwarg names that explicitly
+  appear in api_docs_json. Never invent or guess API names not present in the docs.
 
 Output:
 A JSON object with this exact schema:
@@ -37,6 +68,7 @@ A JSON object with this exact schema:
       "tier": "intermediate",                    // "intermediate" or "comparison"
       "branch_slug": "vesde",                    // slug of top-level rubric branch
       "paper_section_ref": "Section 3.1 / A2.1",
+      "api_refs": ["src.sde.vesde:VESDE"],
       "imports": ["from src.sde.vesde import VESDE"],
       "rationale": "Paper specifies f(x,t)=0.",
 
@@ -64,22 +96,51 @@ A JSON object with this exact schema:
   ]
 }
 
-Mapping rules (apply in order):
-1. If a rubric leaf's finegrained_task_category is "Method Implementation" → tier=intermediate.
-2. If finegrained_task_category is "Experimental Setup" AND the requirement names a numeric constant
-   (e.g. "sigma_max is set to 15") → tier=intermediate, comparison_kind=constant_equals.
-3. If finegrained_task_category is "Evaluation, Metrics & Benchmarking" AND the requirement implies
-   beating a baseline (or quotes a metric threshold against a named rival) → tier=comparison.
-4. If a rubric leaf is qualitative (no number, no rival, e.g. "the tokenizer is learnable")
-   → tier=intermediate, set comparison_kind=shape_only with a smoke check, AND set
+Tier is GIVEN — do not reclassify. Each leaf in <rubric_leaves_json> already has
+a `tier` field set deterministically upstream. Copy it verbatim into your spec.
+Fill the matching block:
+  - tier="intermediate" → populate the `intermediate` object (what_to_compute,
+    input_recipe, expected_value, expected_shape, tolerance, comparison_kind);
+    set `comparison` to null.
+  - tier="comparison"   → populate the `comparison` object (our_call, rival_call,
+    metric, comparison_op, margin, paper_table_ref); set `intermediate` to null.
+
+Spec-body rules (apply in order):
+1. If a leaf's requirement names a numeric constant (e.g. "sigma_max is set to 15") and
+   tier="intermediate", use comparison_kind=constant_equals with that value as expected_value.
+2. For qualitative leaves (no number, no rival, e.g. "the tokenizer is learnable") that
+   landed in tier=intermediate, use comparison_kind=shape_only with a smoke check and set
+   skip_reason="qualitative". For qualitative leaves that landed in tier=comparison
+   (uncommon — usually means the rubric is non-numeric Result-Analysis), still emit a
+   comparison block with our_call/rival_call from api_docs_json and set
    skip_reason="qualitative".
-5. If you cannot find a plausible symbol in repo_symbols to import for a leaf → still emit
-   the spec but set skip_reason="no_symbol" and put your best-guess import in `imports`.
-6. The branch_slug is the slug of the leaf's top-level ancestor under the rubric root
+3. For every repo API you target, add a structured `api_refs` entry in the form
+   `module.path:QualifiedName` using the exact module and key from api_docs_json.
+   For nested classes, use the full qualified key, e.g.
+   `src.algorithms.distillation:DistillationManager.TrTransform`.
+4. If you cannot find a plausible symbol in api_docs_json to import for a leaf → still emit
+   the spec but set skip_reason="no_symbol" and leave `api_refs` and `imports` empty.
+5. The branch_slug is the slug of the leaf's top-level ancestor under the rubric root
    (lowercase, underscores). Example: ancestor "Variance Exploding SDE (VESDE) ..." → "vesde".
+   Echo the branch_slug already present on the input leaf.
 
 Constraints:
-- Use ONLY the provided rubric, paper text, and symbol map. Do NOT invent numbers or symbols.
+- Use ONLY the provided rubric, paper text, and api_docs_json. Do NOT invent numbers or symbols.
+- Treat api_refs as the source of truth for repo APIs. `imports` is only a resolved convenience
+  field and may be rewritten by the static validator.
+- For "constant_equals" tests: target the simplest Config dataclass that exposes the constant
+  (e.g. APTConfig().scaling) rather than a heavyweight class requiring complex dependencies.
+- If instantiating a class requires other class instances as constructor arguments (visible in
+  its "params" dict in api_docs_json), set skip_reason="qualitative" so the test is marked xfail.
+- Only reference method names that appear in api_docs_json for that class. If a method name is
+  not found, use a hasattr() smoke check and set skip_reason="qualitative".
+- Never reference test files: any `imports` entry pointing to `tests.*` (e.g.
+  `from tests.test_foo import TestBar`) is FORBIDDEN — repo tests are not a reusable library.
+  If a leaf appears to require a repo test helper, set skip_reason="qualitative" and have the
+  Pass-2 emitter produce a smoke check.
+- If a symbol in api_docs_json is keyed as `OuterClass.InnerClass` (dot in the key), it is a
+  nested class. Never add `from <module> import InnerClass` to imports — refer to it as
+  `OuterClass.InnerClass` after importing the outer class.
 - Every numeric `expected_value` and every `margin` MUST be traceable to a sentence in the paper.
   If you cannot find one, prefer comparison_kind=shape_only over fabricating a number.
 - Tests must be deterministic on tiny inputs. Avoid input_recipe that requires datasets or

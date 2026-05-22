@@ -1,2 +1,0 @@
-['bash /oracle/solution.sh', 'Enter']
-['bash ', '/tests/run-tests.sh', 'Enter']

@@ -1,2 +1,0 @@
-error: Failed to inspect Python interpreter from active virtual environment at `terminal-bench/.venv/bin/python3`
-  Caused by: Python interpreter not found at `/home/yantingchi/Desktop/DK/Paper2Code/terminal-bench/.venv/bin/python3`

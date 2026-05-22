@@ -1,234 +1,208 @@
-# 📄 Paper2Code: Automating Code Generation from Scientific Papers in Machine Learning
+# Paper2Code++
 
-![PaperCoder Overview](./assets/papercoder_overview.png)
+Paper2Code++ generates a paper-specific reproduction repository from a cleaned
+paper input, then can optionally build evaluation rubrics, tests, and Harbor
+benchmark tasks around that generated repository.
 
-📄 [Read the paper on arXiv](https://arxiv.org/abs/2504.17192)
+## User-configurable values
 
-**PaperCoder** is a multi-agent LLM system that transforms paper into a code repository.
-It follows a three-stage pipeline: planning, analysis, and code generation, each handled by specialized agents.  
-Our method outperforms strong baselines on both Paper2Code and PaperBench and produces faithful, high-quality implementations.
-
----
-
-## 🗺️ Table of Contents
-
-- [⚡ Quick Start](#-quick-start)
-- [📚 Detailed Setup Instructions](#-detailed-setup-instructions)
-- [📦 Paper2Code Benchmark Datasets](#-paper2code-benchmark-datasets)
-- [📊 Model-based Evaluation of Repositories](#-model-based-evaluation-of-repositories-generated-by-papercoder)
-
----
-
-## ⚡ Quick Start
-- Note: The following command runs example paper ([Attention Is All You Need](https://arxiv.org/abs/1706.03762)).  
-
-### Using OpenAI API
-- 💵 Estimated cost for using o3-mini: $0.50–$0.70
+Set these values before running commands. The paths and model name below are
+examples; replace them for your paper and environment.
 
 ```bash
-pip install openai
+export PAPER_NAME="adaptive-pruning"
+export PAPER_FORMAT="JSON"
+export PAPER_JSON_PATH="/absolute/path/to/paper_cleaned.json"
+export PAPER_LATEX_PATH=""
+export MODEL="gpt-5.4"
 
-export OPENAI_API_KEY="<OPENAI_API_KEY>"
+export RUN_ROOT="/mnt/blk1/Paper2Code/outputs/${PAPER_NAME}"
+export PIPELINE_OUTPUT_DIR="${RUN_ROOT}/planning"
+export GENERATED_REPO_DIR="${RUN_ROOT}/generated_repo"
 
-cd scripts
-bash run.sh
+export EVAL_INFO_JSON="${RUN_ROOT}/eval_info.json"
+export EVAL_PLAN_DIR="${RUN_ROOT}/eval_plan"
+export HARBOR_ASSET_DIR="${RUN_ROOT}/harbor_asset"
+export RUBRIC_PASS1_JSON="${RUN_ROOT}/rubric_pass1.json"
+export RUBRIC_JSON="${RUN_ROOT}/paper2code_rubric.json"
+export UNIT_TEST_DIR="${RUN_ROOT}/unit_tests"
+export HARBOR_OUTPUT_DIR="/mnt/blk1/Paper2Code/outputs/harbor_tasks"
 ```
 
-### Using Open Source Models with vLLM
-- If you encounter any issues installing vLLM, please refer to the [official vLLM repository](https://github.com/vllm-project/vllm).
-- The default model is `deepseek-ai/DeepSeek-Coder-V2-Lite-Instruct`.
+## API key setup
+
+You must provide your own API key. Do not commit real keys into this repository,
+and do not paste real keys into README or config files.
+
+For the standard OpenAI API:
 
 ```bash
-pip install vllm
-
-cd scripts
-bash run_llm.sh
+export PAPER2CODE_LLM_PROVIDER="openai"
+export OPENAI_API_KEY="replace-with-your-own-api-key"
 ```
 
-### Output Folder Structure (Only Important Files)
-```bash
-outputs
-├── Transformer
-│   ├── analyzing_artifacts
-│   ├── coding_artifacts
-│   └── planning_artifacts
-└── Transformer_repo # Final output repository
-```
----
-
-## 📚 Detailed Setup Instructions
-
-### 🛠️ Environment Setup
-
-- 💡 To use the `o3-mini` version, make sure you have the latest `openai` package installed.
-- 📦 Install only what you need:
-  - For OpenAI API: `openai`
-  - For open-source models: `vllm`
-      - If you encounter any issues installing vLLM, please refer to the [official vLLM repository](https://github.com/vllm-project/vllm).
-
+For Azure OpenAI instead:
 
 ```bash
-pip install openai 
-pip install vllm 
+export PAPER2CODE_LLM_PROVIDER="azure"
+export AZURE_OPENAI_API_KEY="replace-with-your-own-azure-key"
+export AZURE_OPENAI_ENDPOINT="https://your-resource.openai.azure.com/"
+export AZURE_OPENAI_API_VERSION="2024-12-01-preview"
 ```
 
-- Or, if you prefer, you can install all dependencies using `pip`:
+## Sample usage
 
 ```bash
-pip install -r requirements.txt
+cd /mnt/blk1/Paper2Code
+python3.10 -m venv .venv
+source .venv/bin/activate
+python -m pip install --upgrade pip
+python -m pip install openai tqdm pyyaml huggingface_hub datasets requests
+mkdir -p "${RUN_ROOT}" "${PIPELINE_OUTPUT_DIR}" "${GENERATED_REPO_DIR}"
 ```
 
-### 📄 (Option) Convert PDF to JSON
-The following process describes how to convert a paper PDF into JSON format.  
-If you have access to the LaTeX source and plan to use it with PaperCoder, you may skip this step and proceed to [🚀 Running PaperCoder](#-running-papercoder).  
-Note: In our experiments, we converted all paper PDFs to JSON format.
+## How to reproduce result
 
-1. Clone the `s2orc-doc2json` repository to convert your PDF file into a structured JSON format.  
-   (For detailed configuration, please refer to the [official repository](https://github.com/allenai/s2orc-doc2json).)
+1. Prepare a cleaned paper input.
 
-```bash
-git clone https://github.com/allenai/s2orc-doc2json.git
-```
+   If you already have a cleaned JSON or LaTeX file, set `PAPER_JSON_PATH` or
+   `PAPER_LATEX_PATH` above and skip this step. If you have a raw S2ORC-style
+   JSON file, clean it first:
 
-2. Run the PDF processing service.
+   ```bash
+   python codes/0_pdf_process.py \
+     --input_json_path "/absolute/path/to/raw_paper.json" \
+     --output_json_path "${PAPER_JSON_PATH}"
+   ```
 
-```bash
-cd ./s2orc-doc2json/grobid-0.7.3
-./gradlew run
-```
+2. Generate the reproduction plan and extracted config.
 
-3. Convert your PDF into JSON format.
+   ```bash
+   python codes/1_planning.py \
+     --paper_name "${PAPER_NAME}" \
+     --gpt_version "${MODEL}" \
+     --paper_format "${PAPER_FORMAT}" \
+     --pdf_json_path "${PAPER_JSON_PATH}" \
+     --pdf_latex_path "${PAPER_LATEX_PATH}" \
+     --output_dir "${PIPELINE_OUTPUT_DIR}"
 
-```bash
-mkdir -p ./s2orc-doc2json/output_dir/paper_coder
-python ./s2orc-doc2json/doc2json/grobid2json/process_pdf.py \
-    -i ${PDF_PATH} \
-    -t ./s2orc-doc2json/temp_dir/ \
-    -o ./s2orc-doc2json/output_dir/paper_coder
-```
+   python codes/1.1_extract_config.py \
+     --paper_name "${PAPER_NAME}" \
+     --output_dir "${PIPELINE_OUTPUT_DIR}"
+   ```
 
-### 🚀 Running PaperCoder
-- Note: The following command runs example paper ([Attention Is All You Need](https://arxiv.org/abs/1706.03762)).  
-  If you want to run PaperCoder on your own paper, please modify the environment variables accordingly.
+3. Optionally refine model and dataset names against Hugging Face.
 
-#### Using OpenAI API
-- 💵 Estimated cost for using o3-mini: $0.50–$0.70
+   ```bash
+   python codes/1.2_rag_config.py \
+     --output_dir "${PIPELINE_OUTPUT_DIR}" \
+     --gpt_version "gpt-4.1-mini"
+   ```
 
+4. Generate analysis artifacts and code.
 
-```bash
-# Using the PDF-based JSON format of the paper
-export OPENAI_API_KEY="<OPENAI_API_KEY>"
+   ```bash
+   python codes/2_analyzing.py \
+     --paper_name "${PAPER_NAME}" \
+     --gpt_version "${MODEL}" \
+     --paper_format "${PAPER_FORMAT}" \
+     --pdf_json_path "${PAPER_JSON_PATH}" \
+     --pdf_latex_path "${PAPER_LATEX_PATH}" \
+     --output_dir "${PIPELINE_OUTPUT_DIR}"
 
-cd scripts
-bash run.sh
-```
+   python codes/3_coding.py \
+     --paper_name "${PAPER_NAME}" \
+     --gpt_version "${MODEL}" \
+     --paper_format "${PAPER_FORMAT}" \
+     --pdf_json_path "${PAPER_JSON_PATH}" \
+     --pdf_latex_path "${PAPER_LATEX_PATH}" \
+     --output_dir "${PIPELINE_OUTPUT_DIR}" \
+     --output_repo_dir "${GENERATED_REPO_DIR}"
+   ```
 
-```bash
-# Using the LaTeX source of the paper
-export OPENAI_API_KEY="<OPENAI_API_KEY>"
+5. Run the generated reproduction repository.
 
-cd scripts
-bash run_latex.sh
-```
+   The generated entry point depends on the paper and on the files selected by
+   the planning stage.
 
+   ```bash
+   cd "${GENERATED_REPO_DIR}"
+   if [ -f requirements.txt ]; then python -m pip install -r requirements.txt; fi
+   if [ -f reproduce.sh ]; then
+     bash reproduce.sh
+   elif [ -f main.py ]; then
+     python main.py
+   elif [ -f app.py ]; then
+     python app.py
+   else
+     find . -maxdepth 2 -type f | sort
+   fi
+   ```
 
-#### Using Open Source Models with vLLM
-- The default model is `deepseek-ai/DeepSeek-Coder-V2-Lite-Instruct`.
+## Optional evaluation artifacts
 
-```bash
-# Using the PDF-based JSON format of the paper
-cd scripts
-bash run_llm.sh
-```
-
-```bash
-# Using the LaTeX source of the paper
-cd scripts
-bash run_latex_llm.sh
-```
-
----
-
-## 📦 Paper2Code Benchmark Datasets
-- Huggingface dataset: [paper2code](https://huggingface.co/datasets/iaminju/paper2code)
-  
-- You can find the description of the Paper2Code benchmark dataset in [data/paper2code](https://github.com/going-doer/Paper2Code/tree/main/data/paper2code). 
-- For more details, refer to Section 4.1 "Paper2Code Benchmark" in the [paper](https://arxiv.org/abs/2504.17192).
-
-
----
-
-## 📊 Model-based Evaluation of Repositories Generated by PaperCoder
-
-- We evaluate repository quality using a model-based approach, supporting both reference-based and reference-free settings.  
-  The model critiques key implementation components, assigns severity levels, and generates a 1–5 correctness score averaged over 8 samples using **o3-mini-high**.
-
-- For more details, please refer to Section 4.3.1 (*Paper2Code Benchmark*) of the paper.
-- **Note:** The following examples evaluate the sample repository (**Transformer_repo**).  
-  Please modify the relevant paths and arguments if you wish to evaluate a different repository.
-
-### 🛠️ Environment Setup
-```bash
-pip install tiktoken
-export OPENAI_API_KEY="<OPENAI_API_KEY>"
-```
-
-
-### 📝 Reference-free Evaluation
-- `target_repo_dir` is the generated repository.
+These steps create paper-grounded evaluation metadata, asset plans, rubrics,
+pytest suites, and a Harbor task. Stage 6 requires the `codex` CLI if assets
+need to be materialized.
 
 ```bash
-cd codes/
-python eval.py \
-    --paper_name Transformer \
-    --pdf_json_path ../examples/Transformer_cleaned.json \
-    --data_dir ../data \
-    --output_dir ../outputs/Transformer \
-    --target_repo_dir ../outputs/Transformer_repo \
-    --eval_result_dir ../results \
-    --eval_type ref_free \
-    --generated_n 8 \
-    --papercoder
-```
+cd /mnt/blk1/Paper2Code
 
-### 📝 Reference-based Evaluation
-- `target_repo_dir` is the generated repository.
-- `gold_repo_dir` should point to the official repository (e.g., author-released code).
+python codes/5_eval_get_running_info.py \
+  --paper_name "${PAPER_NAME}" \
+  --paper_format "${PAPER_FORMAT}" \
+  --pdf_json_path "${PAPER_JSON_PATH}" \
+  --pdf_latex_path "${PAPER_LATEX_PATH}" \
+  --gpt_version "${MODEL}" \
+  --output_path "${EVAL_INFO_JSON}"
 
-```bash
-cd codes/
-python eval.py \
-    --paper_name Transformer \
-    --pdf_json_path ../examples/Transformer_cleaned.json \
-    --data_dir ../data \
-    --output_dir ../outputs/Transformer \
-    --target_repo_dir ../outputs/Transformer_repo \
-    --gold_repo_dir ../examples/Transformer_gold_repo \
-    --eval_result_dir ../results \
-    --eval_type ref_based \
-    --generated_n 8 \
-    --papercoder
-```
+python codes/5.1_get_evaluation_plan.py \
+  --paper_json_path "${PAPER_JSON_PATH}" \
+  --eval_info_json "${EVAL_INFO_JSON}" \
+  --generated_repo_path "${GENERATED_REPO_DIR}" \
+  --output_dir "${EVAL_PLAN_DIR}" \
+  --gpt_version "${MODEL}"
 
+python codes/6_download_dataset.py \
+  --paper_json_path "${PAPER_JSON_PATH}" \
+  --generated_repo_path "${GENERATED_REPO_DIR}" \
+  --eval_info_json "${EVAL_INFO_JSON}" \
+  --eval_plan_json "${EVAL_PLAN_DIR}/eval_plan.json" \
+  --output_dir "${HARBOR_ASSET_DIR}" \
+  --gpt_version "${MODEL}"
 
-### 📄 Example Output
-```bash
-========================================
-🌟 Evaluation Summary 🌟
-📄 Paper name: Transformer
-🧪 Evaluation type: ref_based
-📁 Target repo directory: ../outputs/Transformer_repo
-📊 Evaluation result:
-        📈 Score: 4.5000
-        ✅ Valid: 8/8
-========================================
-🌟 Usage Summary 🌟
-[Evaluation] Transformer - ref_based
-🛠️ Model: o3-mini
-📥 Input tokens: 44318 (Cost: $0.04874980)
-📦 Cached input tokens: 0 (Cost: $0.00000000)
-📤 Output tokens: 26310 (Cost: $0.11576400)
-💵 Current total cost: $0.16451380
-🪙 Accumulated total cost so far: $0.16451380
-============================================
+python codes/7_getting_rubric.py \
+  --paper_name "${PAPER_NAME}" \
+  --paper_format "${PAPER_FORMAT}" \
+  --pdf_json_path "${PAPER_JSON_PATH}" \
+  --pdf_latex_path "${PAPER_LATEX_PATH}" \
+  --eval_plan_path "${EVAL_PLAN_DIR}/eval_plan.json" \
+  --download_report_path "${HARBOR_ASSET_DIR}/c1_download_dataset_summary.json" \
+  --gpt_version "${MODEL}" \
+  --output_path "${RUBRIC_PASS1_JSON}"
+
+python codes/8_getting_paper2code_rubric.py \
+  --pass1_json_path "${RUBRIC_PASS1_JSON}" \
+  --paper_name "${PAPER_NAME}" \
+  --gpt_version "${MODEL}" \
+  --output_path "${RUBRIC_JSON}"
+
+python codes/9_getting_unit_test_codex.py \
+  --rubric_json_path "${RUBRIC_JSON}" \
+  --paper_name "${PAPER_NAME}" \
+  --repo_plan_path "${PIPELINE_OUTPUT_DIR}/planning_response.json" \
+  --generated_repo_path "${GENERATED_REPO_DIR}" \
+  --output_dir "${UNIT_TEST_DIR}" \
+  --gpt_version "${MODEL}"
+
+python codes/10_get_harbor_set.py \
+  --paper_name "${PAPER_NAME}" \
+  --paper_json_path "${PAPER_JSON_PATH}" \
+  --planning_dir "${PIPELINE_OUTPUT_DIR}" \
+  --repo_dir "${GENERATED_REPO_DIR}" \
+  --unit_test_dir "${UNIT_TEST_DIR}" \
+  --harbor_asset_dir "${HARBOR_ASSET_DIR}" \
+  --harbor_output_dir "${HARBOR_OUTPUT_DIR}" \
+  --task_slug "${PAPER_NAME}" \
+  --force
 ```

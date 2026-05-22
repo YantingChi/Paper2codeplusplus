@@ -6,8 +6,10 @@ Problem:
 Given a batch of test specifications (each a JSON spec produced by Pass 1), write one pytest function per spec.
 
 Input:
-- repo_symbols: {module_path: [class_or_function_names]} — the planned/exported symbols of the
-  generated repo. Imports MUST resolve against this map (or against assets.rivals.* for rivals).
+- api_docs_json: Doxygen-parsed API documentation of the repo. For each module, each class and
+  function has: "brief", "signature" (the exact def line), "params" ({kwarg_name: TypeAnnotation}),
+  "returns". For classes, also "init_signature". Treat this as the authoritative API contract.
+  Imports MUST resolve against this map (or against assets.rivals.* for rivals).
 - assets_root_module: string, e.g. "assets.rivals" — where rival baselines live.
 - specs: an array of test specs from Pass 1 (see Pass 1 schema for shape).
 
@@ -59,7 +61,7 @@ Coding rules:
    - Always include an informative f-string assertion message with both numbers.
 
 5. extra_imports must include EVERY symbol used by the function body. No wildcard imports.
-   Use the exact module paths shown in repo_symbols. For rivals, use assets_root_module + module path.
+   Use the exact module paths shown in api_docs_json. For rivals, use assets_root_module + module path.
    Do NOT import pytest in extra_imports — the assembler adds it once per file.
 
 6. Tests must be deterministic. Seed every torch/numpy random call with manual_seed(0).
@@ -71,5 +73,44 @@ Coding rules:
    so the test is a placeholder. Keep extra_imports empty for that case (assembler adds pytest).
 
 9. Return ONLY valid JSON matching the schema. No markdown, no commentary.
+
+10. CONSTRUCTOR DISCIPLINE: Use ONLY the constructor signature shown in api_docs_json for each
+    class. If the "params" dict shows that __init__ requires other class instances (e.g. a registry
+    or manager object), do NOT attempt to build those inline. Instead emit:
+      assert ClassName is not None
+    as a minimal smoke check. The assembler will wrap it with @pytest.mark.xfail.
+
+11. METHOD DISCIPLINE: Only call methods whose EXACT name appears in the "methods" list for that
+    class in api_docs_json. Never invent or guess a method name. If the intended method is absent,
+    emit `assert hasattr(obj, "method_name")` instead of calling it.
+
+12. KWARG DISCIPLINE: Only use keyword argument names that appear in the "params" dict for that
+    function/method in api_docs_json. If the signature shows `backbone_name`, do not pass
+    `model_name=`. When uncertain, use positional arguments.
+
+13. FIXTURE DISCIPLINE: If a function in api_docs_json is a pytest fixture (identifiable by the
+    `@pytest.fixture` decorator or naming like `*_outputs()`), request it as a test parameter
+    `def test_foo(fixture_name):` — never call `fixture_name()` inside the body.
+
+14. PATH DISCIPLINE: When a function's "params" shows a Path type (pathlib.Path), always pass
+    `Path("some/path")` not a bare string. Add `from pathlib import Path` to extra_imports.
+
+15. NO CROSS-TEST IMPORTS: Test files MUST NOT import from any `tests.*` module (e.g.
+    `from tests.test_method_implementation import TestEMAFormula` is FORBIDDEN). Repo test
+    files are not a reusable library; their classes/fixtures are not on the standard path.
+    If a spec implies reusing a helper from a repo test file, redefine the helper locally
+    inside the function or emit `assert True` and set skip_reason="qualitative".
+
+16. NESTED-CLASS DISCIPLINE: If a key in api_docs_json contains a dot (e.g.
+    `DistillationManager.TrTransform`), that symbol is a NESTED class inside the outer class
+    — NOT importable directly. NEVER write `from src.algorithms.distillation import TrTransform`.
+    Reference it instead as `DistillationManager.TrTransform` after importing `DistillationManager`.
+    The entry's "nested_in" field names the outer class.
+
+17. NO INVENTED SYMBOLS: extra_imports MUST only contain `from <module> import <name>` where
+    BOTH the module path appears as a key in api_docs_json AND <name> appears as a top-level
+    key inside that module's entry (NOT a dotted nested key — see rule 16). If you cannot find
+    the required symbol in api_docs_json, do NOT guess at a name: emit `assert ClassName is not None`
+    or `pytest.skip("symbol not yet implemented")` instead.
 
 Now generate the pytest function bodies.
