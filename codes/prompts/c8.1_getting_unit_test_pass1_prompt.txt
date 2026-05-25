@@ -128,12 +128,27 @@ Constraints:
 - Use ONLY the provided rubric, paper text, and api_docs_json. Do NOT invent numbers or symbols.
 - Treat api_refs as the source of truth for repo APIs. `imports` is only a resolved convenience
   field and may be rewritten by the static validator.
-- For "constant_equals" tests: target the simplest Config dataclass that exposes the constant
-  (e.g. APTConfig().scaling) rather than a heavyweight class requiring complex dependencies.
-- If instantiating a class requires other class instances as constructor arguments (visible in
-  its "params" dict in api_docs_json), set skip_reason="qualitative" so the test is marked xfail.
+- For "constant_equals" tests, try the simplest readable path to the value BEFORE bailing to
+  qualitative. In this order:
+    (a) A zero-arg constructor of a Config dataclass that exposes the constant
+        (e.g. `APTConfig().scaling`, `TrainingConfig().num_train_epochs`). Preferred when the
+        class can be instantiated without arguments.
+    (b) A YAML/JSON config asset under `configs/` that holds the default. The defaults-only
+        file is typically `configs/default.yaml`. Emit:
+            input_recipe   = "import yaml; from pathlib import Path"
+            what_to_compute = "yaml.safe_load(Path('configs/default.yaml').read_text())[<section>][<key>]"
+        Use this path EVEN when the corresponding Python config class has required fields and
+        cannot be zero-arg-constructed (e.g. pydantic `Field(...)` declarations) — the YAML
+        defaults are the source of truth in those repos.
+    (c) Only if NEITHER (a) nor (b) is reachable (constant hard-coded inside a function body
+        with no config exposure), set skip_reason="qualitative".
+  A class with complex constructor args is NOT by itself a reason to bail — check the YAML
+  defaults first.
 - Only reference method names that appear in api_docs_json for that class. If a method name is
-  not found, use a hasattr() smoke check and set skip_reason="qualitative".
+  not found, prefer `assert hasattr(ClassName, "method_name")` with NO skip_reason — a failing
+  hasattr is a legitimate test outcome. Reserve skip_reason="qualitative" for rubric leaves
+  whose claim is genuinely non-Boolean (e.g. "the tokenizer is learnable", "the optimizer
+  converges smoothly").
 - Never reference test files: any `imports` entry pointing to `tests.*` (e.g.
   `from tests.test_foo import TestBar`) is FORBIDDEN — repo tests are not a reusable library.
   If a leaf appears to require a repo test helper, set skip_reason="qualitative" and have the
