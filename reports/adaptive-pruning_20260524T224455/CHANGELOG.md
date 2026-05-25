@@ -57,4 +57,27 @@ Azure-backed, separate quota; same gpt-5.2 judge). Proxy grades are slow (~85 mi
 - **Verdict: KEEP** (fidelity rules provably fix the equation/semantics/hyperparam clusters they target).
   Net −1 leaf because rule 13 listed lr/epochs/split but omitted batch size & metric reporting → iter 2.
 
-| 1-valid | proxy 05:41 | codes/3_coding.py:147-151 | (see above) fidelity rules 9–13 | 0.4742 → 0.4491 (confounded); leaf-level +5/−4 on targeted clusters | KEEP |
+| 1-valid | proxy 05:41 | codes/3_coding.py:147-151 | (see above) fidelity rules 9–13 | 0.4742 → 0.4491 (confounded); leaf-level +5/−4 on targeted clusters | KEEP (committed 61daf54) |
+| 2 | proxy 07:27 | codes/3_coding.py:151-152 | Broaden rule 13 to ALL table hyperparams (esp. **batch size** + target-sparsity schedule); add rule 14 (report EXACT metrics: SQuAD F1/EM, CNN/DM ROUGE-1/2/L, GLUE accuracy). | 0.4491 → 0.4624 (matched proxy) | KEEP |
+
+### Iter 2 — VALID (matched proxy comparison vs iter 1)
+- **iter2proxy aggregate: 0.4624** vs iter1 0.4491 (both proxy/outputs-free → directly comparable). +1.3pp.
+- **Recovered all 4 targeted leaves:** GLUE batch size 32; APT target-sparsity schedule; SQuAD dev-F1
+  reported; APT merge-before-inference. The broadened rule 13 + new rule 14 worked.
+- **But 6 OTHER leaves newly regressed** — including **eq.14, which iter-1 had FIXED and whose governing
+  rule was unchanged between iter-1 and iter-2.**
+
+### ⚠️ Dominant finding: full-repo regeneration is stochastic (~±6-leaf noise floor)
+`--only 3` regenerates all 28 files from scratch via the LLM. Re-running it (even with an unchanged rule
+for a given leaf) flips ~5–6 leaves in each direction — proven by the eq.14 leaf going fixed→broken
+between iter-1 and iter-2 with no rule change touching it. **This noise (~6/88 ≈ 7pp) is larger than the
+true per-tweak prompt effect (±1–2 leaves), so any single-run before/after is unreliable** and the
+aggregate bounces in a flat band (0.45–0.47) across baseline/iter1/iter2. The grader is itself consistent
+(only ~9 leaves differ for the *same* repo across providers); the variance comes from code generation.
+
+**Implication (architectural, not a prompt tweak):** to convert the demonstrated per-cluster wins into a
+reliable aggregate gain you must remove the regeneration variance — either (a) a **targeted repair stage**
+that re-generates ONLY the files behind failing leaves and keeps passing files frozen, or (b) **multi-run
+averaging** (N regenerations) to measure/realize the mean. Continued blind prompt-only iteration just
+chases noise. (This is the plan's documented escape-hatch condition: ≥2 prompt-only iterations hit the
+same wall.)
