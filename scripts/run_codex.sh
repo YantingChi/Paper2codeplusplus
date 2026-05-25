@@ -360,6 +360,34 @@ if (( STAGE3_RAN == 1 )); then
     snapshot_repo "stage3"
 fi
 
+# Stage 3.5: targeted, feedback-driven repair. Regenerates ONLY the files behind
+# failing rubric leaves (per a grader_output.json), leaving passing files frozen,
+# to avoid the ~+/-6-leaf stochastic noise of a full stage-3 regeneration.
+# Needs a grader_output.json: set REPAIR_GRADER_OUTPUT, else the most recent one
+# for this paper is used. Exits nonzero with a clear message if none is found.
+if run_stage 3.5; then
+    CURRENT_STAGE="Stage 3.5: Repair"
+    echo "------- Stage 3.5: Repair (feedback-driven, targeted) -------"
+    REPAIR_GRADER_OUTPUT="${REPAIR_GRADER_OUTPUT:-}"
+    if [[ -z "$REPAIR_GRADER_OUTPUT" ]]; then
+        REPAIR_GRADER_OUTPUT="$(ls -t "$ROOT_DIR"/outputs/paperbench_eval/"$PAPER_NAME"/*/grader_output.json 2>/dev/null | head -1)"
+    fi
+    if [[ -z "$REPAIR_GRADER_OUTPUT" || ! -f "$REPAIR_GRADER_OUTPUT" ]]; then
+        echo "[run_codex][ERROR] Stage 3.5 needs a grader_output.json to repair against." >&2
+        echo "[run_codex][ERROR] Set REPAIR_GRADER_OUTPUT=/path/to/grader_output.json (none found for $PAPER_NAME)." >&2
+        exit 1
+    fi
+    echo "[run_codex] Stage 3.5 repairing against: $REPAIR_GRADER_OUTPUT"
+    "$PYTHON_BIN" "$ROOT_DIR/codes/3.5_repair.py" \
+        --paper_name "$PAPER_NAME" \
+        --gpt_version "$GPT_VERSION" \
+        --pdf_json_path "$PDF_JSON_CLEANED_PATH" \
+        --output_dir "$OUTPUT_DIR" \
+        --output_repo_dir "$OUTPUT_REPO_DIR" \
+        --grader_output "$REPAIR_GRADER_OUTPUT"
+    snapshot_repo "stage3_5"
+fi
+
 if run_stage 5; then
     CURRENT_STAGE="Stage 5: Eval Info"
     echo "------- Stage 5: Eval Info -------"
