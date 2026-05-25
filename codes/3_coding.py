@@ -144,6 +144,11 @@ Next, you must write only the "{todo_file_name}".
 6. Before using a external variable/module, make sure you import it first.
 7. Write out EVERY CODE DETAIL, DON'T LEAVE TODO.
 8. REFER TO CONFIGURATION: you must use configuration from "config.yaml". DO NOT FABRICATE any configuration values.
+9. NO PROXIES OR STUBS: Implement the ACTUAL algorithm/method described in the paper. NEVER write a placeholder, stub, mock, "minimal runnable proxy", "simplified", "X-style", or "we do not vendor" implementation, and never leave a comment to that effect. If the paper names an external baseline or method (e.g., a cited GitHub implementation), reproduce its algorithm faithfully in code here.
+10. EXACT EQUATIONS: Implement every equation EXACTLY as written in the paper, including all coefficients, scaling factors, constants, and exponents (e.g., EMA decay weights, loss-term weights, multiplicative factors like a leading 2, summation ranges). Do NOT approximate, substitute a heuristic, or "simplify" a formula. If the paper gives equation (k), match it term-for-term.
+11. PRESERVE SEMANTICS: Keep the precise granularity and meaning of each operation (e.g., distinguish pruning of attention heads vs. neurons vs. hidden dimensions; do not collapse distinct mask types into a single generic per-element operation).
+12. CORRECT PLACEMENT: Invoke each operation at the exact point in the pipeline the paper specifies. If a transformation must happen before inference/evaluation (e.g., merging adapters/LoRA into the weights), perform it there in the evaluation path — not only inside export/saving code.
+13. VERIFIABLE HYPERPARAMETERS: When the paper's tables specify hyperparameters for a given dataset or method (learning rate, epochs, distillation split, etc.), make those exact values present and resolvable in the code/config you write for that dataset/method, so they are concretely enforced rather than merely default-able.
 
 {detailed_logic_analysis}
 
@@ -238,5 +243,59 @@ for todo_idx, todo_file_name in enumerate(tqdm(todo_file_lst)):
 
     with open(f"{output_repo_dir}/{todo_file_name}", 'w') as f:
         f.write(code)
+
+
+# write_requirements_txt: materialize the planning stage's "Required packages"
+# list into <repo>/requirements.txt. The planning Task list almost never names
+# requirements.txt as a file to generate, so without this the generated repo
+# ships code that imports torch/transformers/etc. but has no dependency
+# manifest — and scripts/run_tests_local.sh then skips installation and pytest
+# collection fails with ModuleNotFoundError. The "Required packages" entries are
+# already in pip-installable form (e.g. "torch>=2.1.0"), so we just clean and
+# write them. Returns nothing; prints a clear message on success or on the
+# (degenerate) empty-list case so a missing manifest is never silent.
+def write_requirements_txt(task_list_dict, repo_dir):
+    raw_packages = task_list_dict.get('Required packages') or []
+    # Drop blanks and the common "no dependencies" sentinel the planner emits.
+    # Also drop interpreter pins like "python==3.10.*": the planner often lists
+    # the Python version among "Required packages", but `pip install python==...`
+    # is impossible and makes pip abort the ENTIRE `-r requirements.txt` install
+    # atomically — which silently leaves torch/numpy/etc. uninstalled and breaks
+    # test collection. The interpreter is provisioned by the venv, not by pip.
+    cleaned = []
+    seen = set()
+    for entry in raw_packages:
+        if not isinstance(entry, str):
+            continue
+        pkg = entry.strip()
+        if not pkg:
+            continue
+        if pkg.lower().startswith('no ') and 'depend' in pkg.lower():
+            continue
+        # Extract the distribution name (text before any version specifier).
+        name = re.split(r'[=<>~!;\[\s]', pkg, maxsplit=1)[0].strip().lower()
+        if name in ('python', 'python3'):
+            print(f"[CODING][requirements] skipping interpreter pin '{pkg}' "
+                  f"(not pip-installable)")
+            continue
+        if pkg in seen:
+            continue
+        seen.add(pkg)
+        cleaned.append(pkg)
+
+    req_path = f"{repo_dir}/requirements.txt"
+    if not cleaned:
+        print(f"[CODING][requirements] WARNING: planning 'Required packages' was "
+              f"empty; writing an empty {req_path}. Tests may fail to import deps.")
+    try:
+        with open(req_path, 'w') as f:
+            f.write("\n".join(cleaned) + ("\n" if cleaned else ""))
+    except OSError as e:
+        print(f"[CODING][requirements] ERROR: could not write {req_path}: {e}")
+        raise
+    print(f"[CODING][requirements] wrote {len(cleaned)} package(s) to {req_path}")
+
+
+write_requirements_txt(task_list, output_repo_dir)
 
 save_accumulated_cost(f"{output_dir}/accumulated_cost.json", total_accumulated_cost)
