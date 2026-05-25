@@ -81,3 +81,17 @@ that re-generates ONLY the files behind failing leaves and keeps passing files f
 averaging** (N regenerations) to measure/realize the mean. Continued blind prompt-only iteration just
 chases noise. (This is the plan's documented escape-hatch condition: ≥2 prompt-only iterations hit the
 same wall.)
+
+### Iter 3 — targeted repair stage (new component: codes/3.5_repair.py)
+Chose path (a). Built `codes/3.5_repair.py` + wired stage `3.5` into `scripts/run_codex.sh`.
+- Reads a grader_output.json, finds failing leaves (<0.8), maps each to the repo file the JUDGE itself
+  inspected (parsed from `<eval_dir>/<leaf_id>.log` "Model file selection raw output"), and regenerates
+  ONLY those files. **Validated mapping: all 31 failing leaves → 11 files, 0 unmapped.**
+- Each repaired file's prompt lists its failing requirements (to fix) AND the requirements it already
+  passes (to preserve), so neighbours in the same file are protected (e.g. `apt_linear.py`: fix 1,
+  preserve 32). The other ~17 files stay frozen → eliminates the full-repo regen noise.
+- Run against the iter-2 grader output (matches current repo). Re-grade via proxy to verify.
+- Overfitting guard: fixes target the paper-derived leaf REQUIREMENTS; the judge's `# Reality` is only a
+  secondary "what's wrong now" hint. Never edits rubric/grader/paper.
+
+| 3 | proxy (running) | NEW codes/3.5_repair.py + run_codex.sh stage 3.5 | Targeted repair of 11 failing-leaf files; passing files frozen. | 0.4624 → (running) | pending |
