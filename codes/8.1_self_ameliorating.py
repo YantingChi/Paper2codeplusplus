@@ -91,6 +91,61 @@ def load_rubric_leaves(rubric_path: str) -> List[Dict]:
     return leaves
 
 
+# Turn an arbitrary name into a stable, id-safe slug.
+def _slug(text: str) -> str:
+    s = re.sub(r"[^a-z0-9]+", "_", (text or "").lower()).strip("_")
+    return s[:60] or "item"
+
+
+def load_reproduction_rubric_leaves(repro_path: str) -> List[Dict]:
+    """Convert the Pass-1 reproduction rubric (7_getting_rubric.py output) into extra
+    code-checkable leaves. We fold in `methods` (algorithmic subroutines the code must
+    implement) and `hyperparameters` flagged `required_for_reproduction` (exact values the
+    code/config must set). `results_to_verify` and `assets` are skipped: they need the code
+    to actually run, which the self-check (code-only) cannot judge.
+
+    These items are paper-derived (independent of the grader) and finer-grained than the
+    paper2code Code-Development leaves, giving the self-ameliorator better coverage.
+    """
+    with open(repro_path, "r", encoding="utf-8") as f:
+        payload = json.load(f)
+    rubric = payload.get("reproduction_rubric", payload)
+
+    extra: List[Dict] = []
+    for m in (rubric.get("methods") or []):
+        name = m.get("name", "")
+        details = m.get("details", "")
+        anchor = m.get("anchor", "")
+        req = f"The code implements the method '{name}': {details}".strip()
+        if anchor:
+            req += f" (paper anchor: {anchor})"
+        extra.append({
+            "id": f"method_{_slug(name)}",
+            "requirements": req,
+            "finegrained_task_category": "Method Implementation",
+        })
+    for h in (rubric.get("hyperparameters") or []):
+        # Only fold in hyperparameters the paper marks as required for reproduction.
+        if not h.get("required_for_reproduction", False):
+            continue
+        name = h.get("name", "")
+        value = h.get("value", "")
+        scope = h.get("scope", "")
+        anchor = h.get("anchor", "")
+        req = (f"The code/config sets the hyperparameter '{name}' to the paper's value "
+               f"'{value}'").strip()
+        if scope:
+            req += f" for {scope}"
+        if anchor:
+            req += f" (paper anchor: {anchor})"
+        extra.append({
+            "id": f"hparam_{_slug(name)}",
+            "requirements": req,
+            "finegrained_task_category": "Hyperparameter Value",
+        })
+    return extra
+
+
 # ============================================================
 # Codebase serialization
 # ============================================================
@@ -490,6 +545,17 @@ def parse_args() -> argparse.Namespace:
         help="Path to the paper2code rubric JSON (output of 8_getting_paper2code_rubric.py).",
     )
     parser.add_argument(
+        "--reproduction_rubric_path",
+        type=str,
+        default="",
+        help=(
+            "Optional path to the Pass-1 reproduction rubric JSON (output of "
+            "7_getting_rubric.py). Its `methods` and required `hyperparameters` are folded in "
+            "as additional, finer-grained code-checkable items. If empty, auto-detected as the "
+            "newest *_reproduction_rubric_*.json next to --rubric_path."
+        ),
+    )
+    parser.add_argument(
         "--max_iterations",
         type=int,
         default=5,
@@ -523,10 +589,31 @@ def main() -> None:
 
     # ---- Load rubric leaves (filter to Code Development only) ----
     leaves = load_rubric_leaves(args.rubric_path)
+
+    # ---- Fold in finer-grained paper-derived items from the Pass-1 reproduction rubric ----
+    # (methods + required hyperparameters). This widens coverage beyond the coarse
+    # paper2code Code-Development leaves, which alone let the self-check converge too early.
+    repro_path = args.reproduction_rubric_path
+    if not repro_path:
+        # Auto-detect: newest *_reproduction_rubric_*.json next to the paper2code rubric.
+        import glob
+        cands = sorted(
+            glob.glob(os.path.join(os.path.dirname(args.rubric_path), "*_reproduction_rubric_*.json")),
+            key=os.path.getmtime,
+        )
+        repro_path = cands[-1] if cands else ""
+    if repro_path and os.path.isfile(repro_path):
+        seen_ids = {lf.get("id") for lf in leaves}
+        extra = [lf for lf in load_reproduction_rubric_leaves(repro_path) if lf["id"] not in seen_ids]
+        leaves.extend(extra)
+        print(f"Folded in {len(extra)} extra items from reproduction rubric: {os.path.basename(repro_path)}")
+    else:
+        print("No reproduction rubric found; checking paper2code Code-Development leaves only.")
+
     if not leaves:
         print("⚠️ No 'Code Development' leaves found in the rubric. Nothing to check.")
         sys.exit(0)
-    print(f"Loaded {len(leaves)} Code-Development rubric leaves to check.")
+    print(f"Loaded {len(leaves)} rubric leaves to check (paper2code + reproduction).")
 
     # ---- Prepare output dirs ----
     artifacts_dir = os.path.join(args.output_dir, "ameliorating_artifacts")

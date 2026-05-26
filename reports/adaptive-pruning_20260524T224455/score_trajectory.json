@@ -48,6 +48,34 @@
     "edit": "NEW codes/3.5_repair.py + scripts/run_codex.sh stage 3.5; targeted repair of the 11 files behind failing leaves, passing files frozen",
     "matched_comparison_vs_iter2": "+0.3791",
     "leaf_delta_vs_iter2": {"fixed": 21, "broke": 7},
-    "note": "BREAKTHROUGH. Targeted repair (regenerate only failing-leaf files, freeze passing files) removed the full-repo regeneration noise that capped iters 1-2, so the per-cluster fidelity wins finally stuck. 0.4624 -> 0.8415, beating the 0.7 stretch target. 7 intra-file regressions remain (a 2nd repair pass would likely recover them). Overfitting caveat: repair targets paper-derived requirements, judge #Reality used only as secondary hint."
+    "note": "SUPERSEDED / CONTAMINATED. Grader-driven (read grader_output.json) = training-on-the-test. Discarded per user. Kept here only as the contaminated reference; the gap 0.8415-0.5178 ~= 0.32 quantifies the overfit."
+  },
+  {
+    "iter": 4,
+    "label": "iter4rubricrepair",
+    "timestamp": "20260525T210302",
+    "aggregate_score": 0.5178,
+    "num_failing_leaves": 25,
+    "grader_provider": "aoai-proxy",
+    "repair_signal": "codes/8 paper2code rubric only (23 Code-Development leaves) via codes/8.1_self_ameliorating.py — GRADER-INDEPENDENT",
+    "note": "HONEST best for adaptive-pruning. +5.5pp over clean baseline 0.4624. Grader never read by the repair. This is the canonical adaptive-pruning result (repo restored from stage8.1_15)."
+  },
+  {
+    "iter": 5,
+    "label": "iter5enriched",
+    "timestamp": "20260525T220000",
+    "aggregate_score": 0.4818,
+    "num_failing_leaves": 26,
+    "grader_provider": "aoai-proxy",
+    "repair_signal": "codes/8 + codes/7 methods/hyperparameters (46 items)",
+    "note": "Enriched coverage but real score within +/-6-leaf patch noise of iter-4; did not beat iter-4. adaptive-pruning plateaus ~0.48-0.52 honestly; residual gap needs external-baseline wiring (Stage 8.2), not code-dev fidelity."
+  },
+  {
+    "generalization_n3_held_out": [
+      {"paper": "adaptive-pruning", "baseline": 0.4624, "after_8_1": 0.5178, "delta": 0.0554},
+      {"paper": "pinn",            "baseline": 0.7235, "after_8_1": 0.9503, "delta": 0.2268},
+      {"paper": "robust-clip",     "baseline": 0.2726, "after_8_1": 0.3122, "delta": 0.0396}
+    ],
+    "note": "Rubric-driven 8.1 repair (grader-independent) is POSITIVE on all 3 papers -> generalizes, not adaptive-pruning-specific. Magnitude scales with paper tractability (pinn self-contained -> 0.95)."
   }
 ]
