@@ -1,0 +1,18 @@
+iter4 grade start: Mon May 25 09:03:02 PM CDT 2026
+  Paper      : adaptive-pruning
+  Judge      : simple
+  Model      : gpt-5.2 (only for simple judge)
+  Provider   : aoai-proxy
+  Base URL   : http://127.0.0.1:8787/openai/v1/
+  Submission : /mnt/blk1/Paper2Code/outputs/paperbench_repos/adaptive-pruning_repo
+  Output dir : /mnt/blk1/Paper2Code/outputs/paperbench_eval/adaptive-pruning/iter4rubricrepair_20260525T210302
+2026-05-25 21:03:03 [info     ] Judging submission for paper /mnt/blk1/Paper2Code/assets/Other-repo/frontier-evals/project/paperbench/data/papers/adaptive-pruning/rubric.json component=paperbench.grade
+2026-05-25 21:03:03 [warning  ] Model gpt-5.2 not found in tiktoken, using o200k_base component=preparedness_turn_completer.oai_completions_turn_completer
+2026-05-25 21:03:03 [warning  ] Model gpt-5.2 not found in tiktoken, using o200k_base component=preparedness_turn_completer.oai_completions_turn_completer
+2026-05-25 21:03:03 [warning  ] Model gpt-5.2 not found in tiktoken, using o200k_base component=preparedness_turn_completer.oai_completions_turn_completer
+
+------- PaperBench Score: adaptive-pruning -------
+  Score : 0.5178
+  Nodes : 86/86 valid  (0 invalid/failed)
+  Output: /mnt/blk1/Paper2Code/outputs/paperbench_eval/adaptive-pruning/iter4rubricrepair_20260525T210302/grader_output.json
+iter4 grade END: Mon May 25 10:18:39 PM CDT 2026 exit=0

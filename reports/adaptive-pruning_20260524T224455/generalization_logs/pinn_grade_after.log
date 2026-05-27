@@ -1,0 +1,18 @@
+pinn after grade start: Tue May 26 12:04:49 AM CDT 2026
+  Paper      : pinn
+  Judge      : simple
+  Model      : gpt-5.2 (only for simple judge)
+  Provider   : aoai-proxy
+  Base URL   : http://127.0.0.1:8787/openai/v1/
+  Submission : /mnt/blk1/Paper2Code/outputs/paperbench_repos/pinn_repo
+  Output dir : /mnt/blk1/Paper2Code/outputs/paperbench_eval/pinn/after_8.1_20260526T000449
+2026-05-26 00:04:49 [info     ] Judging submission for paper /mnt/blk1/Paper2Code/assets/Other-repo/frontier-evals/project/paperbench/data/papers/pinn/rubric.json component=paperbench.grade
+2026-05-26 00:04:49 [warning  ] Model gpt-5.2 not found in tiktoken, using o200k_base component=preparedness_turn_completer.oai_completions_turn_completer
+2026-05-26 00:04:49 [warning  ] Model gpt-5.2 not found in tiktoken, using o200k_base component=preparedness_turn_completer.oai_completions_turn_completer
+2026-05-26 00:04:49 [warning  ] Model gpt-5.2 not found in tiktoken, using o200k_base component=preparedness_turn_completer.oai_completions_turn_completer
+
+------- PaperBench Score: pinn -------
+  Score : 0.9503
+  Nodes : 126/126 valid  (0 invalid/failed)
+  Output: /mnt/blk1/Paper2Code/outputs/paperbench_eval/pinn/after_8.1_20260526T000449/grader_output.json
+pinn after grade END: Tue May 26 12:10:17 AM CDT 2026 exit=0

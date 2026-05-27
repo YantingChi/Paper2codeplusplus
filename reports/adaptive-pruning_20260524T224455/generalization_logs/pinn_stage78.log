@@ -1,0 +1,53 @@
+pinn stages 7,8 start: Mon May 25 11:52:36 PM CDT 2026
+[run_codex] Logging to /mnt/blk1/Paper2Code/outputs/aalog/run_codex_pinn_1.log (index 1)
+pinn
+Running stages: 7,8
+------- Stage 7: Reproduction Rubric (Pass 1) -------
+  no download_report found under /mnt/blk1/Paper2Code/tests/harbor/yantingchi/pinn/harbor/asset; running paper-only rubric
+==================================================
+Reproduction Rubric Summary
+Paper name: pinn
+Model: gpt-5.2
+Prompt token estimate: 26595
+Saved to: /mnt/blk1/Paper2Code/outputs/paperbench_repos/pinn_repo/eval/pinn_reproduction_rubric_gpt-5.2.json
+==================================================
+🌟 Usage Summary 🌟
+[ReproductionRubric] pinn
+🛠️ Model: gpt-5.2
+📥 Input tokens: 26991 (Cost: $0.04723425)
+📦 Cached input tokens: 0 (Cost: $0.00000000)
+📤 Output tokens: 8012 (Cost: $0.11216800)
+💵 Current total cost: $0.15940225
+🪙 Accumulated total cost so far: $0.15940225
+============================================
+
+------- Stage 8: Paper2Code Rubric (Pass 2/3) -------
+==================================================
+Paper2Code Rubric Summary
+Paper name: pinn
+Model: gpt-5.2
+Pass 2 prompt token estimate: 9357
+Pass 3 prompt token estimate: 16310
+Saved to: /mnt/blk1/Paper2Code/outputs/paperbench_repos/pinn_repo/eval/pinn_paper2code_rubric_gpt-5.2.json
+==================================================
+🌟 Usage Summary 🌟
+[Paper2CodeRubric][Pass2] pinn
+🛠️ Model: gpt-5.2
+📥 Input tokens: 9795 (Cost: $0.01714125)
+📦 Cached input tokens: 0 (Cost: $0.00000000)
+📤 Output tokens: 6555 (Cost: $0.09177000)
+💵 Current total cost: $0.10891125
+🪙 Accumulated total cost so far: $0.10891125
+============================================
+
+🌟 Usage Summary 🌟
+[Paper2CodeRubric][Pass3] pinn
+🛠️ Model: gpt-5.2
+📥 Input tokens: 16409 (Cost: $0.02871575)
+📦 Cached input tokens: 0 (Cost: $0.00000000)
+📤 Output tokens: 1942 (Cost: $0.02718800)
+💵 Current total cost: $0.05590375
+🪙 Accumulated total cost so far: $0.16481500
+============================================
+
+pinn stages 7,8 END: Mon May 25 11:54:58 PM CDT 2026 exit=0

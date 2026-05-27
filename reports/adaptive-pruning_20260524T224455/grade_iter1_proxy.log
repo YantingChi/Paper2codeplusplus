@@ -1,0 +1,19 @@
+iter1 proxy grade start: Mon May 25 04:16:37 AM CDT 2026
+  Paper      : adaptive-pruning
+  Judge      : simple
+  Model      : gpt-5.2 (only for simple judge)
+  Provider   : aoai-proxy
+  Base URL   : http://127.0.0.1:8787/openai/v1/
+  Submission : /mnt/blk1/Paper2Code/outputs/paperbench_repos/adaptive-pruning_repo
+  Output dir : /mnt/blk1/Paper2Code/outputs/paperbench_eval/adaptive-pruning/iter1proxy_20260525T041637
+warning: `VIRTUAL_ENV=/mnt/blk1/Paper2Code/.venv` does not match the project environment path `.venv` and will be ignored; use `--active` to target the active environment instead
+2026-05-25 04:16:37 [info     ] Judging submission for paper /mnt/blk1/Paper2Code/assets/Other-repo/frontier-evals/project/paperbench/data/papers/adaptive-pruning/rubric.json component=paperbench.grade
+2026-05-25 04:16:37 [warning  ] Model gpt-5.2 not found in tiktoken, using o200k_base component=preparedness_turn_completer.oai_completions_turn_completer
+2026-05-25 04:16:37 [warning  ] Model gpt-5.2 not found in tiktoken, using o200k_base component=preparedness_turn_completer.oai_completions_turn_completer
+2026-05-25 04:16:37 [warning  ] Model gpt-5.2 not found in tiktoken, using o200k_base component=preparedness_turn_completer.oai_completions_turn_completer
+
+------- PaperBench Score: adaptive-pruning -------
+  Score : 0.4491
+  Nodes : 86/86 valid  (0 invalid/failed)
+  Output: /mnt/blk1/Paper2Code/outputs/paperbench_eval/adaptive-pruning/iter1proxy_20260525T041637/grader_output.json
+iter1 proxy grade END: Mon May 25 05:41:23 AM CDT 2026 exit=0
