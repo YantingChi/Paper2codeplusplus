@@ -1,0 +1,32 @@
+Problem:
+You are reviewing the rival-baseline adapter files for a paper-reproduction
+repository. Stage 8.2 has scaffolded one `src/baselines/<slug>.py` per rival
+baseline. Each adapter must expose `run_baseline(dataset, config)` that, when
+called, actually runs the baseline and returns a metric dict comparable to the
+authors' own method. For EACH baseline below decide PASS or FAIL.
+
+How to judge each bucket:
+
+- bucket=download: PASS only if `run_baseline` imports a real module reachable
+  under the rival code root (the `_RIVAL_ROOT` sys.path injection at the top of
+  the file) AND calls into it to produce results. FAIL if the body still raises
+  NotImplementedError, still contains a `TODO(c8.2-refine-...)` marker, or only
+  returns hard-coded numbers.
+
+- bucket=implement: PASS only if `run_baseline` contains a genuine, runnable
+  implementation of the algorithm/training method described in the baseline's
+  eval-plan notes (it may delegate to helpers added in src/pipeline/*, but the
+  logic must be present and reference the repo's real dataset loader / model /
+  metrics). FAIL if it is still a NotImplementedError stub, a `TODO` placeholder,
+  or fabricates results without computing them.
+
+Judge ONLY from the code shown in <current_adapters>. Do not assume an
+implementation "exists elsewhere". A function signature alone is not enough —
+the body must show the work.
+
+For each baseline return:
+- slug: the baseline slug.
+- status: "pass" or "fail".
+- evidence: the file + the specific line/expression that justifies the verdict
+  (or "still a stub" / "still has TODO marker" when failing).
+- reason: one sentence.

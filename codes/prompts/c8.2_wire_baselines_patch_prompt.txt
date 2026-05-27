@@ -1,0 +1,78 @@
+Problem:
+Make each still-failing rival-baseline adapter run for real. The repository,
+the adapter skeletons, and the baselines to wire are shown below. Produce
+minimal SEARCH/REPLACE edits (exact format in the example) that replace each
+adapter's NotImplementedError stub with a working `run_baseline(dataset,
+config)` implementation.
+
+Per-bucket guidance:
+
+- bucket=download — the rival's real code has already been cloned to the
+  directory named in the task ("rival code root"), and the adapter's top-level
+  `_RIVAL_ROOT` block has already added it to sys.path. Read the hint-file
+  excerpts to find the rival's true entry point (a function / class / CLI), then
+  import it by its real module name (a `.py` file or package directory directly
+  under the rival code root) and call it. Translate the rival's return value into
+  a `{"<metric_name>": <float>, ...}` dict. NEVER invent a module name that is
+  not visible under the rival code root; if the rival exposes only a CLI, shell
+  out with `subprocess` and parse its stdout/output files.
+
+- bucket=implement — there is NO external repo. Implement the algorithm or
+  training method described in the baseline's eval-plan notes as real Python.
+  Strongly prefer reusing the repository's existing building blocks — its
+  dataset loader, model/optimizer factory, training loop, and metrics module —
+  rather than duplicating them. You may add a small helper to an existing
+  src/pipeline/*.py or src/models/*.py file and call it from `run_baseline`. If
+  a paper detail needed to run the baseline is genuinely unavailable in the
+  inputs, leave a clearly-marked `# TODO(c8.2):` comment at that exact spot
+  instead of fabricating a value — but still make the surrounding code import
+  and run.
+
+Config-construction rule (IMPORTANT — repeated source of bugs):
+- To build the repository's config object, use a MODULE-LEVEL factory that you can
+  SEE in the provided source (e.g. `build_experiment_config(path)`, `build_config(path)`,
+  `load_yaml(path)`), typically pointing at `configs/default.yaml`, then override fields.
+- Do NOT call classmethods like `.from_dict(...)`, `.from_overrides(...)`, `.parse_obj(...)`
+  unless that exact classmethod is visibly defined on the class in the provided source.
+  Pydantic `BaseModel` subclasses are constructed as `Cls(**fields)` or via
+  `Cls.model_validate(dict)` — and they require EVERY non-default field, so prefer the
+  repo's own builder that fills defaults from the yaml.
+- Likewise only call helper constructors (e.g. `X.from_config(...)`) that actually exist
+  in the source.
+
+Thread the dataset argument (IMPORTANT):
+- `run_baseline(dataset, config)` receives the dataset/experiment to run on as its first
+  argument. You MUST make the config the baseline runs under name that dataset.
+- BEWARE: some repos' config builders resolve the dataset name FROM the config FILE at
+  build time (e.g. `build_experiment_config(path)` reads dataset_name out of `path`), so
+  assigning `exp.dataset_name` AFTER building is too late and raises "could not resolve
+  dataset name". In that case, pass a dataset-specific config path instead: look under
+  `configs/` for a file that names the dataset (e.g. `configs/<dataset>.yaml`,
+  `configs/toy_<dataset>.yaml`, or `configs/datasets/<dataset>.yaml`) and pass THAT path;
+  or write a tiny temp YAML containing `dataset_name: <dataset>` (plus `task_name`) and
+  pass its path. Inspect the builder's source to see which it expects.
+- Then merge any keys from the `config` argument on top.
+
+Call repo/rival classes with their REAL signatures:
+- Before calling any class/function from the repo or the rival, find its actual
+  definition in the provided source and pass exactly the parameters it declares.
+  Do NOT invent keyword arguments (e.g. `EvalRunner(dataset=...)` when
+  `EvalRunner.__init__` takes no `dataset` — read runner.py and pass what it
+  actually accepts). Inventing kwargs raises `TypeError` at runtime.
+
+Fill in smoke_args():
+- Every adapter has a `smoke_args()` function. Replace its `(None, {})` stub with
+  the SMALLEST valid `(dataset_or_experiment, config)` pair that makes
+  `run_baseline(*smoke_args())` actually execute — e.g. a 2-D toy target, a
+  single-example split, or the cheapest in-scope dataset. Use the rival's
+  examples / eval_plan notes to pick valid values (e.g. a target spec the rival
+  requires). This is what the stage uses to verify your adapter runs.
+
+Hard requirements for every edit:
+- The adapter's `run_baseline(dataset, config)` signature must stay exactly as
+  scaffolded (the registry calls it positionally).
+- Return a plain dict of metric name -> value.
+- Keep edits surgical and valid Python; do not delete the module docstring or
+  the `_RIVAL_ROOT` block in download adapters.
+- Update/author Doxygen blocks (## @brief / # @param / # @return) for any new
+  function you introduce.

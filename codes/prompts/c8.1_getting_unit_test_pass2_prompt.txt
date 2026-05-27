@@ -49,10 +49,20 @@ Coding rules:
        sum_to_one       → assert torch.allclose(out.sum(dim=-1), torch.ones(out.shape[:-1]), atol=...)
        monotonic        → assert torch.all(out[1:] >= out[:-1])  (or <=, choose by paper)
        constant_equals  → assert <symbol> == expected_value  (used for hyperparameter constants)
-   - If spec.skip_reason == "qualitative", emit a minimal smoke check using shape_only or a
-     hasattr/requires_grad check; the assembler will wrap it with @pytest.mark.xfail.
+   - If spec.skip_reason == "qualitative_smoke" (Bucket A), emit a hasattr/callable check,
+     e.g. `assert hasattr(ClassName, "method_name")` or `assert callable(fn)`. The assembler
+     applies NO marker, so this is reported as a real PASS/FAIL — write the most specific
+     existence check the api_docs_json supports. Do NOT wrap it in try/except or weaken it to
+     `assert True`.
+   - For dataset/asset "is obtained" specs (skip_reason="qualitative_smoke"), emit a
+     `assert callable(main)` / `assert hasattr(<prep_module>, "main")` smoke check on the
+     prep entrypoint — NOT an on-disk existence check (the bundle runs without a data-prep
+     step). These get NO xfail — real PASS/FAIL, never XPASS.
 
-4. For tier=comparison:
+4. For tier=comparison (Bucket C — full reproduction):
+   - You MUST translate the spec verbatim; NEVER dodge to `assert callable(...)` or
+     `assert X is not None`. The assembler tags the test @pytest.mark.reproduction and pytest
+     filters it from the default run, so it is safe to write a heavy body here.
    - Call ours via spec.comparison.our_call and read spec.comparison.metric from its return.
    - Call rival via spec.comparison.rival_call.
    - Apply assertion:

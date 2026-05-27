@@ -423,17 +423,36 @@ def read_all_files(directory, allowed_ext, is_print=True):
     
     return all_files_content
 
+# Directories that are never part of the paper's source code and must NOT be
+# walked: virtual envs / installed packages (thousands of library .py files that
+# would explode any prompt and may contain non-UTF-8 bytes), caches, and VCS dirs.
+_SKIP_DIRS = {
+    ".venv", "venv", "env", ".env", "site-packages", "__pycache__",
+    ".git", ".github", "node_modules", ".mypy_cache", ".pytest_cache", ".ipynb_checkpoints",
+}
+
+
 def read_python_files(directory):
-    """Recursively read all .py files in the specified directory and return their contents."""
+    """Recursively read all .py files in the specified directory and return their contents.
+
+    Skips virtualenv / installed-package / cache / VCS directories (see _SKIP_DIRS)
+    so we only read the project's own source, and reads with errors='replace' so a
+    stray non-UTF-8 byte in one file can never crash the whole pipeline.
+    """
     python_files_content = {}
-    
-    for root, _, files in os.walk(directory):  # Recursively traverse directories
+
+    for root, dirs, files in os.walk(directory):  # Recursively traverse directories
+        # Prune skip-dirs in place so os.walk never descends into them.
+        dirs[:] = [d for d in dirs if d not in _SKIP_DIRS]
         for filename in files:
             if filename.endswith(".py"):  # Check if file has .py extension
                 relative_path = os.path.relpath(os.path.join(root, filename), directory)  # Preserve directory structure
-                with open(os.path.join(root, filename), "r", encoding="utf-8") as file:
-                    python_files_content[relative_path] = file.read()
-    
+                try:
+                    with open(os.path.join(root, filename), "r", encoding="utf-8", errors="replace") as file:
+                        python_files_content[relative_path] = file.read()
+                except OSError as e:
+                    print(f"[SKIP] could not read {relative_path}: {e}")
+
     return python_files_content
   
 

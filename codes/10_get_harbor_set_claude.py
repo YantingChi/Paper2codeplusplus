@@ -1,7 +1,10 @@
-"""Stage 10 - package current Paper2Code artifacts into Harbor tasks.
+# This is the Claude-edited fork of 10_get_harbor_set.py.
+# run_codex.sh stage 10h invokes THIS file; the unsuffixed 10_get_harbor_set.py
+# is kept frozen as a reference. Keep edits here, not there.
+"""Stage 10h - package current Paper2Code artifacts into Harbor tasks.
 
 Sample usage:
-  python3.10 codes/10_get_harbor_set.py \
+  python3.10 codes/10_get_harbor_set_claude.py \
     --paper_name adaptive-pruning \
     --planned_file outputs/paperbench_log/adaptive-pruning/planning_response.json \
     --eval_plan_json tests/harbor/yantingchi/adaptive-pruning/eval_plan/eval_plan.json \
@@ -23,6 +26,7 @@ import json
 import os
 import re
 import shutil
+import subprocess
 import sys
 from pathlib import Path
 from typing import Any
@@ -56,6 +60,13 @@ build_timeout_sec = 1800.0
 cpus = 2
 memory_mb = 8192
 storage_mb = 16384
+gpus = 0
+allow_internet = true
+
+[verifier.env]
+PAPER2CODE_INSTALL_REQUIREMENTS = "{install_reqs_default}"
+
+[solution.env]
 """
 
 ASSET_CATEGORY_BLURBS = {
@@ -73,23 +84,7 @@ ASSET_CATEGORY_BLURBS = {
     ),
 }
 
-DOCKERFILE = """# Builds the Paper2Code Harbor runtime and installs the full generated requirements.
-# Sample usage:
-#   docker build -t p2c-task outputs/harbor_tasks/<task>/environment
-#   docker run --rm -v "$PWD/outputs/harbor_tasks/<task>/tests:/tests" -v /tmp/p2c-task-logs:/logs p2c-task bash /tests/test.sh
-
-ARG PYTHON_IMAGE=python:3.10.13-slim
-ARG PIP_DEFAULT_TIMEOUT=120
-ARG PIP_RETRIES=5
-
-FROM ${PYTHON_IMAGE}
-
-ARG PIP_DEFAULT_TIMEOUT=120
-ARG PIP_RETRIES=5
-
-ENV PIP_DISABLE_PIP_VERSION_CHECK=1 \\
-    PIP_DEFAULT_TIMEOUT=${PIP_DEFAULT_TIMEOUT} \\
-    PIP_RETRIES=${PIP_RETRIES}
+DOCKERFILE = """FROM python:3.11-slim
 
 # Harbor builds this image with the task environment directory as context.
 WORKDIR /workspace
@@ -97,18 +92,17 @@ RUN apt-get update && apt-get install -y --no-install-recommends \\
         git build-essential ca-certificates curl \\
     && rm -rf /var/lib/apt/lists/*
 
-# Install the verifier runner plus the generated repo's full dependency set.
-COPY codebase/requirements.txt /tmp/paper2code-requirements.txt
-RUN pip install --no-cache-dir --upgrade pip setuptools wheel \\
-    && pip install --no-cache-dir pytest \\
-    && pip install --no-cache-dir -r /tmp/paper2code-requirements.txt
+RUN pip install --no-cache-dir pytest
 
-# Copy the full Harbor environment after dependency installation for better
-# Docker layer reuse while iterating on task metadata and tests.
+# Light codebase deps so the repo imports out of the box. Heavy wheels (torch,
+# transformers, ...) are deferred to verifier-time (PAPER2CODE_INSTALL_REQUIREMENTS=1).
+# Copied before the full tree so editing the codebase doesn't bust this layer.
+COPY requirements-base.txt /tmp/requirements-base.txt
+RUN pip install --no-cache-dir -r /tmp/requirements-base.txt \\
+    || echo "[WARN] base requirements failed; deferring all installs to /tests/test.sh"
+
 COPY . /workspace/environment
-COPY tests /tests
 
-# Make both the agent-visible baked tests and Harbor verifier logs readable.
 RUN mkdir -p /logs/verifier && chmod -R a+rX /workspace /logs
 
 CMD ["bash"]
@@ -126,53 +120,42 @@ TEST_SH = """#!/usr/bin/env bash
 # Runs the Paper2Code pytest verifier and writes Harbor reward diagnostics.
 set -uo pipefail
 
-TEST_ROOT="${TEST_ROOT:-/tests}"
-LOG_ROOT="${LOG_ROOT:-/logs/verifier}"
-SCORE_DIR="${SCORE_DIR:-/tests/scores}"
-ENVIRONMENT_ROOT="${ENVIRONMENT_ROOT:-/workspace/environment}"
-CODEBASE_ROOT="${CODEBASE_ROOT:-/workspace/environment/codebase}"
-REQUIREMENTS_FILE="${REQUIREMENTS_FILE:-/workspace/environment/codebase/requirements.txt}"
-
-# Prepare verifier output locations expected by Harbor.
-mkdir -p "$LOG_ROOT" "$SCORE_DIR"
-rm -f "$SCORE_DIR/scores.json"
+mkdir -p /logs/verifier
+rm -f /logs/verifier/scores.json
 
 # Optional dependency installation is disabled by default because generated
 # repos often request large GPU wheels. Set PAPER2CODE_INSTALL_REQUIREMENTS=1
 # inside Harbor only when dependency installation is the failure under test.
-if [ "${PAPER2CODE_INSTALL_REQUIREMENTS:-0}" = "1" ] && [ -f "$REQUIREMENTS_FILE" ]; then
-    pip install -q -r "$REQUIREMENTS_FILE" || true
+if [ "${PAPER2CODE_INSTALL_REQUIREMENTS:-0}" = "1" ] && [ -f /workspace/environment/codebase/requirements.txt ]; then
+    pip install -q -r /workspace/environment/codebase/requirements.txt || true
 fi
 
 # Stage-9b conftest.py respects these env vars.
-export PAPER2CODE_REPO_PATH="$CODEBASE_ROOT"
-export PAPER2CODE_SCORE_PATH="$SCORE_DIR/scores.json"
-export PYTHONPATH="$CODEBASE_ROOT:$ENVIRONMENT_ROOT:${PYTHONPATH:-}"
+export PAPER2CODE_REPO_PATH="/workspace/environment/codebase"
+export PAPER2CODE_SCORE_PATH="/logs/verifier/scores.json"
+export PYTHONPATH="/workspace/environment/codebase:/workspace/environment:${PYTHONPATH:-}"
 
-# Run from the codebase root because stage-9b tests reference repo-relative
-# paths such as configs/baselines.yaml and scripts/prepare_data.py.
-cd "$CODEBASE_ROOT"
-pytest -q --tb=short -rA "$TEST_ROOT" > "$LOG_ROOT/pytest.log" 2>&1
+cd /tests
+pytest -q --tb=short -rA . > /logs/verifier/pytest.log 2>&1
 pytest_status=$?
 
-# Convert test scores and pytest diagnostics into Harbor verifier artifacts.
-python "$TEST_ROOT/compute_reward.py" \\
-    --specs "$TEST_ROOT/test_specs.json" \\
-    --scores "$SCORE_DIR/scores.json" \\
-    --output "$LOG_ROOT/reward.txt"
+python /tests/compute_reward.py \\
+    --specs /tests/test_specs.json \\
+    --scores /logs/verifier/scores.json \\
+    --output /logs/verifier/reward.txt
 
-python "$TEST_ROOT/analyze_failures.py" \\
-    --scores "$SCORE_DIR/scores.json" \\
-    --pytest-log "$LOG_ROOT/pytest.log" \\
-    --summary "$LOG_ROOT/summary.txt" \\
-    --report "$LOG_ROOT/failure_report.json" \\
+python /tests/analyze_failures.py \\
+    --scores /logs/verifier/scores.json \\
+    --pytest-log /logs/verifier/pytest.log \\
+    --summary /logs/verifier/summary.txt \\
+    --report /logs/verifier/failure_report.json \\
     --pytest-status "$pytest_status"
 
-if [ ! -s "$LOG_ROOT/reward.txt" ]; then
-    echo "0.0" > "$LOG_ROOT/reward.txt"
+if [ ! -s /logs/verifier/reward.txt ]; then
+    echo "0.0" > /logs/verifier/reward.txt
 fi
 
-cat "$LOG_ROOT/reward.txt"
+cat /logs/verifier/reward.txt
 exit 0
 """
 
@@ -515,27 +498,54 @@ def clear_existing_task_dir(task_dir: Path) -> None:
 
 
 def copy_codebase(repo_dir: Path, dst: Path) -> None:
-    shutil.copytree(
-        repo_dir,
-        dst,
-        ignore=shutil.ignore_patterns(*SKIP_COPY_PATTERNS),
-    )
+    # Drop the repo's OWN top-level tests/ dir so the held-out verifier never
+    # lands under environment/codebase/tests/ where the agent could read it.
+    # Nested tests dirs (e.g. src/foo/tests) are preserved — we only skip the
+    # tests dir that sits at the repo root.
+    repo_root_str = str(repo_dir)
+
+    def _ignore(src: str, names: list[str]) -> set[str]:
+        ignored = set(shutil.ignore_patterns(*SKIP_COPY_PATTERNS)(src, names))
+        if os.path.realpath(src) == os.path.realpath(repo_root_str) and "tests" in names:
+            ignored.add("tests")
+        return ignored
+
+    shutil.copytree(repo_dir, dst, ignore=_ignore)
 
 
-def ensure_requirements_file(codebase_dir: Path) -> None:
-    requirements_path = codebase_dir / "requirements.txt"
-    if requirements_path.exists():
-        return
-    requirements_path.write_text(
-        "# Generated by codes/10_get_harbor_set.py because the source repo had no requirements.txt.\n"
-        "# Sample usage: pip install -r requirements.txt\n",
-        encoding="utf-8",
+# Rewrite the stage-9b conftest's hardcoded host paths to file-relative anchors.
+# The generated conftest bakes DEFAULT_REPO_PATH / DEFAULT_SCORE_PATH as absolute
+# host paths (e.g. /mnt/blk1/Paper2Code/...), which are invalid once the task is
+# moved or run on another host. We anchor them on the conftest's own location so
+# `pytest tests/` works directly on the bundle; inside Harbor the env vars set by
+# test.sh (PAPER2CODE_REPO_PATH / PAPER2CODE_SCORE_PATH) still override these.
+def _rewrite_conftest_defaults(src_path: Path, dst_path: Path) -> None:
+    text = src_path.read_text(encoding="utf-8")
+
+    text, repo_subs = re.subn(
+        r"^DEFAULT_REPO_PATH\s*=\s*['\"][^'\"]*['\"]",
+        "DEFAULT_REPO_PATH = str(Path(__file__).resolve().parent.parent / 'environment' / 'codebase')",
+        text,
+        flags=re.M,
     )
+    text, score_subs = re.subn(
+        r"^DEFAULT_SCORE_PATH\s*=\s*['\"][^'\"]*['\"]",
+        "DEFAULT_SCORE_PATH = str(Path(__file__).resolve().parent.parent / 'logs' / 'verifier' / 'scores.json')",
+        text,
+        flags=re.M,
+    )
+    if repo_subs < 1 or score_subs < 1:
+        sys.exit(
+            "[ERROR] could not rewrite conftest defaults "
+            f"(repo_subs={repo_subs}, score_subs={score_subs}); "
+            f"expected DEFAULT_REPO_PATH and DEFAULT_SCORE_PATH assignments in {src_path}"
+        )
+    dst_path.write_text(text, encoding="utf-8")
 
 
 def copy_tests(src_tests: Path, dst_tests: Path) -> None:
-    for name in ("conftest.py", "pytest.ini"):
-        shutil.copy2(src_tests / name, dst_tests / name)
+    _rewrite_conftest_defaults(src_tests / "conftest.py", dst_tests / "conftest.py")
+    shutil.copy2(src_tests / "pytest.ini", dst_tests / "pytest.ini")
 
     for test_file in sorted(src_tests.glob("test_*.py")):
         shutil.copy2(test_file, dst_tests / test_file.name)
@@ -701,6 +711,94 @@ def build_bundle_log(
     )
 
 
+# Lightweight runtime deps safe to bake into the image at build time. Heavy
+# wheels (torch, transformers, lm-eval, accelerate, ...) are intentionally left
+# out so the image build stays fast and we don't silently bake a CPU-only torch
+# when a GPU build is wanted; those are installed at verifier-time when
+# PAPER2CODE_INSTALL_REQUIREMENTS=1 (set via task.toml [verifier.env]).
+LIGHT_DEP_WHITELIST = {
+    "numpy", "pandas", "pyyaml", "yaml", "tqdm", "packaging", "scipy",
+    "matplotlib", "scikit-learn", "sklearn", "datasets", "omegaconf", "requests",
+    "filelock", "regex", "typing-extensions", "click", "rich", "joblib",
+}
+
+# Match a requirement line's base package name, e.g. "torch>=2.1.0" -> "torch".
+_REQ_NAME_RE = re.compile(r"^\s*([A-Za-z0-9][A-Za-z0-9._-]*)")
+
+
+# Read the test specs array (stage-9b) so we can branch on whether a comparison
+# (reproduction) tier exists. Returns [] if the file is missing or malformed.
+def load_test_specs(unit_test_dir: Path) -> list[dict]:
+    specs_path = unit_test_dir / "test_specs.json"
+    try:
+        doc = json.loads(specs_path.read_text(encoding="utf-8"))
+    except (FileNotFoundError, json.JSONDecodeError):
+        return []
+    tests = doc.get("tests", []) if isinstance(doc, dict) else doc
+    return tests if isinstance(tests, list) else []
+
+
+# True if any spec is in the comparison (reproduction) tier.
+def has_comparison_tier(specs: list[dict]) -> bool:
+    return any(spec.get("tier") == "comparison" for spec in specs)
+
+
+# True if any comparison test file imports the rival package namespace. We grep
+# the raw text (cheap) instead of parsing — c6.5 does the real AST work.
+def comparison_uses_rivals(comparison_dir: Path) -> bool:
+    if not comparison_dir.is_dir():
+        return False
+    for test_file in comparison_dir.rglob("test_*.py"):
+        try:
+            if "assets.rivals." in test_file.read_text(encoding="utf-8", errors="replace"):
+                return True
+        except OSError:
+            continue
+    return False
+
+
+# Scaffold assets/rivals/<slug> packages inside the bundled codebase so the
+# comparison tests' `assets.rivals.*` imports resolve. c6.5 sys.exits(1) when
+# tests/comparison/ is absent, so we run with check=False and only call it when
+# we already detected rival imports.
+def maybe_install_rival_stubs(codebase_dir: Path) -> None:
+    script = Path(__file__).resolve().parent / "c6.5_install_rival_stubs.py"
+    if not script.is_file():
+        print(f"[warn] rival-stub script not found: {script}", file=sys.stderr)
+        return
+    result = subprocess.run(
+        [sys.executable, str(script), "--repo", str(codebase_dir)],
+        check=False,
+    )
+    if result.returncode != 0:
+        print(
+            f"[warn] c6.5 rival-stub bootstrap returned {result.returncode}; "
+            "comparison tests may fail to import assets.rivals.*",
+            file=sys.stderr,
+        )
+
+
+# Write environment/requirements-base.txt: the subset of the codebase's
+# requirements.txt whose base package name is in LIGHT_DEP_WHITELIST. Always
+# writes the file (possibly empty) so the Dockerfile's COPY/install step has a
+# target. Returns the number of lines written.
+def write_requirements_base(codebase_dir: Path, env_dir: Path) -> int:
+    req_path = codebase_dir / "requirements.txt"
+    kept: list[str] = []
+    if req_path.is_file():
+        for raw in req_path.read_text(encoding="utf-8", errors="replace").splitlines():
+            line = raw.strip()
+            if not line or line.startswith("#") or line.startswith("-"):
+                continue
+            match = _REQ_NAME_RE.match(line)
+            if match and match.group(1).lower() in LIGHT_DEP_WHITELIST:
+                kept.append(line)
+    (env_dir / "requirements-base.txt").write_text(
+        ("\n".join(kept) + "\n") if kept else "", encoding="utf-8"
+    )
+    return len(kept)
+
+
 # Main packaging workflow.
 def create_task(args: argparse.Namespace, sources: dict[str, Path | None]) -> Path:
     harbor_root = Path(args.harbor_output_dir).resolve()
@@ -718,9 +816,7 @@ def create_task(args: argparse.Namespace, sources: dict[str, Path | None]) -> Pa
     for directory in (env_dir, solution_dir, tests_dir):
         directory.mkdir(parents=True, exist_ok=True)
 
-    codebase_dir = env_dir / "codebase"
-    copy_codebase(sources["repo_dir"], codebase_dir)  # type: ignore[arg-type]
-    ensure_requirements_file(codebase_dir)
+    copy_codebase(sources["repo_dir"], env_dir / "codebase")  # type: ignore[arg-type]
     shutil.copy2(sources["planned_file"], env_dir / "planning.json")
     shutil.copy2(sources["eval_plan"], env_dir / "eval_plan.json")
     if sources["paper_json"] is not None:
@@ -730,13 +826,37 @@ def create_task(args: argparse.Namespace, sources: dict[str, Path | None]) -> Pa
     copy_tests(sources["tests_dir"], tests_dir)  # type: ignore[arg-type]
     asset_counts = copy_assets(sources["asset_dir"], env_dir)  # type: ignore[arg-type]
 
-    repro_files = detect_repro_files(env_dir / "codebase")
+    # Branch on whether the suite has a comparison (reproduction) tier: it drives
+    # timeouts, the default for verifier-time heavy-dep install, and rival stubs.
+    specs = load_test_specs(sources["unit_test_dir"])  # type: ignore[arg-type]
+    comparison_present = has_comparison_tier(specs)
+
+    codebase_dir = env_dir / "codebase"
+    if comparison_present and comparison_uses_rivals(codebase_dir / "tests" / "comparison"):
+        maybe_install_rival_stubs(codebase_dir)
+
+    n_base = write_requirements_base(codebase_dir, env_dir)
+    print(f"[info] requirements-base.txt: {n_base} light dep(s) baked into image.")
+
+    # Bump timeouts for reproduction runs, but only if the caller left the
+    # module defaults untouched (don't override an explicit --*_timeout_sec).
+    agent_timeout = args.agent_timeout_sec
+    verifier_timeout = args.verifier_timeout_sec
+    if comparison_present:
+        if agent_timeout == DEFAULT_AGENT_TIMEOUT_SEC:
+            agent_timeout = 7200
+        if verifier_timeout == DEFAULT_VERIFIER_TIMEOUT_SEC:
+            verifier_timeout = 3600
+    install_reqs_default = "1" if comparison_present else "0"
+
+    repro_files = detect_repro_files(codebase_dir)
     (task_dir / "task.toml").write_text(
         TASK_TOML.format(
             difficulty=args.difficulty,
             task_slug=task_slug,
-            agent_timeout_sec=args.agent_timeout_sec,
-            verifier_timeout_sec=args.verifier_timeout_sec,
+            agent_timeout_sec=agent_timeout,
+            verifier_timeout_sec=verifier_timeout,
+            install_reqs_default=install_reqs_default,
         ),
         encoding="utf-8",
     )
@@ -747,11 +867,6 @@ def create_task(args: argparse.Namespace, sources: dict[str, Path | None]) -> Pa
     write_executable(tests_dir / "test.sh", TEST_SH)
     (tests_dir / "compute_reward.py").write_text(COMPUTE_REWARD_PY, encoding="utf-8")
     (tests_dir / "analyze_failures.py").write_text(ANALYZE_FAILURES_PY, encoding="utf-8")
-    shutil.copytree(
-        tests_dir,
-        env_dir / "tests",
-        ignore=shutil.ignore_patterns(*SKIP_COPY_PATTERNS),
-    )
     (task_dir / "bundle_log.md").write_text(build_bundle_log(sources, task_dir), encoding="utf-8")
 
     return task_dir
@@ -769,8 +884,11 @@ def print_summary(task_dir: Path, args: argparse.Namespace) -> None:
     print(f"  docker run --rm -v {tests_dir}:/tests -v /tmp/p2c-{task_slug}-logs:/logs p2c-{task_slug} bash /tests/test.sh")
     print(f"  cat /tmp/p2c-{task_slug}-logs/verifier/summary.txt")
     print()
-    print("Or via Harbor:")
-    print(f"  harbor run -p {Path(args.harbor_output_dir).resolve()} -a <agent> -m <model>")
+    harbor_root = Path(args.harbor_output_dir).resolve()
+    print("Validate + boot via Harbor:")
+    print(f"  harbor tasks check {task_dir} -m sonnet -o /tmp/{task_slug}-check.json")
+    print(f"  harbor tasks start-env -p {task_dir} -e docker --non-interactive")
+    print(f"  harbor run -p {harbor_root} -t {task_slug} -a openhands -m gpt-5 --debug")
 
 
 def main() -> None:
