@@ -1,1 +1,0 @@
-reset to stage3_12 snapshot (clean iter-2 stage-3 output; rules 9-14 baked in; NO repair) at Mon May 25 08:56:07 PM CDT 2026
