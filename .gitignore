@@ -1,5 +1,6 @@
 /assets/
-/tests/
+/tests/*
+!/tests/test_aoai_proxy.py
 /jobs/
 
 /data/*
@@ -16,6 +17,8 @@
 !/scripts/run_codex_with_eval.sh
 !/scripts/run_codex.sh
 !/scripts/run_paperbench_codex_all.sh
+!/scripts/install_aoai_proxy_systemd.sh
+!/scripts/run_paper_with_aoai_proxy.sh
 
 /temp*
 /api-key
@@ -32,3 +35,6 @@ __pycache__/
 !/README.md
 
 /codes/misc_compare.py
+/codes/__pycache__/*
+/deploy/*
+/reports/*
