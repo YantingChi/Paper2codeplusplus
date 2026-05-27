@@ -3,7 +3,7 @@
 # Sample usage:
 # PAPER_NAME=adaptive-pruning bash /mnt/blk1/Paper2Code/scripts/run_codex.sh --start 1
 # PAPER_NAME=bbox bash /mnt/blk1/Paper2Code/scripts/run_codex.sh --start 5 2>&1 | tee ${PAPER_NAME}_run.log
-# PAPER_NAME=adaptive-pruning bash /mnt/blk1/Paper2Code/scripts/run_codex.sh --stages 5,5.1,7,8.1
+# PAPER_NAME=bam bash /mnt/blk1/Paper2Code/scripts/run_codex.sh --stages 9
 set -euo pipefail
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
@@ -19,20 +19,8 @@ on_error() {
 }
 trap on_error ERR
 
-# export OPENAI_API_KEY=""
-
-# use openai api key
-# export PAPER2CODE_LLM_PROVIDER=openai
-# export OPENAI_API_KEY="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"
-
-# Use azure openai key
-export PAPER2CODE_LLM_PROVIDER=azure
-export AZURE_OPENAI_API_KEY="DROto1OI8KzrSyjn2GRMMrDNu15IzvbLzINMiQrUwLIvjTlBEfEhJQQJ99CEACHYHv6XJ3w3AAAAACOGM255"
-export AZURE_OPENAI_ENDPOINT="https://csci8980-group11-resource.openai.azure.com/"
-python codes/api_key_selector.py
-
-
-python $ROOT_DIR/codes/api_key_selector.py
+# LLM credentials are intentionally supplied by the caller's environment.
+# Use scripts/run_paper_with_aoai_proxy.sh to run through the local AOAI proxy.
 Error_log_file=$ROOT_DIR/results/error_log_${PAPER_NAME:-unknown}.log
 
 
@@ -60,7 +48,9 @@ Stages:
   7    Repro Rubric        (codes/7_getting_rubric.py)
   8    Paper2Code Rubric   (codes/8_getting_paper2code_rubric.py)
   8.1  Self-Ameliorating   (codes/8.1_self_ameliorating.py)
+  8.2  Wire Baselines      (codes/8.2_wire_baselines.py)
   9    Unit Tests          (codes/9a_categorize_and_plan.py + codes/9b_synthesize_tests.py)
+ 10h   Harbor Bundle       (codes/10_get_harbor_set_claude.py)
  10    SkyDiscover Bundle  (codes/10_get_skyDiscover.py)
  11    SkyDiscover Run     (codes/11_run_sky_discover.py)
 
@@ -137,13 +127,13 @@ if (( selection_count > 1 )); then
     exit 1
 fi
 
-if ! [[ "$START_STAGE" =~ ^[0-9]+(\.[0-9]+)?$ ]]; then
-    echo "Error: --start must be a non-negative number (got: $START_STAGE)" >&2
+if ! [[ "$START_STAGE" =~ ^[0-9]+(\.[0-9]+)?[a-z]?$ ]]; then
+    echo "Error: --start must be a stage id like 8.1 or 10h (got: $START_STAGE)" >&2
     exit 1
 fi
 
-if [[ -n "$ONLY_STAGE" ]] && ! [[ "$ONLY_STAGE" =~ ^[0-9]+(\.[0-9]+)?$ ]]; then
-    echo "Error: --only must be a non-negative number (got: $ONLY_STAGE)" >&2
+if [[ -n "$ONLY_STAGE" ]] && ! [[ "$ONLY_STAGE" =~ ^[0-9]+(\.[0-9]+)?[a-z]?$ ]]; then
+    echo "Error: --only must be a stage id like 8.1 or 10h (got: $ONLY_STAGE)" >&2
     exit 1
 fi
 
@@ -160,8 +150,8 @@ if [[ -n "$STAGES" ]]; then
 
     IFS=',' read -r -a STAGE_SELECTIONS <<< "$STAGES"
     for selected_stage in "${STAGE_SELECTIONS[@]}"; do
-        if ! [[ "$selected_stage" =~ ^[0-9]+(\.[0-9]+)?$ ]]; then
-            echo "Error: --stages values must be non-negative numbers (got: $selected_stage)" >&2
+        if ! [[ "$selected_stage" =~ ^[0-9]+(\.[0-9]+)?[a-z]?$ ]]; then
+            echo "Error: --stages values must be stage ids like 8.1 or 10h (got: $selected_stage)" >&2
             exit 1
         fi
     done
@@ -360,6 +350,34 @@ if (( STAGE3_RAN == 1 )); then
     snapshot_repo "stage3"
 fi
 
+# Stage 3.5: targeted, feedback-driven repair. Regenerates ONLY the files behind
+# failing rubric leaves (per a grader_output.json), leaving passing files frozen,
+# to avoid the ~+/-6-leaf stochastic noise of a full stage-3 regeneration.
+# Needs a grader_output.json: set REPAIR_GRADER_OUTPUT, else the most recent one
+# for this paper is used. Exits nonzero with a clear message if none is found.
+if run_stage 3.5; then
+    CURRENT_STAGE="Stage 3.5: Repair"
+    echo "------- Stage 3.5: Repair (feedback-driven, targeted) -------"
+    REPAIR_GRADER_OUTPUT="${REPAIR_GRADER_OUTPUT:-}"
+    if [[ -z "$REPAIR_GRADER_OUTPUT" ]]; then
+        REPAIR_GRADER_OUTPUT="$(ls -t "$ROOT_DIR"/outputs/paperbench_eval/"$PAPER_NAME"/*/grader_output.json 2>/dev/null | head -1)"
+    fi
+    if [[ -z "$REPAIR_GRADER_OUTPUT" || ! -f "$REPAIR_GRADER_OUTPUT" ]]; then
+        echo "[run_codex][ERROR] Stage 3.5 needs a grader_output.json to repair against." >&2
+        echo "[run_codex][ERROR] Set REPAIR_GRADER_OUTPUT=/path/to/grader_output.json (none found for $PAPER_NAME)." >&2
+        exit 1
+    fi
+    echo "[run_codex] Stage 3.5 repairing against: $REPAIR_GRADER_OUTPUT"
+    "$PYTHON_BIN" "$ROOT_DIR/codes/3.5_repair.py" \
+        --paper_name "$PAPER_NAME" \
+        --gpt_version "$GPT_VERSION" \
+        --pdf_json_path "$PDF_JSON_CLEANED_PATH" \
+        --output_dir "$OUTPUT_DIR" \
+        --output_repo_dir "$OUTPUT_REPO_DIR" \
+        --grader_output "$REPAIR_GRADER_OUTPUT"
+    snapshot_repo "stage3_5"
+fi
+
 if run_stage 5; then
     CURRENT_STAGE="Stage 5: Eval Info"
     echo "------- Stage 5: Eval Info -------"
@@ -393,6 +411,18 @@ if run_stage 6; then
         --eval_plan_json "$EVAL_PLAN_JSON_PATH" \
         --output_dir "$HARBOR_ASSET_DIR" \
         --gpt_version "$GPT_VERSION"
+
+    # Wire rival baselines into the repo so run_tests_local.sh --reproduction
+    # can resolve the comparison tests' assets.rivals.* imports right away.
+    # Guarded on tests/comparison/ existing (stage 9 produces it); a failure
+    # here is advisory only and must not fail the download stage.
+    if [[ -d "$OUTPUT_REPO_DIR/tests/comparison" ]]; then
+        "$PYTHON_BIN" "$ROOT_DIR/codes/c6.5_install_rival_stubs.py" \
+                --repo "$OUTPUT_REPO_DIR" \
+            || echo "[run_codex] WARNING: rival-stub bootstrap failed; run it manually before --reproduction." >&2
+    else
+        echo "[run_codex] No tests/comparison/ yet — skipping rival-stub bootstrap (run stage 9 first)."
+    fi
 fi
 
 if run_stage 7; then
@@ -455,6 +485,24 @@ if (( STAGE81_RAN == 1 )); then
     snapshot_repo "stage8.1"
 fi
 
+STAGE82_RAN=0
+if run_stage 8.2; then
+    CURRENT_STAGE="Stage 8.2: Wire Baselines"
+    echo "------- Stage 8.2: Wire Baselines (rival adapters from eval_plan) -------"
+    HARBOR_DIR="$ROOT_DIR/tests/harbor/yantingchi/$PAPER_NAME"
+    "$PYTHON_BIN" "$ROOT_DIR/codes/8.2_wire_baselines.py" \
+        --paper_name "$PAPER_NAME" \
+        --gpt_version "$GPT_VERSION" \
+        --output_dir "$OUTPUT_DIR" \
+        --output_repo_dir "$OUTPUT_REPO_DIR" \
+        --eval_plan_path "$HARBOR_DIR/eval_plan/eval_plan.json" \
+        --asset_root "$HARBOR_DIR/harbor/asset"
+    STAGE82_RAN=1
+fi
+if (( STAGE82_RAN == 1 )); then
+    snapshot_repo "stage8.2"
+fi
+
 # if run_stage 9; then
 #     echo "------- Stage 9: Unit Tests -------"
 #     "$PYTHON_BIN" "$ROOT_DIR/codes/9_getting_unit_test.py" \
@@ -487,91 +535,111 @@ if run_stage 9; then
         --tier both
 fi
 
+# Stage 10h: package the generated repo, eval plan, downloaded assets, and the
+# stage-9b pytest suite into a Harbor task directory under $HARBOR_TASKS_DIR.
+# The resulting task is runnable via:
+#   harbor run -p "$HARBOR_TASKS_DIR" -m "<model>" -a "<agent>"
+if run_stage 10h; then
+    CURRENT_STAGE="Stage 10h: Harbor Bundle"
+    echo "------- Stage 10h: Harbor Bundle -------"
+    "$PYTHON_BIN" "$ROOT_DIR/codes/10_get_harbor_set_claude.py" \
+        --paper_name "$PAPER_NAME" \
+        --planned_file "$REPO_PLAN_PATH" \
+        --eval_plan_json "$EVAL_PLAN_JSON_PATH" \
+        --paper_json_path "$PDF_JSON_CLEANED_PATH" \
+        --repo_dir "$OUTPUT_REPO_DIR" \
+        --unit_test_dir "$TESTS_OUTPUT_DIR" \
+        --harbor_asset_dir "$HARBOR_ASSET_DIR" \
+        --harbor_output_dir "$HARBOR_TASKS_DIR" \
+        --task_slug "$PAPER_NAME" \
+        --force
+fi
+
 #/mnt/blk1/Paper2Code/data/paperbench_papers/adaptive-pruning/rubric_ap.json 
 
+# currently disabled as we do not need this part
+# if run_stage 10; then
+#     CURRENT_STAGE="Stage 10: SkyDiscover Bundle"
+#     echo "------- Stage 10: SkyDiscover Bundle -------"
 
-if run_stage 10; then
-    CURRENT_STAGE="Stage 10: SkyDiscover Bundle"
-    echo "------- Stage 10: SkyDiscover Bundle -------"
+#     # Serializes the generated codebase into SkyDiscover's expected format:
+#     # initial_program.py (CODEBASE dict) + evaluator.py (weighted pytest reward).
+#     bundle_args=(
+#         --paper_name "$PAPER_NAME"
+#         --paper_json_path "$PDF_JSON_CLEANED_PATH"
+#         --planning_dir "$OUTPUT_DIR"
+#         --repo_dir "$OUTPUT_REPO_DIR"
+#         --unit_test_dir "$TESTS_OUTPUT_DIR"
+#         --skydiscover_output_dir "$SKYDISCOVER_TASKS_DIR"
+#         --task_slug "$PAPER_NAME"
+#         --force
+#     )
 
-    # Serializes the generated codebase into SkyDiscover's expected format:
-    # initial_program.py (CODEBASE dict) + evaluator.py (weighted pytest reward).
-    bundle_args=(
-        --paper_name "$PAPER_NAME"
-        --paper_json_path "$PDF_JSON_CLEANED_PATH"
-        --planning_dir "$OUTPUT_DIR"
-        --repo_dir "$OUTPUT_REPO_DIR"
-        --unit_test_dir "$TESTS_OUTPUT_DIR"
-        --skydiscover_output_dir "$SKYDISCOVER_TASKS_DIR"
-        --task_slug "$PAPER_NAME"
-        --force
-    )
+#     if [[ -d "$HARBOR_ASSET_DIR" ]]; then
+#         echo "  noting stage-6 assets from: $HARBOR_ASSET_DIR"
+#         bundle_args+=(--harbor_asset_dir "$HARBOR_ASSET_DIR")
+#     else
+#         echo "  no stage-6 assets at $HARBOR_ASSET_DIR"
+#     fi
 
-    if [[ -d "$HARBOR_ASSET_DIR" ]]; then
-        echo "  noting stage-6 assets from: $HARBOR_ASSET_DIR"
-        bundle_args+=(--harbor_asset_dir "$HARBOR_ASSET_DIR")
-    else
-        echo "  no stage-6 assets at $HARBOR_ASSET_DIR"
-    fi
+#     "$PYTHON_BIN" "$ROOT_DIR/codes/10_get_skyDiscover.py" "${bundle_args[@]}"
+# fi
 
-    "$PYTHON_BIN" "$ROOT_DIR/codes/10_get_skyDiscover.py" "${bundle_args[@]}"
-fi
+# if run_stage 11; then
+#     CURRENT_STAGE="Stage 11: SkyDiscover Run"
+#     echo "------- Stage 11: SkyDiscover Run -------"
+#     # Iteratively evolves the codebase over SKYDISCOVER_ITERATIONS rounds.
+#     # Each round: SkyDiscover asks the LLM to improve initial_program.py,
+#     # evaluator.py scores the result via the pytest suite, best version is kept.
+#     # evaluator.py appends one JSON line per iteration to cost_log.jsonl.
+#     cost_log="$SKYDISCOVER_JOBS_DIR/$PAPER_NAME/cost_log.jsonl"
+#     mkdir -p "$SKYDISCOVER_JOBS_DIR/$PAPER_NAME"
+#     skydiscover_args=(
+#         --skydiscover_output_dir "$SKYDISCOVER_TASKS_DIR"
+#         --task_slug "$PAPER_NAME"
+#         --search "$SKYDISCOVER_SEARCH"
+#         --model "$GPT_VERSION"
+#         --iterations "$SKYDISCOVER_ITERATIONS"
+#         --output_dir "$SKYDISCOVER_JOBS_DIR/$PAPER_NAME"
+#         --cost_log "$cost_log"
+#     )
+#     "$PYTHON_BIN" "$ROOT_DIR/codes/11_run_sky_discover.py" "${skydiscover_args[@]}" 2>&1 | tee "$Error_log_file"
 
-if run_stage 11; then
-    CURRENT_STAGE="Stage 11: SkyDiscover Run"
-    echo "------- Stage 11: SkyDiscover Run -------"
-    # Iteratively evolves the codebase over SKYDISCOVER_ITERATIONS rounds.
-    # Each round: SkyDiscover asks the LLM to improve initial_program.py,
-    # evaluator.py scores the result via the pytest suite, best version is kept.
-    # evaluator.py appends one JSON line per iteration to cost_log.jsonl.
-    cost_log="$SKYDISCOVER_JOBS_DIR/$PAPER_NAME/cost_log.jsonl"
-    mkdir -p "$SKYDISCOVER_JOBS_DIR/$PAPER_NAME"
-    skydiscover_args=(
-        --skydiscover_output_dir "$SKYDISCOVER_TASKS_DIR"
-        --task_slug "$PAPER_NAME"
-        --search "$SKYDISCOVER_SEARCH"
-        --model "$GPT_VERSION"
-        --iterations "$SKYDISCOVER_ITERATIONS"
-        --output_dir "$SKYDISCOVER_JOBS_DIR/$PAPER_NAME"
-        --cost_log "$cost_log"
-    )
-    "$PYTHON_BIN" "$ROOT_DIR/codes/11_run_sky_discover.py" "${skydiscover_args[@]}" 2>&1 | tee "$Error_log_file"
+#     # ---- cost summary ---------------------------------------------------- #
+#     if [[ -f "$cost_log" ]]; then
+#         echo ""
+#         echo "------- SkyDiscover Cost Summary -------"
+#         COST_LOG_PATH="$cost_log" "$PYTHON_BIN" - <<'PYEOF'
+# import json, os, sys
+# from pathlib import Path
 
-    # ---- cost summary ---------------------------------------------------- #
-    if [[ -f "$cost_log" ]]; then
-        echo ""
-        echo "------- SkyDiscover Cost Summary -------"
-        COST_LOG_PATH="$cost_log" "$PYTHON_BIN" - <<'PYEOF'
-import json, os, sys
-from pathlib import Path
+# log_path = os.environ.get("COST_LOG_PATH", "")
+# try:
+#     entries = [json.loads(l) for l in Path(log_path).read_text().splitlines() if l.strip()]
+# except Exception as e:
+#     print(f"  Could not read cost log: {e}")
+#     sys.exit(0)
+# if not entries:
+#     print("  No evaluation entries found.")
+#     sys.exit(0)
 
-log_path = os.environ.get("COST_LOG_PATH", "")
-try:
-    entries = [json.loads(l) for l in Path(log_path).read_text().splitlines() if l.strip()]
-except Exception as e:
-    print(f"  Could not read cost log: {e}")
-    sys.exit(0)
-if not entries:
-    print("  No evaluation entries found.")
-    sys.exit(0)
+# iters = len(entries)
+# best = max(entries, key=lambda e: e["score"])
+# total_dur = sum(e["duration_s"] for e in entries)
+# total_tok = sum(e["codebase_tokens_est"] for e in entries)
+# # Each iteration: SkyDiscover sends ~tokens_est input + generates ~tokens_est/2 output.
+# # GPT-4o Azure pricing (rough): $5/1M input tokens, $15/1M output tokens.
+# cost_usd = total_tok * (5 + 15 * 0.5) / 1_000_000
 
-iters = len(entries)
-best = max(entries, key=lambda e: e["score"])
-total_dur = sum(e["duration_s"] for e in entries)
-total_tok = sum(e["codebase_tokens_est"] for e in entries)
-# Each iteration: SkyDiscover sends ~tokens_est input + generates ~tokens_est/2 output.
-# GPT-4o Azure pricing (rough): $5/1M input tokens, $15/1M output tokens.
-cost_usd = total_tok * (5 + 15 * 0.5) / 1_000_000
-
-print(f"  Iterations completed  : {iters}")
-print(f"  Best score            : {best['score']:.4f}  (iter {best['iteration']})")
-print(f"  Total eval time       : {total_dur:.1f}s  (~{total_dur/iters:.1f}s / iter)")
-print(f"  Est. tokens used      : {total_tok:,}  (~{total_tok // 1000}K)")
-print(f"  Est. API cost (GPT-4o): ${cost_usd:.4f}")
-print(f"  Full cost log         : {log_path}")
-PYEOF
-    fi
-fi
+# print(f"  Iterations completed  : {iters}")
+# print(f"  Best score            : {best['score']:.4f}  (iter {best['iteration']})")
+# print(f"  Total eval time       : {total_dur:.1f}s  (~{total_dur/iters:.1f}s / iter)")
+# print(f"  Est. tokens used      : {total_tok:,}  (~{total_tok // 1000}K)")
+# print(f"  Est. API cost (GPT-4o): ${cost_usd:.4f}")
+# print(f"  Full cost log         : {log_path}")
+# PYEOF
+#     fi
+# fi
 
 # echo "------- Harbor Bundle -------"
 

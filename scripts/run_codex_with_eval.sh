@@ -18,20 +18,9 @@ set -euo pipefail
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 
-# export OPENAI_API_KEY=""
-
-# use openai api key
-# export PAPER2CODE_LLM_PROVIDER=openai
-# export OPENAI_API_KEY="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"
-
-# Use azure openai key
-export PAPER2CODE_LLM_PROVIDER=azure
-export AZURE_OPENAI_API_KEY="DROto1OI8KzrSyjn2GRMMrDNu15IzvbLzINMiQrUwLIvjTlBEfEhJQQJ99CEACHYHv6XJ3w3AAAAACOGM255"
-export AZURE_OPENAI_ENDPOINT="https://csci8980-group11-resource.openai.azure.com/"
-python codes/api_key_selector.py
-
-
-python $ROOT_DIR/codes/api_key_selector.py
+# LLM credentials are intentionally supplied by the caller's environment.
+# Use scripts/run_paper_with_aoai_proxy.sh to run the base pipeline through
+# the local AOAI proxy before running evaluation-specific workflows.
 Error_log_file=$ROOT_DIR/results/error_log_${PAPER_NAME:-unknown}.log
 
 

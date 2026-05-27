@@ -19,8 +19,13 @@ Return ONLY valid JSON with this exact schema for every node:
   "id": "",
   "requirements": "",
   "weight": 1,
-  "sub_tasks": [],
-
+  "task_category": null,
+  "finegrained_task_category": null,
+  "anchor": null,
+  "expected_outcome": null,
+  "comparison_protocol": null,
+  "prerequisite_ids": null,
+  "sub_tasks": []
 }
 
 Allowed task_category values:
@@ -46,22 +51,57 @@ Rules:
    - non-empty "sub_tasks"
    - task_category = null
    - finegrained_task_category = null
+   - anchor, expected_outcome, comparison_protocol, prerequisite_ids all set to null
 3. Leaf nodes must:
    - have empty "sub_tasks"
    - have non-null task_category and finegrained_task_category
    - be atomic, testable, and phrased as a single check
+   - set anchor, expected_outcome, comparison_protocol, prerequisite_ids to null
+     UNLESS rules 5/11/12 require them to be populated (Result-Analysis leaves and
+     leaves derived from core_contributions must populate them)
 4. Organize the tree in dependency order:
    setup/assets -> method implementation -> execution -> result verification
 5. Use these leaf phrasing templates:
    - "Code has been implemented such that ..."
    - "The <dataset/model/environment> is obtained."
    - "The <procedure/experiment> has been run ..."
-   - "The results of Figure/Table <X> have been reproduced."
+   - Result-Analysis leaves MUST use this structured template (do NOT use the bare
+     "The results of Figure/Table <X> have been reproduced." form):
+       "The reproduction reproduces <metric> on <experiment conditions> using
+        <named baselines/comparators> and matches the paper's reported
+        <qualitative trend> (anchor: <anchor>)."
+     Example: "The reproduction reproduces the reverse-KL-vs-gradient-evaluations
+     curve on synthetic Gaussian targets with D in {4,16,64,256} using
+     ADVI/Score/Fisher/GSM (B=2) as comparators, averaged over 10 seeds, and matches
+     the paper's claim that BaM is competitive or faster (anchor: Appendix E.2;
+     Figure E.3)."
 6. Include hyperparameters as separate leaves when the paper specifies exact values and they materially affect reproduction.
-7. Create result-analysis leaves only for explicit empirical claims or figure/table outcomes.
+7. Create result-analysis leaves only for explicit empirical claims or figure/table
+   outcomes. Every Result-Analysis leaf MUST reference at least one upstream `run_*`
+   (or implementation) leaf id in `prerequisite_ids`; otherwise the leaf has no
+   upstream computation to check and the audit will flag it.
 8. Do not include uncertain items unless the evidence graph marked them as required; if included, phrase them conservatively.
 9. Prefer deeper trees for method decomposition when the paper naturally decomposes an algorithm into parts.
 10. Assign larger weights only to major method blocks; leaf weights should usually be 1.
+11. Carry-forward rule: For every leaf derived from a Pass 1 `results_to_verify[]`
+    entry, COPY that entry's `anchor`, `expected_outcome`, and `comparison_protocol`
+    verbatim into the leaf's matching fields. Translate the entry's `prerequisites`
+    (which are asset names) into `prerequisite_ids` by referencing the leaf ids you
+    created earlier in the tree for those assets and for the corresponding `run_*`
+    experiment leaf (e.g., `asset_synth_gaussian`, `impl_metrics`,
+    `run_gaussian_reverse_kl`). Do NOT drop information from the Pass 1 entry — the
+    bare phrasing "The results of Figure X have been reproduced." is forbidden.
+12. Core-contributions rule: For every `core_contributions[]` entry:
+    (a) ALWAYS create at least one Code Development leaf capturing the
+        implementation requirement implied by the contribution.
+    (b) If `verification_hint` is non-empty AND does not start with
+        "theoretical_only", ALSO create a Result-Analysis leaf whose
+        `expected_outcome` is the `verification_hint` (with comparison_protocol set
+        to how the check would be performed). Wire its `prerequisite_ids` to the
+        implementation leaf(s) from (a) and any `run_*` leaves needed.
+    (c) If `verification_hint` starts with "theoretical_only", do NOT create a
+        Result-Analysis leaf for that contribution — only the implementation
+        leaf(s) from (a).
 
 Now convert the evidence graph into the rubric JSON.
 """
@@ -111,6 +151,9 @@ FINEGRAINED_TASK_CATEGORY_VALUES = [
 ]
 
 
+# build_nullable_enum_schema: wrap an enum of allowed strings in a schema that also
+# permits null. Used for task_category / finegrained_task_category so internal nodes
+# can serialize them as null.
 def build_nullable_enum_schema(values: List[str]) -> Dict[str, object]:
     return {
         "anyOf": [
@@ -118,6 +161,30 @@ def build_nullable_enum_schema(values: List[str]) -> Dict[str, object]:
             {"type": "null"},
         ]
     }
+
+
+# nullable: wrap an arbitrary JSON-schema fragment so it also permits null. Used for
+# the carry-forward leaf fields (anchor, expected_outcome, comparison_protocol,
+# prerequisite_ids) which are required on every node but must be null on internal
+# (non-leaf) nodes.
+def nullable(inner: Dict[str, object]) -> Dict[str, object]:
+    return {"anyOf": [inner, {"type": "null"}]}
+
+
+# CARRY_FORWARD_LEAF_FIELDS: schema fragments for the four optional fields that let
+# Result-Analysis (and other) leaves preserve information from the Pass 1 evidence
+# graph. Each field is required on every node (strict mode) but is nullable so
+# internal nodes can serialize them as null.
+CARRY_FORWARD_LEAF_FIELDS: Dict[str, Dict[str, object]] = {
+    "anchor": nullable({"type": "string"}),
+    "expected_outcome": nullable({"type": "string"}),
+    "comparison_protocol": nullable({"type": "string"}),
+    "prerequisite_ids": nullable(
+        {"type": "array", "items": {"type": "string"}}
+    ),
+}
+
+CARRY_FORWARD_LEAF_FIELD_NAMES: List[str] = list(CARRY_FORWARD_LEAF_FIELDS.keys())
 
 
 PAPER2CODE_NODE_SCHEMA: Dict[str, object] = {
@@ -131,6 +198,7 @@ PAPER2CODE_NODE_SCHEMA: Dict[str, object] = {
         "finegrained_task_category": build_nullable_enum_schema(
             FINEGRAINED_TASK_CATEGORY_VALUES
         ),
+        **CARRY_FORWARD_LEAF_FIELDS,
         "sub_tasks": {
             "type": "array",
             "items": {"$ref": "#/$defs/node"},
@@ -142,6 +210,7 @@ PAPER2CODE_NODE_SCHEMA: Dict[str, object] = {
         "weight",
         "task_category",
         "finegrained_task_category",
+        *CARRY_FORWARD_LEAF_FIELD_NAMES,
         "sub_tasks",
     ],
     "$defs": {
@@ -156,6 +225,7 @@ PAPER2CODE_NODE_SCHEMA: Dict[str, object] = {
                 "finegrained_task_category": build_nullable_enum_schema(
                     FINEGRAINED_TASK_CATEGORY_VALUES
                 ),
+                **CARRY_FORWARD_LEAF_FIELDS,
                 "sub_tasks": {
                     "type": "array",
                     "items": {"$ref": "#/$defs/node"},
@@ -167,6 +237,7 @@ PAPER2CODE_NODE_SCHEMA: Dict[str, object] = {
                 "weight",
                 "task_category",
                 "finegrained_task_category",
+                *CARRY_FORWARD_LEAF_FIELD_NAMES,
                 "sub_tasks",
             ],
         }
@@ -318,6 +389,15 @@ Rules:
 - Do not output markdown or commentary.
 - Internal nodes must use null categories and have non-empty sub_tasks.
 - Leaf nodes must use valid non-null categories and have empty sub_tasks.
+- Every node must include anchor, expected_outcome, comparison_protocol, and
+  prerequisite_ids (all four are required by the schema). Internal nodes and
+  leaves that do not need them must serialize them as null. Result-Analysis
+  leaves and leaves derived from core_contributions with a non-theoretical
+  verification_hint must populate them per the carry-forward rule.
+- The forbidden phrasing "The results of Figure/Table <X> have been reproduced."
+  must NOT appear anywhere in the output — every Result-Analysis leaf must use
+  the structured template that includes the metric, named comparators,
+  conditions, and the qualitative trend the paper claims.
 """
 
     user_prompt = f"""{PASS2_PROMPT}

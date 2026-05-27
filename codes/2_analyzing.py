@@ -127,10 +127,26 @@ def get_write_msg(todo_file_name, todo_file_desc):
 -----
 
 ## Instruction
-Conduct a Logic Analysis to assist in writing the code, based on the paper, the plan, the design, the task and the previously specified configuration file (config.yaml). 
+Conduct a Logic Analysis to assist in writing the code, based on the paper, the plan, the design, the task and the previously specified configuration file (config.yaml).
 You DON'T need to provide the actual code yet; focus on a thorough, clear analysis.
 
 {draft_desc}
+
+EQUATION FIDELITY (IMPORTANT): After the prose analysis, append a fenced block delimited EXACTLY by
+`<EQUATIONS>` and `</EQUATIONS>` containing a JSON array. For EVERY equation, formula, or numeric
+hyperparameter rule in the paper that THIS file ('{todo_file_name}') is responsible for implementing,
+add one object:
+  {{"eq_id": "<short stable id, e.g. apt_forward_eq2>",
+    "latex": "<the equation copied VERBATIM from the paper, preserving every symbol, coefficient and exponent, e.g. \\\\overline{{S}}^{{(t)}} = 0.85\\\\,\\\\overline{{S}}^{{(t-1)}} + 0.15\\\\,\\\\hat{{S}}>",
+    "target_function": "<the class.method or function in this file that must implement it>",
+    "paper_section": "<paper section/equation label, e.g. 'Eq. (9), Sec 4.2'>",
+    "note": "<the operator FAMILY and any literal constants that MUST appear, e.g. 'KL divergence (NOT MSE); coefficients 0.85/0.15 are literals'>"}}
+Rules for this block:
+- Copy LaTeX literally; do NOT paraphrase math into words. Keep coefficients (0.85, 2, ...) and the
+  operator family (KL vs MSE vs CE vs cosine) exactly as the paper states.
+- Include hyperparameter equalities the paper fixes for this file (e.g. "lr = 2e-4", "epochs(FT)=10").
+- If this file implements NO equations/formulas, emit exactly `<EQUATIONS>[]</EQUATIONS>`.
+- Emit valid JSON inside the block (double quotes, escaped backslashes) so it can be parsed downstream.
 
 -----
 

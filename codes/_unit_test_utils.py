@@ -16,6 +16,7 @@
 
 import ast
 import json
+import os
 import re
 import shutil
 import subprocess
@@ -715,7 +716,13 @@ def build_pass1_messages(
         "IMPORTANT: You MUST generate exactly one test specification for EVERY rubric "
         "leaf provided in <rubric_leaves_json>. Do not skip any leaf. If a leaf has no "
         "traceable numeric value, use comparison_kind=shape_only and set "
-        "skip_reason='qualitative'.\n"
+        "skip_reason='qualitative_smoke'.\n"
+        "Route every leaf into one of three buckets (see the user prompt's 'Bucket "
+        "routing' section): A=implementation-claim smoke (skip_reason='qualitative_smoke', "
+        "hasattr/callable body, NO xfail), B=value check (skip_reason=null, assert the "
+        "actual value via a config dataclass or configs/ YAML), C=reproduction "
+        "(tier='comparison', real our_call/rival_call body, skip_reason=null). The bare "
+        "value skip_reason='qualitative' is DEPRECATED.\n"
         "Each rubric leaf in <rubric_leaves_json> has a `tier` field that is ALREADY "
         "assigned ('intermediate' or 'comparison'). Echo it verbatim in your output "
         "`tier` field — do NOT reclassify. Fill in the `intermediate` block when "
@@ -724,7 +731,7 @@ def build_pass1_messages(
         "that are EXPLICITLY listed in the api_docs_json provided. Each entry includes "
         "'signature' (the exact def line), 'params' (kwarg names and types), and for "
         "classes: 'init_signature' and 'methods'. Never invent or guess API names. "
-        "When in doubt, emit skip_reason='qualitative'.\n"
+        "When in doubt, emit skip_reason='qualitative_smoke'.\n"
         "For each repo API used by a spec, emit an `api_refs` item in the exact "
         "`module.path:QualifiedName` form from api_docs_json. Treat `imports` as "
         "secondary; the static validator will rewrite imports from api_refs.\n"
@@ -1191,6 +1198,10 @@ def pytest_configure(config):
         "markers",
         "slow: comparison-tier tests that run rivals live.",
     )
+    config.addinivalue_line(
+        "markers",
+        "reproduction: full paper-reproduction test, opt-in via `pytest -m reproduction`.",
+    )
 
 
 @pytest.fixture(autouse=True)
@@ -1248,9 +1259,15 @@ def pytest_runtest_makereport(item, call):
 '''
 
 PYTEST_INI_TEMPLATE = """[pytest]
+# Filter reproduction-tier tests out of the default invocation. They are
+# expensive (real training/eval against rivals) and opt-in: run them with
+#   pytest -m reproduction
+# or via `scripts/run_tests_local.sh --reproduction`.
+addopts = -m "not reproduction"
 markers =
     rubric(test_id, rubric_id, weight, tier): Paper2Code rubric metadata
     slow: comparison-tier tests that run rivals live
+    reproduction: full paper-reproduction test, opt-in via `pytest -m reproduction`
 """
 
 
@@ -1355,9 +1372,25 @@ def _write_test_file(
     for fn in functions:
         spec = specs_by_id[fn["test_id"]]
         decorators: List[str] = []
-        if include_slow_marker:
+        # Bucket dispatch (see Phase-2 reform). The skip_reason / tier on the
+        # spec decides which decorators a test gets:
+        #   - Bucket C (tier=comparison): full reproduction → slow + opt-in
+        #     `reproduction` marker so the default `pytest -m "not reproduction"`
+        #     invocation filters it out; run it on demand with -m reproduction.
+        #   - Bucket A (skip_reason="qualitative_smoke"): hasattr/callable body
+        #     with NO marker → reported as a real PASS/FAIL, not XPASS.
+        #   - Bucket B value-check (skip_reason=None): no extra marker.
+        #   - Legacy "qualitative" / "asset_missing": keep the old xfail wrapper
+        #     for back-compat with bundles generated before this reform. New
+        #     bundles never emit these (asset/dataset checks are Bucket A/B).
+        sr = spec.get("skip_reason")
+        is_comparison = fn["tier"] == "comparison" or include_slow_marker
+        if is_comparison:
             decorators.append("@pytest.mark.slow")
-        if spec.get("skip_reason") == "qualitative":
+            decorators.append("@pytest.mark.reproduction")
+        elif sr == "qualitative_smoke":
+            pass  # Bucket A: real PASS/FAIL, no marker.
+        elif sr == "qualitative":
             decorators.append('@pytest.mark.xfail(strict=False, reason="qualitative requirement; smoke test")')
         decorators.append(
             '@pytest.mark.rubric(test_id={tid!r}, rubric_id={rid!r}, weight={w}, tier={tier!r})'.format(
@@ -1756,17 +1789,112 @@ def _repair_one_file(py_path: Path, file_issues: List[Dict[str, Any]]) -> Option
 # --------------------------------------------------------------------------- #
 
 # Run `pytest --collect-only` against tests_dir and return (ok, log_tail).
+#
+# We choose the python carefully because the test files do `from main import
+# Main` etc., which transitively imports torch / transformers / accelerate.
+# If we use the pipeline's `sys.executable`, that python is the host CPython
+# and it sees `~/.local/lib/python3.10/site-packages` — which on some hosts
+# contains a broken botocore/accelerate that fails to import even at collect
+# time. Picking the repo's own .venv interpreter (when present) avoids this
+# leak entirely: that venv was provisioned by run_tests_local.sh from the
+# repo's requirements.txt, so it has the matching torch/transformers and no
+# stray user-site packages.
+#
+# Fallback order:
+#   1. <repo>/.venv/bin/python  (if exists AND can import _posixsubprocess)
+#   2. sys.executable with PYTHONNOUSERSITE=1  (skips user site-packages so
+#      a broken host install doesn't fail collection)
+#
+# If neither yields a working pytest, return (True, "skipped: no usable
+# python") rather than blocking the pipeline — collection is a best-effort
+# check; the audit is the authoritative correctness signal.
 def collect_only_check(tests_dir: Path) -> Tuple[bool, str]:
-    try:
-        result = subprocess.run(
-            [sys.executable, "-m", "pytest", "--collect-only", str(tests_dir)],
-            capture_output=True,
-            text=True,
-            timeout=120,
-            check=False,
-        )
-        return result.returncode == 0, (result.stdout + result.stderr)[-2000:]
-    except FileNotFoundError:
-        return False, "pytest not installed"
-    except subprocess.TimeoutExpired:
-        return False, "pytest --collect-only timed out"
+    # The tests_dir layout is <repo_root>/tests; repo_root holds the .venv
+    # that run_tests_local.sh creates with the full repo dependencies.
+    repo_root = tests_dir.parent
+    candidates: List[Tuple[str, Dict[str, str]]] = []
+
+    venv_python = repo_root / ".venv" / "bin" / "python"
+    if venv_python.is_file():
+        # Probe the venv before trusting it — conda-cloned venvs often look
+        # valid but cannot import their stdlib. If broken, fall through to
+        # the host fallback instead of returning a confusing failure.
+        try:
+            probe = subprocess.run(
+                [str(venv_python), "-c", "import _posixsubprocess"],
+                capture_output=True, text=True, timeout=10, check=False,
+            )
+        except (FileNotFoundError, subprocess.TimeoutExpired):
+            probe = None
+        if probe is not None and probe.returncode == 0:
+            candidates.append((str(venv_python), {}))
+
+    candidates.append((sys.executable, {"PYTHONNOUSERSITE": "1"}))
+
+    last_log = ""
+    for python_path, extra_env in candidates:
+        env = os.environ.copy()
+        env.update(extra_env)
+        try:
+            result = subprocess.run(
+                [python_path, "-m", "pytest", "--collect-only", str(tests_dir)],
+                capture_output=True,
+                text=True,
+                timeout=120,
+                check=False,
+                env=env,
+            )
+            last_log = (result.stdout + result.stderr)[-2000:]
+            if result.returncode == 0:
+                return True, last_log
+            # "No module named pytest" → not a real test failure, try next.
+            if "No module named pytest" in last_log:
+                continue
+            # If the failure is from a third-party / heavy dep that the
+            # collection-check environment doesn't have installed (torch,
+            # transformers, accelerate, etc.), this is not a generated-test
+            # defect — the test will be exercised in a properly provisioned
+            # venv by run_tests_local.sh. Treat as warning, not blocker.
+            if _is_env_dependency_failure(last_log):
+                return True, "collect-only skipped (env missing repo deps):\n" + last_log
+            # Real collection error against this python (e.g., a syntax
+            # error in the generated test file, or a hallucinated repo
+            # symbol that audit somehow missed).
+            return False, last_log
+        except FileNotFoundError:
+            last_log = f"pytest not invokable via {python_path}"
+            continue
+        except subprocess.TimeoutExpired:
+            return False, "pytest --collect-only timed out"
+
+    # All candidates failed to even launch pytest — treat as skipped, not
+    # failed. The audit already validated import resolution statically.
+    return True, "collect-only skipped: " + (last_log or "no usable python with pytest")
+
+
+# True when a collect-only failure is caused by a missing third-party dep
+# (torch, transformers, etc.) rather than a defect in the generated test
+# file. Pattern-matches the pytest error tail.
+def _is_env_dependency_failure(log: str) -> bool:
+    if "ModuleNotFoundError" not in log and "ImportError" not in log:
+        return False
+    # Heavy deps that are provisioned per-repo by requirements.txt, not by
+    # the pipeline. Their absence at pipeline time is expected.
+    env_pkgs = (
+        "torch", "transformers", "accelerate", "datasets", "peft",
+        "jax", "jaxlib", "flax", "tensorflow", "tf_keras",
+        "boto3", "botocore", "huggingface_hub",
+        "numpy", "scipy", "pandas", "sklearn", "scikit-learn",
+        "evaluate", "lm_eval", "rouge_score",
+        "matplotlib", "seaborn",
+    )
+    for pkg in env_pkgs:
+        if f"No module named '{pkg}'" in log:
+            return True
+        # Old collections.Mapping etc. against deps that ship vendored libs.
+        if f"from {pkg}" in log and "cannot import name" in log:
+            return True
+    # collections.Mapping breakage from vendored requests/urllib3 inside boto.
+    if "from collections import Mapping" in log or "cannot import name 'Mapping' from 'collections'" in log:
+        return True
+    return False

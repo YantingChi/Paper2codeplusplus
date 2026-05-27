@@ -91,7 +91,7 @@ A JSON object with this exact schema:
         "paper_table_ref": "Table 2"
       },
 
-      "skip_reason": null                        // or "qualitative" / "no_symbol" etc.
+      "skip_reason": null                        // null | "qualitative_smoke" | "no_symbol"
     }
   ]
 }
@@ -105,15 +105,54 @@ Fill the matching block:
   - tier="comparison"   → populate the `comparison` object (our_call, rival_call,
     metric, comparison_op, margin, paper_table_ref); set `intermediate` to null.
 
+Bucket routing (decide this FIRST, for every leaf, from the requirement text):
+
+  A. SMOKE — the requirement describes an API/implementation claim with NO
+     concrete value to compare against (no number, no string literal, no class
+     name). Phrases like "code has been implemented such that X exists / is
+     exposed / uses Y", "the tokenizer is learnable".
+     → tier stays "intermediate", comparison_kind="shape_only",
+       skip_reason="qualitative_smoke".
+     Pass-2 will emit `assert hasattr(...)` / `assert callable(...)`; the
+     assembler applies NO marker, so the test reports as a real PASS/FAIL.
+
+  B. VALUE — the requirement cites a concrete value (number, string, boolean,
+     class/optimizer name) that a Boolean assertion can check. Phrases like
+     "beam size default is 3", "optimizer is AdamW", "spectral norm defaults
+     to True".
+     → tier="intermediate", comparison_kind="constant_equals" (or shape_only
+       for non-numeric), skip_reason=null. Use the (a)/(b)/(c) cascade below
+       to reach the value. If NEITHER a config dataclass NOR a configs/ asset
+       exposes it, fall back to skip_reason="qualitative_smoke".
+
+  Dataset/asset "is obtained" leaves (e.g. "The StrategyQA dataset is
+  obtained.") are Bucket A, NEVER xfail. The unit-test bundle runs WITHOUT a
+  data-prep step, so an on-disk existence check would fail on a fresh checkout.
+  Instead smoke-check that the prep mechanism exists — `assert callable(main)`
+  (or `assert hasattr(<prep_module>, "main")`) — and set
+  skip_reason="qualitative_smoke". This reports a real PASS (prep entrypoint
+  present) / FAIL (absent), never XPASS.
+
+  C. REPRODUCTION — the requirement cites a paper outcome (a Table/Figure, a
+     metric vs a rival, or a qualitative trend across a hyperparameter sweep).
+     Phrases like "the reproduction reproduces Accuracy (%) on …", "matches the
+     paper's reported … trend".
+     → tier="comparison", populate our_call/rival_call/metric/comparison_op/
+       margin from api_docs_json + assets_root_module, skip_reason=null. The
+       assembler tags it @pytest.mark.reproduction and pytest filters it from
+       the default run; it executes only under `pytest -m reproduction`.
+
+The bare value skip_reason="qualitative" is DEPRECATED — use
+"qualitative_smoke" (Bucket A). Never emit skip_reason="asset_missing":
+an asset/dataset test must report a real PASS/FAIL, not an xfail.
+
 Spec-body rules (apply in order):
 1. If a leaf's requirement names a numeric constant (e.g. "sigma_max is set to 15") and
    tier="intermediate", use comparison_kind=constant_equals with that value as expected_value.
-2. For qualitative leaves (no number, no rival, e.g. "the tokenizer is learnable") that
-   landed in tier=intermediate, use comparison_kind=shape_only with a smoke check and set
-   skip_reason="qualitative". For qualitative leaves that landed in tier=comparison
-   (uncommon — usually means the rubric is non-numeric Result-Analysis), still emit a
-   comparison block with our_call/rival_call from api_docs_json and set
-   skip_reason="qualitative".
+2. Bucket A leaves (no value, intermediate) use comparison_kind=shape_only with a
+   hasattr/callable smoke check and skip_reason="qualitative_smoke". Bucket C leaves
+   (tier=comparison) always emit a real comparison block with our_call/rival_call from
+   api_docs_json and skip_reason=null — never dodge to a smoke check.
 3. For every repo API you target, add a structured `api_refs` entry in the form
    `module.path:QualifiedName` using the exact module and key from api_docs_json.
    For nested classes, use the full qualified key, e.g.
@@ -128,16 +167,31 @@ Constraints:
 - Use ONLY the provided rubric, paper text, and api_docs_json. Do NOT invent numbers or symbols.
 - Treat api_refs as the source of truth for repo APIs. `imports` is only a resolved convenience
   field and may be rewritten by the static validator.
-- For "constant_equals" tests: target the simplest Config dataclass that exposes the constant
-  (e.g. APTConfig().scaling) rather than a heavyweight class requiring complex dependencies.
-- If instantiating a class requires other class instances as constructor arguments (visible in
-  its "params" dict in api_docs_json), set skip_reason="qualitative" so the test is marked xfail.
+- For "constant_equals" tests, try the simplest readable path to the value BEFORE bailing to
+  qualitative. In this order:
+    (a) A zero-arg constructor of a Config dataclass that exposes the constant
+        (e.g. `APTConfig().scaling`, `TrainingConfig().num_train_epochs`). Preferred when the
+        class can be instantiated without arguments.
+    (b) A YAML/JSON config asset under `configs/` that holds the default. The defaults-only
+        file is typically `configs/default.yaml`. Emit:
+            input_recipe   = "import yaml; from pathlib import Path"
+            what_to_compute = "yaml.safe_load(Path('configs/default.yaml').read_text())[<section>][<key>]"
+        Use this path EVEN when the corresponding Python config class has required fields and
+        cannot be zero-arg-constructed (e.g. pydantic `Field(...)` declarations) — the YAML
+        defaults are the source of truth in those repos.
+    (c) Only if NEITHER (a) nor (b) is reachable (constant hard-coded inside a function body
+        with no config exposure), set skip_reason="qualitative_smoke".
+  A class with complex constructor args is NOT by itself a reason to bail — check the YAML
+  defaults first.
 - Only reference method names that appear in api_docs_json for that class. If a method name is
-  not found, use a hasattr() smoke check and set skip_reason="qualitative".
+  not found, prefer `assert hasattr(ClassName, "method_name")` with skip_reason="qualitative_smoke"
+  (Bucket A) — a failing hasattr is a legitimate test outcome, and the assembler applies no
+  marker so it reports as real PASS/FAIL. Use this for rubric leaves whose claim is genuinely
+  non-Boolean (e.g. "the tokenizer is learnable", "the optimizer converges smoothly").
 - Never reference test files: any `imports` entry pointing to `tests.*` (e.g.
   `from tests.test_foo import TestBar`) is FORBIDDEN — repo tests are not a reusable library.
-  If a leaf appears to require a repo test helper, set skip_reason="qualitative" and have the
-  Pass-2 emitter produce a smoke check.
+  If a leaf appears to require a repo test helper, set skip_reason="qualitative_smoke" and have
+  the Pass-2 emitter produce a smoke check.
 - If a symbol in api_docs_json is keyed as `OuterClass.InnerClass` (dot in the key), it is a
   nested class. Never add `from <module> import InnerClass` to imports — refer to it as
   `OuterClass.InnerClass` after importing the outer class.

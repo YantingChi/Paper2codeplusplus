@@ -152,6 +152,37 @@ def audit_and_repair_tier(
     return audit_payload
 
 
+# Recursively delete every __pycache__ directory and stray .pyc under `root`.
+# Why: stale bytecode from earlier generations (often compiled against a
+# different Python version, or from a source version that has since been
+# overwritten) can shadow the freshly written .py files when pytest imports
+# them, producing ImportError tracebacks for symbols that are no longer in
+# the source. Running this after the new test files land makes audit,
+# repair, and the final collect-only check all operate on a clean cache.
+# Returns the number of cache items removed (directories + stray .pyc).
+def clear_pycache(root: Path) -> int:
+    """Wipe __pycache__ dirs and stray .pyc files under `root`."""
+    removed = 0
+    for cache_dir in list(root.rglob("__pycache__")):
+        if not cache_dir.is_dir():
+            continue
+        try:
+            for entry in cache_dir.iterdir():
+                if entry.is_file():
+                    entry.unlink()
+            cache_dir.rmdir()
+            removed += 1
+        except OSError as error:
+            print(f"[c9b synthesize] WARN: failed to remove {cache_dir}: {error}")
+    for stray in list(root.rglob("*.pyc")):
+        try:
+            stray.unlink()
+            removed += 1
+        except OSError as error:
+            print(f"[c9b synthesize] WARN: failed to remove {stray}: {error}")
+    return removed
+
+
 # Stage B entrypoint: load specs, synthesize per-tier, assemble, audit, repair.
 def main(args: argparse.Namespace) -> None:
     output_dir = Path(args.output_dir).resolve()
@@ -289,6 +320,19 @@ def main(args: argparse.Namespace) -> None:
         manifest_path.write_text(
             json.dumps(manifest_payload, indent=2, ensure_ascii=False),
             encoding="utf-8",
+        )
+
+    # ---------- Drop stale bytecode left over from earlier generations ----------
+    # Without this, .pyc files compiled against an older version of src/ (or
+    # under a different Python version) can shadow the freshly written .py
+    # files and surface as ImportErrors during audit / collect-only. We do
+    # this *after* all new test files are on disk and *before* anything that
+    # might import the repo.
+    removed_cache = clear_pycache(repo_root)
+    if removed_cache:
+        print(
+            f"[c9b synthesize] cleared {removed_cache} stale __pycache__/.pyc "
+            f"item(s) under {repo_root}."
         )
 
     # ---------- Pass 3 audit + Pass 4 repair, per-tier ----------

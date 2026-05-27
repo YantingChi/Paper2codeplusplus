@@ -27,7 +27,8 @@ Output: A rubric file json file with the following schema
       "name": "",
       "description": "",
       "anchor": "Section / Subsection / Equation / Table / Figure / Appendix",
-      "confidence": 0.0
+      "confidence": 0.0,
+      "verification_hint": "How a reproduction would empirically check this contribution. If the contribution is purely theoretical and is not exercised by any figure/table, write exactly 'theoretical_only: implementation check only'."
     }
   ],
   "assets": [
@@ -63,7 +64,9 @@ Output: A rubric file json file with the following schema
       "target": "Figure|Table|explicit claim",
       "description": "",
       "anchor": "",
-      "prerequisites": []
+      "prerequisites": [],
+      "expected_outcome": "Concrete, comparator-bearing trend the paper claims, e.g. 'BaM forward-KL trajectory lies below ADVI/Score/Fisher/GSM (B=2) at the same gradient-evaluation budget on D in {4,16,64,256}, averaged over 10 seeds'. Do NOT invent numeric thresholds the paper did not publish.",
+      "comparison_protocol": "How the new code's output is compared to the paper's reported outcome, e.g. 'overlay mean-over-10-seeds curves; check ordering at matched gradient-eval budget'."
     }
   ],
   "uncertain_or_missing": [
@@ -146,8 +149,18 @@ RUBRIC_SCHEMA = {
                     "description": {"type": "string"},
                     "anchor": {"type": "string"},
                     "confidence": {"type": "number"},
+                    # verification_hint: how a reproduction would empirically check this
+                    # contribution. Empty or "theoretical_only: implementation check only"
+                    # signals that Pass 2 should NOT create a Result-Analysis leaf for it.
+                    "verification_hint": {"type": "string"},
                 },
-                "required": ["name", "description", "anchor", "confidence"],
+                "required": [
+                    "name",
+                    "description",
+                    "anchor",
+                    "confidence",
+                    "verification_hint",
+                ],
             },
         },
         "assets": {
@@ -245,8 +258,22 @@ RUBRIC_SCHEMA = {
                         "type": "array",
                         "items": {"type": "string"},
                     },
+                    # expected_outcome: comparator-bearing qualitative trend the paper
+                    # claims (metric, named baselines, conditions, direction). No
+                    # invented numeric thresholds.
+                    "expected_outcome": {"type": "string"},
+                    # comparison_protocol: how the new code's output is compared against
+                    # the paper's reported outcome (averaging, ordering, matched budget).
+                    "comparison_protocol": {"type": "string"},
                 },
-                "required": ["target", "description", "anchor", "prerequisites"],
+                "required": [
+                    "target",
+                    "description",
+                    "anchor",
+                    "prerequisites",
+                    "expected_outcome",
+                    "comparison_protocol",
+                ],
             },
         },
         "uncertain_or_missing": {
@@ -791,6 +818,19 @@ Rules:
   experiments. Restrict `results_to_verify` entries to only those experiments, benchmarks,
   and baselines that appear in the eval_plan. Do not include results that require more
   GPU VRAM or dataset size than the constraints allow.
+- For each `results_to_verify[]` entry, `expected_outcome` must state (a) the metric,
+  (b) the named baselines/comparators, (c) the experiment conditions (dataset, dimensions,
+  batch size, seeds, budget), and (d) the qualitative trend the paper claims
+  (e.g., "BaM forward-KL trajectory lies below ADVI/Score/Fisher/GSM at the same
+  gradient-evaluation budget on D in {4,16,64,256}"). `comparison_protocol` must state
+  how the new code's output is compared to the paper's reported outcome (e.g., "overlay
+  mean-over-10-seeds curves; check ordering at matched gradient-eval budget").
+  Do NOT invent numeric thresholds the paper did not publish.
+- For each `core_contributions[]` entry, fill `verification_hint` with how a reproduction
+  would empirically check the contribution. If the contribution is purely theoretical and
+  not exercised by any figure or table, write exactly
+  "theoretical_only: implementation check only" so Pass 2 knows not to create a
+  Result-Analysis leaf for it.
 - Return only valid JSON matching the required schema.
 - Do not output chain-of-thought.
 """
