@@ -8,7 +8,38 @@ set -euo pipefail
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 CURRENT_STAGE="initialization"
+# ---- General ----
+PYTHON_BIN="${PYTHON_BIN:-python3.10}"
+GPT_VERSION="${GPT_VERSION:-gpt-5.2}"
 
+# ---- LLM provider / API key ----
+# Default the whole pipeline to the standard OpenAI API using OPENAI_API_KEY.
+# Without this, codes/api_key_selector.py runs in "auto" mode and silently
+# switches to Azure whenever AZURE_OPENAI_ENDPOINT happens to be set in the
+# environment -- which routes every call to the (currently dead) Azure resource.
+#
+# Overrides:
+#   - Use Azure instead:   export PAPER2CODE_LLM_PROVIDER=azure  (+ AZURE_OPENAI_* vars)
+#   - Route through the local AOAI proxy: keep provider=openai and
+#       export OPENAI_BASE_URL=http://127.0.0.1:8787/v1
+#       export OPENAI_API_KEY=dummy        # proxy injects the real upstream key
+export PAPER2CODE_LLM_PROVIDER="${PAPER2CODE_LLM_PROVIDER:-openai}"
+
+# ---- Optional: route OpenAI traffic through the local AOAI proxy ----
+# Set USE_AOAI_PROXY=1 to send all OpenAI calls through the localhost proxy,
+# which injects the real upstream key from /etc/aoai-proxy.env. The pipeline
+# then only needs a placeholder OPENAI_API_KEY (the proxy supplies the real one).
+# Off by default so direct-to-OpenAI runs are unaffected.
+USE_AOAI_PROXY="${USE_AOAI_PROXY:-1}"
+if [[ "$USE_AOAI_PROXY" == "1" ]]; then
+    AOAI_PROXY_ENDPOINT="${AOAI_PROXY_ENDPOINT:-http://127.0.0.1:8787}"
+    export OPENAI_BASE_URL="${OPENAI_BASE_URL:-${AOAI_PROXY_ENDPOINT%/}/v1}"
+    export OPENAI_API_KEY="${OPENAI_API_KEY:-dummy}"
+fi
+
+
+
+########################################################
 on_error() {
     local status=$?
     local failed_command=${BASH_COMMAND:-unknown}
@@ -22,8 +53,6 @@ trap on_error ERR
 # LLM credentials are intentionally supplied by the caller's environment.
 # Use scripts/run_paper_with_aoai_proxy.sh to run through the local AOAI proxy.
 Error_log_file=$ROOT_DIR/results/error_log_${PAPER_NAME:-unknown}.log
-
-
 
 
 START_STAGE="${START_STAGE:-0}"
@@ -53,6 +82,7 @@ Stages:
  10h   Harbor Bundle       (codes/10_get_harbor_set_claude.py)
  10    SkyDiscover Bundle  (codes/10_get_skyDiscover.py)
  11    SkyDiscover Run     (codes/11_run_sky_discover.py)
+ 3.5   Repair (OPTIONAL)   (codes/3.5_repair.py) -- post-pipeline; needs a grader_output.json
 
 Default: --start 0 (run all stages).
 --only STAGE runs exactly one stage.
@@ -60,6 +90,11 @@ Default: --start 0 (run all stages).
 --start, --only, and --stages are mutually exclusive.
 Stage numbers may be decimals (e.g. --only 5.1, --start 8.1).
 Earlier stages' artifacts must already exist when starting mid-pipeline.
+
+Stage 3.5 (Repair) is OPTIONAL: it NEVER runs in a --start sweep. It runs only
+when named explicitly via --only 3.5 (or included in --stages), and physically
+runs after Stage 10h. It needs a grader_output.json from a prior eval; set
+REPAIR_GRADER_OUTPUT=/path/to/grader_output.json or let it pick the most recent.
 EOF
 }
 
@@ -175,6 +210,29 @@ run_stage() {
     fi
 }
 
+# run_optional_stage: like run_stage, but an optional stage is NEVER part of a
+# --start sweep. It runs ONLY when named explicitly via --only or --stages.
+# Use this for stages that must not run automatically in normal pipeline order
+# (e.g. Stage 3.5 repair, which needs a grader_output.json from a prior eval).
+run_optional_stage() {
+    local stage_num="$1"
+    local selected_stage
+
+    if [[ -n "$ONLY_STAGE" ]]; then
+        [[ "$ONLY_STAGE" = "$stage_num" ]]
+    elif [[ -n "$STAGES" ]]; then
+        for selected_stage in "${STAGE_SELECTIONS[@]}"; do
+            if [[ "$selected_stage" = "$stage_num" ]]; then
+                return 0
+            fi
+        done
+        return 1
+    else
+        # --start mode: optional stages are always skipped.
+        return 1
+    fi
+}
+
 
 # PAPER_NAME="adaptive-pruning"
 # ---- Required ----
@@ -183,9 +241,16 @@ if [[ -z "${PAPER_NAME:-}" ]]; then
     exit 1
 fi
 
-# ---- General ----
-PYTHON_BIN="${PYTHON_BIN:-python3.10}"
-GPT_VERSION="${GPT_VERSION:-gpt-5.2}"
+
+
+# Fail early (with a clear message) if we are meant to use OpenAI but no key is
+# present -- otherwise the first Python stage dies deep in the SDK with a less
+# obvious error.
+if [[ "$PAPER2CODE_LLM_PROVIDER" == "openai" && -z "${OPENAI_API_KEY:-}" ]]; then
+    echo "[run_codex] ERROR: PAPER2CODE_LLM_PROVIDER=openai but OPENAI_API_KEY is not set." >&2
+    echo "[run_codex] ERROR: run 'export OPENAI_API_KEY=sk-...' and retry." >&2
+    exit 1
+fi
 
 # ---- Data roots (paperbench layout) ----
 PAPERBENCH_PAPERS_DIR="${PAPERBENCH_PAPERS_DIR:-$ROOT_DIR/data/paperbench_papers}"
@@ -237,6 +302,25 @@ DOWNLOAD_REPORT_JSON_PATH="${DOWNLOAD_REPORT_JSON_PATH:-$HARBOR_ASSET_DIR/c1_dow
 LOCAL_MACHINE_CHECK="${LOCAL_MACHINE_CHECK:-1}"
 
 mkdir -p "$OUTPUT_DIR" "$OUTPUT_REPO_DIR" "$EVAL_DIR"
+
+# ---- Per-paper concurrency guard ----
+# Two run_codex.sh invocations on the same PAPER_NAME race on shared artifacts
+# (planning_trajectories.json, *_simple_analysis_response.json, the repo dir),
+# which silently corrupts the run -- e.g. Stage 3 reads a planning file that a
+# concurrent Stage 1 rewrote, then looks for analysis files the parallel Stage 2
+# never produced. Take an exclusive non-blocking flock on $OUTPUT_DIR/.runlock
+# and abort with a clear message if another run already holds it. The lock fd
+# stays open for the lifetime of this shell and is released automatically on
+# exit (normal, error, or signal), so no manual cleanup is needed.
+LOCK_FILE="$OUTPUT_DIR/.runlock"
+exec 9>"$LOCK_FILE"
+if ! flock -n 9; then
+    echo "[run_codex] ERROR: another run_codex.sh is already active for PAPER_NAME=$PAPER_NAME" >&2
+    echo "[run_codex] ERROR: lock file: $LOCK_FILE" >&2
+    echo "[run_codex] ERROR: wait for the other run to finish, or if you are sure no process holds it," >&2
+    echo "[run_codex] ERROR: remove $LOCK_FILE and retry." >&2
+    exit 1
+fi
 
 # ---- Centralized run log + intermediate repo snapshots ----
 # AALOG_DIR holds one consolidated log per script invocation.
@@ -348,34 +432,6 @@ if run_stage 3; then
 fi
 if (( STAGE3_RAN == 1 )); then
     snapshot_repo "stage3"
-fi
-
-# Stage 3.5: targeted, feedback-driven repair. Regenerates ONLY the files behind
-# failing rubric leaves (per a grader_output.json), leaving passing files frozen,
-# to avoid the ~+/-6-leaf stochastic noise of a full stage-3 regeneration.
-# Needs a grader_output.json: set REPAIR_GRADER_OUTPUT, else the most recent one
-# for this paper is used. Exits nonzero with a clear message if none is found.
-if run_stage 3.5; then
-    CURRENT_STAGE="Stage 3.5: Repair"
-    echo "------- Stage 3.5: Repair (feedback-driven, targeted) -------"
-    REPAIR_GRADER_OUTPUT="${REPAIR_GRADER_OUTPUT:-}"
-    if [[ -z "$REPAIR_GRADER_OUTPUT" ]]; then
-        REPAIR_GRADER_OUTPUT="$(ls -t "$ROOT_DIR"/outputs/paperbench_eval/"$PAPER_NAME"/*/grader_output.json 2>/dev/null | head -1)"
-    fi
-    if [[ -z "$REPAIR_GRADER_OUTPUT" || ! -f "$REPAIR_GRADER_OUTPUT" ]]; then
-        echo "[run_codex][ERROR] Stage 3.5 needs a grader_output.json to repair against." >&2
-        echo "[run_codex][ERROR] Set REPAIR_GRADER_OUTPUT=/path/to/grader_output.json (none found for $PAPER_NAME)." >&2
-        exit 1
-    fi
-    echo "[run_codex] Stage 3.5 repairing against: $REPAIR_GRADER_OUTPUT"
-    "$PYTHON_BIN" "$ROOT_DIR/codes/3.5_repair.py" \
-        --paper_name "$PAPER_NAME" \
-        --gpt_version "$GPT_VERSION" \
-        --pdf_json_path "$PDF_JSON_CLEANED_PATH" \
-        --output_dir "$OUTPUT_DIR" \
-        --output_repo_dir "$OUTPUT_REPO_DIR" \
-        --grader_output "$REPAIR_GRADER_OUTPUT"
-    snapshot_repo "stage3_5"
 fi
 
 if run_stage 5; then
@@ -555,7 +611,51 @@ if run_stage 10h; then
         --force
 fi
 
-#/mnt/blk1/Paper2Code/data/paperbench_papers/adaptive-pruning/rubric_ap.json 
+# Stage 3.5: targeted, feedback-driven repair (OPTIONAL, runs after the pipeline).
+# Regenerates ONLY the files behind failing rubric leaves (per a grader_output.json),
+# leaving passing files frozen, to avoid the ~+/-6-leaf stochastic noise of a full
+# stage-3 regeneration.
+#
+# This stage is OPTIONAL: it NEVER runs as part of a --start sweep. Invoke it
+# explicitly once a grader has produced a grader_output.json for this paper, e.g.:
+#   PAPER_NAME=bbox bash scripts/run_codex.sh --only 3.5
+# Needs a grader_output.json: set REPAIR_GRADER_OUTPUT, else the most recent one
+# for this paper is used. Exits nonzero with a clear message if none is found.
+if run_optional_stage 3.5; then
+    CURRENT_STAGE="Stage 3.5: Repair"
+    echo "------- Stage 3.5: Repair (feedback-driven, targeted) -------"
+    REPAIR_GRADER_OUTPUT="${REPAIR_GRADER_OUTPUT:-}"
+    if [[ -z "$REPAIR_GRADER_OUTPUT" ]]; then
+        REPAIR_EVAL_DIR="$ROOT_DIR/outputs/paperbench_eval/$PAPER_NAME"
+        if [[ -d "$REPAIR_EVAL_DIR" ]]; then
+            REPAIR_GRADER_OUTPUT="$(
+                find "$REPAIR_EVAL_DIR" \
+                    -mindepth 2 \
+                    -maxdepth 2 \
+                    -name grader_output.json \
+                    -printf '%T@ %p\n' \
+                    | sort -nr \
+                    | awk 'NR == 1 { sub(/^[^ ]+ /, ""); print }'
+            )"
+        fi
+    fi
+    if [[ -z "$REPAIR_GRADER_OUTPUT" || ! -f "$REPAIR_GRADER_OUTPUT" ]]; then
+        echo "[run_codex][ERROR] Stage 3.5 needs a grader_output.json to repair against." >&2
+        echo "[run_codex][ERROR] Set REPAIR_GRADER_OUTPUT=/path/to/grader_output.json (none found for $PAPER_NAME)." >&2
+        exit 1
+    fi
+    echo "[run_codex] Stage 3.5 repairing against: $REPAIR_GRADER_OUTPUT"
+    "$PYTHON_BIN" "$ROOT_DIR/codes/3.5_repair.py" \
+        --paper_name "$PAPER_NAME" \
+        --gpt_version "$GPT_VERSION" \
+        --pdf_json_path "$PDF_JSON_CLEANED_PATH" \
+        --output_dir "$OUTPUT_DIR" \
+        --output_repo_dir "$OUTPUT_REPO_DIR" \
+        --grader_output "$REPAIR_GRADER_OUTPUT"
+    snapshot_repo "stage3_5"
+fi
+
+#/mnt/blk1/Paper2Code/data/paperbench_papers/adaptive-pruning/rubric_ap.json
 
 # currently disabled as we do not need this part
 # if run_stage 10; then
